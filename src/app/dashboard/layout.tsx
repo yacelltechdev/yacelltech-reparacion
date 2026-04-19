@@ -93,10 +93,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 w-10 rounded-full bg-slate-100 p-0">
-                  <UserIcon className="h-5 w-5" />
-                </Button>
+              <DropdownMenuTrigger className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+                <UserIcon className="h-5 w-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuGroup>
