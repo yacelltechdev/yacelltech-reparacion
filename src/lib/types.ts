@@ -19,7 +19,7 @@ export interface Repair {
   fecha: string;
   fecha_despacho?: string;
   notaDevolucion?: string;
-  checklist?: Record<string, boolean>;
+  checklist?: Record<string, boolean | null>;
   patronArray?: number[];
   cargosAdicionales?: { id: number; desc: string; monto: number }[];
 }

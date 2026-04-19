@@ -363,7 +363,7 @@ export default function NewRepairPage() {
 
               <div className="space-y-2">
                 <Label>Asignar Técnico</Label>
-                <Select defaultValue="Oscar" onValueChange={v => setFormData({...formData, tecnico: v})}>
+                <Select defaultValue="Oscar" onValueChange={v => setFormData({...formData, tecnico: v ?? undefined})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Oscar">Oscar</SelectItem>
