@@ -23,35 +23,28 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Usuarios temporales solicitados por el USER
-    const testUsers = {
-      freddy: "1234",
-      oscar: "1234",
-      carlos: "1234",
-      admin: "admin",
-      caja: "1234"
-    };
-
-    const pass = (testUsers as any)[username.toLowerCase()];
-
-    setTimeout(() => {
-      if (pass && pass === password) {
-        let role = "tech";
-        if (username.toLowerCase() === "admin") role = "admin";
-        if (username.toLowerCase() === "caja") role = "caja";
-        
-        login(username, role);
-        toast.success(`¡Bienvenido de nuevo, ${username}!`);
-        router.push(role === "tech" ? "/dashboard/technician" : role === "caja" ? "/dashboard/inbox" : "/dashboard");
-      } else {
-        toast.error("Usuario o contraseña incorrectos");
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Usuario o contraseña incorrectos");
+        return;
       }
+      login(username, data.role);
+      toast.success(`¡Bienvenido de nuevo, ${username}!`);
+      router.push(data.role === "tech" ? "/dashboard/technician" : data.role === "caja" ? "/dashboard/inbox" : "/dashboard");
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (

@@ -1,34 +1,71 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
-import { 
-  LayoutDashboard, 
-  Inbox, 
-  Wrench, 
-  History, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Inbox,
+  Wrench,
+  History,
+  BarChart3,
   LogOut,
   Smartphone,
-  Menu,
+  KeyRound,
   User as UserIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuGroup,
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [changePwOpen, setChangePwOpen] = useState(false);
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPw !== confirmPw) { toast.error("Las contraseñas no coinciden"); return; }
+    setPwLoading(true);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user?.username, currentPassword: currentPw, newPassword: newPw }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Error al cambiar contraseña"); return; }
+      toast.success("Contraseña actualizada correctamente");
+      setChangePwOpen(false);
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setPwLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Protección de rutas simple
@@ -100,6 +137,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setChangePwOpen(true)}>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Cambiar Contraseña
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-700">
                     <LogOut className="mr-2 h-4 w-4" />
                     Cerrar Sesión
@@ -136,6 +178,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           );
         })}
       </nav>
+
+      <Dialog open={changePwOpen} onOpenChange={setChangePwOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cambiar Contraseña</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4 pt-2">
+            <div className="space-y-1">
+              <Label htmlFor="current-pw">Contraseña actual</Label>
+              <Input id="current-pw" type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} required />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="new-pw">Nueva contraseña</Label>
+              <Input id="new-pw" type="password" value={newPw} onChange={e => setNewPw(e.target.value)} required minLength={4} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="confirm-pw">Confirmar nueva contraseña</Label>
+              <Input id="confirm-pw" type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} required minLength={4} />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={pwLoading} className="w-full">
+                {pwLoading ? "Guardando..." : "Actualizar Contraseña"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
