@@ -5,7 +5,7 @@ const ALLOWED = ['models', 'marcas', 'colores'];
 
 export async function GET(
   req: Request,
-  { params }: { params: { table: string } }
+  { params }: { params: Promise<{ table: string }> }
 ) {
   const { table } = await params;
   if (!ALLOWED.includes(table)) return NextResponse.json({ error: "Invalid table" }, { status: 400 });
@@ -21,7 +21,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { table: string } }
+  { params }: { params: Promise<{ table: string }> }
 ) {
   const { table } = await params;
   if (!ALLOWED.includes(table)) return NextResponse.json({ error: "Invalid table" }, { status: 400 });
