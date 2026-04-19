@@ -128,3 +128,36 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  html, body {
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print { display: none !important; }
+
+  body * { visibility: hidden; }
+  .print-only, .print-only * { visibility: visible; }
+
+  .print-only {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+  }
+
+  .ticket { page-break-after: always; break-after: page; }
+  .ticket:last-child { page-break-after: auto; break-after: auto; }
+
+  @page { margin: 8mm; size: Letter; }
+}
+
+.print-only { display: none; }
