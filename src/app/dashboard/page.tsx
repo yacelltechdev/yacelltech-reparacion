@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Smartphone, Wrench, CheckCircle2, DollarSign, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Smartphone, Wrench, CheckCircle2, DollarSign, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Repair } from "@/lib/types";
 
 const totalCosto = (r: Repair) =>
@@ -16,8 +17,13 @@ function Trend({ today, yesterday }: { today: number; yesterday: number }) {
   return <span className="text-xs text-slate-400 flex items-center gap-1"><Minus className="h-3 w-3" /> Igual que ayer</span>;
 }
 
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
 export default function AdminDashboard() {
   const [data, setData] = useState<Repair[]>([]);
+  const now = new Date();
+  const [mesIdx, setMesIdx] = useState(now.getMonth());
+  const [anio, setAnio] = useState(now.getFullYear());
 
   useEffect(() => {
     fetch("/api/repairs")
@@ -98,6 +104,63 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Resumen mensual por técnico */}
+      <Card className="border-none shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Resumen Mensual por Técnico</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+              if (mesIdx === 0) { setMesIdx(11); setAnio(a => a - 1); } else setMesIdx(m => m - 1);
+            }}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="text-sm font-medium w-36 text-center">{MESES[mesIdx]} {anio}</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+              if (mesIdx === 11) { setMesIdx(0); setAnio(a => a + 1); } else setMesIdx(m => m + 1);
+            }}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            const prefix = `${anio}-${String(mesIdx + 1).padStart(2, "0")}`;
+            const delMes = data.filter(r => r.fecha?.startsWith(prefix));
+            const porTecnico = delMes.reduce<Record<string, { total: number; entregados: number }>>((acc, r) => {
+              const t = r.tecnico || "Sin asignar";
+              if (!acc[t]) acc[t] = { total: 0, entregados: 0 };
+              acc[t].total++;
+              if (r.status === "Entregado bueno") acc[t].entregados++;
+              return acc;
+            }, {});
+            const entries = Object.entries(porTecnico).sort((a, b) => b[1].total - a[1].total);
+            if (entries.length === 0) return (
+              <p className="text-sm text-slate-400 italic text-center py-6">Sin registros en {MESES[mesIdx]} {anio}.</p>
+            );
+            return (
+              <div className="divide-y">
+                <div className="grid grid-cols-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                  <span>Técnico</span>
+                  <span className="text-center">Recibidos</span>
+                  <span className="text-center">Entregados</span>
+                  <span className="text-center">Pendientes</span>
+                </div>
+                {entries.map(([tecnico, stats]) => (
+                  <div key={tecnico} className="grid grid-cols-4 py-2.5 text-sm items-center">
+                    <span className="font-medium capitalize">{tecnico}</span>
+                    <span className="text-center font-bold text-blue-600">{stats.total}</span>
+                    <span className="text-center font-bold text-emerald-600">{stats.entregados}</span>
+                    <span className="text-center font-bold text-amber-600">{stats.total - stats.entregados}</span>
+                  </div>
+                ))}
+                <div className="grid grid-cols-4 pt-2.5 text-sm font-bold text-slate-700">
+                  <span>Total</span>
+                  <span className="text-center text-blue-700">{delMes.length}</span>
+                  <span className="text-center text-emerald-700">{delMes.filter(r => r.status === "Entregado bueno").length}</span>
+                  <span className="text-center text-amber-700">{delMes.filter(r => r.status !== "Entregado bueno").length}</span>
+                </div>
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
 
       {/* Últimas 5 recepciones */}
       <Card className="border-none shadow-sm">
