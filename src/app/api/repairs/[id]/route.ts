@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { error } = await supabase.from('repairs').delete().eq('id', id);
+    if (error) throw error;
+    return NextResponse.json({ deleted: 1 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

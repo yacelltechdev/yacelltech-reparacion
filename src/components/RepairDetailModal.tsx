@@ -3,8 +3,13 @@ import { useState } from "react";
 import { Repair } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, AlertCircle, Printer, X, PlusCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Check, AlertCircle, Printer, X, PlusCircle, Pencil, Trash2 } from "lucide-react";
 import PrintTicket from "./PrintTicket";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const checklistLabels: Record<string, string> = {
   faceid: "FaceID", camara: "Cámara", senal: "Señal",
@@ -22,12 +27,58 @@ function getTotalCosto(repair: Repair) {
 }
 
 export default function RepairDetailModal({ repair: initialRepair, onClose }: { repair: Repair; onClose: () => void }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [repair, setRepair] = useState<Repair>(initialRepair);
   const [addingCargo, setAddingCargo] = useState(false);
   const [cargoDesc, setCargoDesc] = useState("");
   const [cargoMonto, setCargoMonto] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState<Partial<Repair>>({});
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handlePrint = () => window.print();
+
+  const startEdit = () => {
+    setEditData({
+      cliente: repair.cliente, telefono: repair.telefono, cedula: repair.cedula,
+      marca: repair.marca, modelo: repair.modelo, color: repair.color, serie: repair.serie,
+      sintoma: repair.sintoma, observacion: repair.observacion, costo: repair.costo,
+      tecnico: repair.tecnico, tipoClave: repair.tipoClave, claveTexto: repair.claveTexto,
+    });
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    setSaving(true);
+    const res = await fetch(`/api/repairs/${repair.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editData),
+    });
+    if (res.ok) {
+      setRepair({ ...repair, ...editData });
+      setEditing(false);
+      toast.success("Reparación actualizada");
+    } else {
+      toast.error("Error al guardar");
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    const res = await fetch(`/api/repairs/${repair.id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Reparación eliminada");
+      onClose();
+    } else {
+      toast.error("Error al eliminar");
+      setDeleting(false);
+    }
+  };
 
   const handleAddCargo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,10 +241,21 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
 
           {/* Footer */}
           <div className="border-t px-6 py-4 flex justify-between items-center bg-slate-50 rounded-b-2xl">
-            <Button onClick={handlePrint} className="gap-2">
-              <Printer className="h-4 w-4" />
-              Reimprimir Ticket
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handlePrint} className="gap-2">
+                <Printer className="h-4 w-4" /> Reimprimir Ticket
+              </Button>
+              {isAdmin && (
+                <>
+                  <Button variant="outline" className="gap-2" onClick={startEdit}>
+                    <Pencil className="h-4 w-4" /> Editar
+                  </Button>
+                  <Button variant="outline" className="gap-2 text-red-600 hover:text-red-700 hover:border-red-300" onClick={() => setConfirmDelete(true)}>
+                    <Trash2 className="h-4 w-4" /> Eliminar
+                  </Button>
+                </>
+              )}
+            </div>
             <Button variant="outline" onClick={onClose}>Cerrar</Button>
           </div>
         </div>
@@ -203,6 +265,97 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       <div className="print-only">
         <PrintTicket repair={repair} copies={2} />
       </div>
+
+      {/* Modal Editar */}
+      {editing && (
+        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <h2 className="text-lg font-bold">Editar Reparación — <span className="text-primary">{repair.codigo}</span></h2>
+              <Button variant="ghost" size="icon" onClick={() => setEditing(false)}><X className="h-5 w-5" /></Button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Cliente</Label>
+                  <Input value={editData.cliente || ""} onChange={e => setEditData(p => ({ ...p, cliente: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Teléfono</Label>
+                  <Input value={editData.telefono || ""} onChange={e => setEditData(p => ({ ...p, telefono: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Cédula</Label>
+                  <Input value={editData.cedula || ""} onChange={e => setEditData(p => ({ ...p, cedula: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Precio (RD$)</Label>
+                  <Input type="number" min={0} value={editData.costo ?? ""} onChange={e => setEditData(p => ({ ...p, costo: parseFloat(e.target.value) || 0 }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Marca</Label>
+                  <Input value={editData.marca || ""} onChange={e => setEditData(p => ({ ...p, marca: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Modelo</Label>
+                  <Input value={editData.modelo || ""} onChange={e => setEditData(p => ({ ...p, modelo: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Color</Label>
+                  <Input value={editData.color || ""} onChange={e => setEditData(p => ({ ...p, color: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>IMEI / Serie</Label>
+                  <Input value={editData.serie || ""} onChange={e => setEditData(p => ({ ...p, serie: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Técnico</Label>
+                  <select value={editData.tecnico || ""} onChange={e => setEditData(p => ({ ...p, tecnico: e.target.value }))}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="Oscar">Oscar</option>
+                    <option value="Freddy">Freddy</option>
+                    <option value="Carlos">Carlos</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label>PIN / Clave</Label>
+                  <Input value={editData.claveTexto || ""} onChange={e => setEditData(p => ({ ...p, claveTexto: e.target.value }))} placeholder="Dejar vacío si no aplica" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Síntoma</Label>
+                <Textarea value={editData.sintoma || ""} onChange={e => setEditData(p => ({ ...p, sintoma: e.target.value }))} className="min-h-[70px]" />
+              </div>
+              <div className="space-y-1">
+                <Label>Observación</Label>
+                <Textarea value={editData.observacion || ""} onChange={e => setEditData(p => ({ ...p, observacion: e.target.value }))} className="min-h-[70px]" />
+              </div>
+            </div>
+            <div className="border-t px-6 py-4 flex justify-end gap-2 bg-slate-50 rounded-b-2xl">
+              <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>Cancelar</Button>
+              <Button onClick={handleSaveEdit} disabled={saving}>{saving ? "Guardando..." : "Guardar Cambios"}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmación eliminar */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <Trash2 className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-black mb-2">¿Eliminar esta orden?</h2>
+            <p className="text-slate-500 text-sm mb-1"><strong>{repair.codigo}</strong> — {repair.cliente}</p>
+            <p className="text-slate-400 text-xs mb-6">Esta acción no se puede deshacer.</p>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => setConfirmDelete(false)} disabled={deleting}>Cancelar</Button>
+              <Button onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 text-white">
+                {deleting ? "Eliminando..." : "Confirmar Eliminación"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
