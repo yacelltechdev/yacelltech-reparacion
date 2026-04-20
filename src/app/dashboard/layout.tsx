@@ -12,7 +12,8 @@ import {
   LogOut,
   Smartphone,
   KeyRound,
-  User as UserIcon
+  User as UserIcon,
+  BadgeDollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Taller", icon: Wrench, path: "/dashboard/technician", roles: ["admin", "tech"] },
     { name: "Historial", icon: History, path: "/dashboard/history", roles: ["admin", "caja", "tech"] },
     { name: "Cuadre", icon: BarChart3, path: "/dashboard/report", roles: ["admin", "caja"] },
+    { name: "Pago Técnico", icon: BadgeDollarSign, path: "/dashboard/cuadre-tecnico", roles: ["admin"] },
   ];
 
   const filteredNav = navItems.filter(item => item.roles.includes(user.role));
