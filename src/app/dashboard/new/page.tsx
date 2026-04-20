@@ -350,7 +350,7 @@ export default function NewRepairPage() {
               )}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label>Estado Inicial (Obligatorio)</Label>
                 <Tabs defaultValue="Encendido" className="w-full" onValueChange={v => setFormData({...formData, estadoInicial: v as any})}>
@@ -371,6 +371,18 @@ export default function NewRepairPage() {
                     <SelectItem value="Carlos">Carlos</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="costo">Precio de Reparación (RD$)</Label>
+                <Input
+                  id="costo"
+                  type="number"
+                  min={0}
+                  placeholder="0.00"
+                  value={formData.costo || ""}
+                  onChange={e => setFormData({...formData, costo: parseFloat(e.target.value) || 0})}
+                />
               </div>
             </div>
 
