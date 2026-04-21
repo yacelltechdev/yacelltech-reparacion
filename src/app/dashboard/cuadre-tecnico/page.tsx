@@ -48,7 +48,7 @@ function FacturaCuadre({ cuadre }: { cuadre: CuadreTecnico }) {
       {cuadre.snapshot.map((r, i) => (
         <div key={r.id} style={{ display: "flex", justifyContent: "space-between", padding: "1px 0" }}>
           <span>{i + 1}. {r.codigo} — {r.marca} {r.modelo}</span>
-          <span style={{ fontWeight: "bold", whiteSpace: "nowrap" }}>RD$ {formatMoney(totalCosto(r))}</span>
+          <span style={{ fontWeight: "bold", whiteSpace: "nowrap" }}>RD$ 200.00</span>
         </div>
       ))}
       <div style={{ margin: "10px 0 6px", borderTop: "1px dashed #999" }} />
@@ -133,7 +133,8 @@ export default function CuadreTecnicoPage() {
     }
   };
 
-  const total = pendientes.reduce((s, r) => s + totalCosto(r), 0);
+  const RATE = 200;
+  const total = pendientes.length * RATE;
   const historialTecnico = historial.filter(c => c.tecnico === tecnico);
 
   if (!user || user.role !== "admin") return null;
@@ -197,7 +198,7 @@ export default function CuadreTecnicoPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">RD$ {formatMoney(total)}</div>
-              <p className="text-xs text-slate-400 mt-1">Suma de reparaciones</p>
+              <p className="text-xs text-slate-400 mt-1">{pendientes.length} × RD$200 por reparación</p>
             </CardContent>
           </Card>
           <Card className="border-none shadow-sm flex items-center justify-center p-6">

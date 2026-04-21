@@ -37,8 +37,7 @@ export async function POST(req: Request) {
       cargosAdicionales: r.cargosAdicionales ? JSON.parse(r.cargosAdicionales) : [],
     }));
 
-    const total_generado = parsed.reduce((sum: number, r: any) =>
-      sum + (r.costo || 0) + (r.cargosAdicionales?.reduce((a: number, c: any) => a + c.monto, 0) || 0), 0);
+    const total_generado = parsed.length * 200;
 
     const { data: cuadre, error: cuadreError } = await supabase
       .from('cuadres_tecnico')
