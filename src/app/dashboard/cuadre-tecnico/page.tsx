@@ -65,7 +65,7 @@ function FacturaCuadre({ cuadre }: { cuadre: CuadreTecnico }) {
   );
 }
 
-const TECNICOS = ["freddy", "oscar", "carlos"];
+const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
 export default function CuadreTecnicoPage() {
   const { user } = useAuth();
@@ -99,7 +99,7 @@ export default function CuadreTecnicoPage() {
   const buscar = async () => {
     setLoading(true);
     setErrorMsg("");
-    const res = await fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+bueno&desde=${desde}&hasta=${hasta}`);
+    const res = await fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+bueno`);
     const data: (Repair & { cuadre_tecnico_id?: number | null })[] = await res.json();
     // Filter only uncuadrado
     setPendientes((data as any[]).filter((r: any) => r.cuadre_tecnico_id == null));
