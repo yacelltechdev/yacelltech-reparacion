@@ -136,6 +136,7 @@ export default function CuadreTecnicoPage() {
   const RATE = 200;
   const total = pendientes.length * RATE;
   const historialTecnico = historial.filter(c => c.tecnico === tecnico);
+  const ultimoCuadre = historialTecnico[0] ?? null; // ya viene ordenado desc
 
   if (!user || user.role !== "admin") return null;
 
@@ -149,13 +150,13 @@ export default function CuadreTecnicoPage() {
 
         {/* Filtros */}
         <Card className="border-none shadow-sm">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
             <div className="grid gap-4 sm:grid-cols-4 items-end">
               <div className="space-y-1">
                 <Label>Técnico</Label>
                 <select
                   value={tecnico}
-                  onChange={e => setTecnico(e.target.value)}
+                  onChange={e => { setTecnico(e.target.value); setPendientes([]); }}
                   className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm capitalize"
                 >
                   {TECNICOS.map(t => (
@@ -176,6 +177,26 @@ export default function CuadreTecnicoPage() {
                 Consultar
               </Button>
             </div>
+
+            {/* Último pago */}
+            {ultimoCuadre ? (
+              <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+                <span className="text-blue-400 text-lg">💳</span>
+                <div>
+                  <span className="font-bold text-blue-800">Último pago a {tecnico}:</span>
+                  <span className="ml-2 text-blue-700">
+                    {new Date(ultimoCuadre.creado_en).toLocaleDateString("es-DO", { day: "2-digit", month: "long", year: "numeric" })}
+                  </span>
+                  <span className="ml-3 text-blue-600 font-semibold">
+                    {ultimoCuadre.cantidad_reparados} reparaciones — RD$ {formatMoney(ultimoCuadre.total_generado)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400 italic">
+                Sin pagos registrados para {tecnico}.
+              </div>
+            )}
           </CardContent>
         </Card>
 
