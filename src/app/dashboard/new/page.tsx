@@ -67,11 +67,16 @@ export default function NewRepairPage() {
   });
 
   useEffect(() => {
-    // Cargar catálogos
+    const fetchJson = (url: string) =>
+      fetch(url).then(res => {
+        if (!res.ok) return [];
+        return res.json().catch(() => []);
+      }).catch(() => []);
+
     Promise.all([
-      fetch("/api/catalogs/marcas").then(res => res.json()),
-      fetch("/api/catalogs/models").then(res => res.json()),
-      fetch("/api/catalogs/colores").then(res => res.json())
+      fetchJson("/api/catalogs/marcas"),
+      fetchJson("/api/catalogs/models"),
+      fetchJson("/api/catalogs/colores"),
     ]).then(([marcas, models, colores]) => {
       setCatalogs({ marcas, models, colores });
     });
