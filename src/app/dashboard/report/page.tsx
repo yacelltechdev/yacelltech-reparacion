@@ -116,6 +116,8 @@ export default function ReportPage() {
 
   useEffect(() => {
     loadAll();
+    const interval = setInterval(loadRepairs, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadAll = async () => {
