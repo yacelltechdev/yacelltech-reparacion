@@ -47,16 +47,17 @@ export default function TechnicianPage() {
 
   useEffect(() => {
     loadRepairs();
-    const interval = setInterval(loadRepairs, 10000);
+    const interval = setInterval(loadRepairs, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
   const loadRepairs = async () => {
+    if (!user?.username) return;
     try {
-      const res = await fetch("/api/repairs");
+      const res = await fetch(`/api/repairs?tecnico=${encodeURIComponent(user.username)}`);
       const data: Repair[] = await res.json();
       const today = new Date().toISOString().split("T")[0];
-      const mine = data.filter(r => r.tecnico?.toLowerCase() === user?.username.toLowerCase());
+      const mine = Array.isArray(data) ? data : [];
 
       const active = mine.filter(r => ["En reparación", "Listo para entregar", "No se pudo reparar"].includes(r.status));
 

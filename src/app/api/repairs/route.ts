@@ -12,7 +12,13 @@ export async function GET(req: Request) {
     const page    = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit   = parseInt(searchParams.get("limit") || "0");
 
+    const active = searchParams.get("active") === "1";
+
     let query = supabase.from('repairs').select('*', { count: 'exact' });
+
+    if (active) {
+      query = query.or('status.eq.En reparación,status.eq.Listo para entregar,status.eq.No se pudo reparar');
+    }
 
     if (q) {
       query = query.or(`codigo.ilike.%${q}%,cliente.ilike.%${q}%,telefono.ilike.%${q}%,modelo.ilike.%${q}%,marca.ilike.%${q}%,serie.ilike.%${q}%`);

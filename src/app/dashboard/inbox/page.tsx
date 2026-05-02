@@ -94,17 +94,15 @@ export default function InboxPage() {
 
   useEffect(() => {
     loadRepairs();
-    const interval = setInterval(loadRepairs, 10000);
+    const interval = setInterval(loadRepairs, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const loadRepairs = async () => {
     try {
-      const res = await fetch("/api/repairs");
+      const res = await fetch("/api/repairs?active=1");
       const data: Repair[] = await res.json();
-      const active = data.filter(r =>
-        ["En reparación", "Listo para entregar", "No se pudo reparar"].includes(r.status)
-      );
+      const active = Array.isArray(data) ? data : [];
 
       if (!isFirstLoad.current) {
         const nowReady = active.filter(r =>
