@@ -394,13 +394,13 @@ export default function NewRepairPage() {
                   <Checkbox
                     id="esPantalla"
                     checked={formData.tipoPantalla !== null && formData.tipoPantalla !== undefined}
-                    onCheckedChange={checked => setFormData({...formData, tipoPantalla: checked ? "In Cell" : null})}
+                    onCheckedChange={checked => setFormData({...formData, tipoPantalla: checked ? "InCell" : null})}
                   />
                   <Label htmlFor="esPantalla" className="cursor-pointer">¿Es reparación de pantalla?</Label>
                 </div>
                 {formData.tipoPantalla != null && (
                   <div className="flex gap-2 mt-1">
-                    {(["In Cell", "OLED"] as const).map(tipo => (
+                    {(["InCell", "OLED"] as const).map(tipo => (
                       <button
                         key={tipo}
                         type="button"
