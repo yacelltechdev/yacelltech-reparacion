@@ -279,6 +279,81 @@ export default function NewRepairPage() {
           </Card>
         </div>
 
+        {/* Estado Inicial + Checklist */}
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary text-md">
+              <Check className="h-4 w-4" /> Estado y Revisión del Equipo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-[220px_1fr] gap-6 items-start">
+              <div className="space-y-2">
+                <Label>Estado Inicial (Obligatorio)</Label>
+                <Tabs defaultValue="Encendido" className="w-full" onValueChange={v => {
+                  if (v === "Apagado") {
+                    const ok = window.confirm(
+                      "⚠️ AVISO DE GARANTÍA\n\n" +
+                      "El equipo se recibe APAGADO. Yacelltech NO se hace responsable por daños ocultos, fallas internas preexistentes ni ningún desperfecto que no pueda verificarse en este momento.\n\n" +
+                      "¿El cliente fue informado y acepta estas condiciones?"
+                    );
+                    if (!ok) return;
+                  }
+                  setFormData({...formData, estadoInicial: v as any});
+                }}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="Encendido">Encendido</TabsTrigger>
+                    <TabsTrigger value="Apagado">Apagado</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div>
+                {formData.estadoInicial === "Apagado" ? (
+                  <div className="flex items-center gap-3 rounded-lg bg-red-50 border border-red-200 p-4 text-red-800 font-semibold">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <span>Equipo recibido APAGADO — se omite el checklist de revisión. Complete la observación abajo.</span>
+                  </div>
+                ) : (
+                  <>
+                    <Label className="mb-4 block font-bold text-slate-700">Checklist de Revisión (Clic para cambiar estado)</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                      {Object.entries(formData.checklist || {}).map(([key, val]) => (
+                        <div
+                          key={key}
+                          onClick={() => toggleCheck(key)}
+                          className={`flex items-center gap-3 p-2 rounded-md cursor-pointer border transition-all ${
+                            val === true ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
+                            val === false ? "bg-red-50 border-red-200 text-red-700" :
+                            "bg-white border-slate-200 text-slate-400 opacity-60"
+                          }`}
+                        >
+                          <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                            val === true ? "bg-emerald-500 border-emerald-500 text-white" :
+                            val === false ? "bg-red-500 border-red-200 text-white" :
+                            "border-slate-300"
+                          }`}>
+                            {val === true && <Check className="h-4 w-4" />}
+                            {val === false && <AlertCircle className="h-4 w-4" />}
+                          </div>
+                          <span className="text-xs font-bold capitalize select-none">
+                            {key === 'faceid' ? 'FaceID' : key}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-4 text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1 text-emerald-600"><Check className="h-3 w-3" /> Funciona</div>
+                      <div className="flex items-center gap-1 text-red-600"><AlertCircle className="h-3 w-3" /> Falla</div>
+                      <div className="flex items-center gap-1 text-slate-400">◯ Sin Revisar</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Diagnóstico y Detalles */}
         <Card className="border-none shadow-sm">
           <CardHeader>
@@ -360,26 +435,6 @@ export default function NewRepairPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label>Estado Inicial (Obligatorio)</Label>
-                <Tabs defaultValue="Encendido" className="w-full" onValueChange={v => {
-                  if (v === "Apagado") {
-                    const ok = window.confirm(
-                      "⚠️ AVISO DE GARANTÍA\n\n" +
-                      "El equipo se recibe APAGADO. Yacelltech NO se hace responsable por daños ocultos, fallas internas preexistentes ni ningún desperfecto que no pueda verificarse en este momento.\n\n" +
-                      "¿El cliente fue informado y acepta estas condiciones?"
-                    );
-                    if (!ok) return;
-                  }
-                  setFormData({...formData, estadoInicial: v as any});
-                }}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="Encendido">Encendido</TabsTrigger>
-                    <TabsTrigger value="Apagado">Apagado</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="trabajoARealizar">Trabajo a Realizar</Label>
                 <Input
@@ -460,48 +515,6 @@ export default function NewRepairPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t">
-              {formData.estadoInicial === "Apagado" ? (
-                <div className="flex items-center gap-3 rounded-lg bg-red-50 border border-red-200 p-4 text-red-800 font-semibold">
-                  <AlertCircle className="h-5 w-5 shrink-0" />
-                  <span>Equipo recibido APAGADO — se omite el checklist de revisión. Complete la observación arriba.</span>
-                </div>
-              ) : (
-                <>
-                  <Label className="mb-4 block font-bold text-slate-700">Checklist de Revisión (Clic para cambiar estado)</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    {Object.entries(formData.checklist || {}).map(([key, val]) => (
-                      <div
-                        key={key}
-                        onClick={() => toggleCheck(key)}
-                        className={`flex items-center gap-3 p-2 rounded-md cursor-pointer border transition-all ${
-                          val === true ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                          val === false ? "bg-red-50 border-red-200 text-red-700" :
-                          "bg-white border-slate-200 text-slate-400 opacity-60"
-                        }`}
-                      >
-                        <div className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-                          val === true ? "bg-emerald-500 border-emerald-500 text-white" :
-                          val === false ? "bg-red-500 border-red-200 text-white" :
-                          "border-slate-300"
-                        }`}>
-                          {val === true && <Check className="h-4 w-4" />}
-                          {val === false && <AlertCircle className="h-4 w-4" />}
-                        </div>
-                        <span className="text-xs font-bold capitalize select-none">
-                          {key === 'faceid' ? 'FaceID' : key}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex gap-4 text-[10px] font-bold uppercase tracking-wider">
-                    <div className="flex items-center gap-1 text-emerald-600"><Check className="h-3 w-3" /> Funciona</div>
-                    <div className="flex items-center gap-1 text-red-600"><AlertCircle className="h-3 w-3" /> Falla</div>
-                    <div className="flex items-center gap-1 text-slate-400">◯ Sin Revisar</div>
-                  </div>
-                </>
-              )}
-            </div>
           </CardContent>
         </Card>
 
