@@ -358,7 +358,17 @@ export default function NewRepairPage() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label>Estado Inicial (Obligatorio)</Label>
-                <Tabs defaultValue="Encendido" className="w-full" onValueChange={v => setFormData({...formData, estadoInicial: v as any})}>
+                <Tabs defaultValue="Encendido" className="w-full" onValueChange={v => {
+                  if (v === "Apagado") {
+                    const ok = window.confirm(
+                      "⚠️ AVISO DE GARANTÍA\n\n" +
+                      "El equipo se recibe APAGADO. Yacelltech NO se hace responsable por daños ocultos, fallas internas preexistentes ni ningún desperfecto que no pueda verificarse en este momento.\n\n" +
+                      "¿El cliente fue informado y acepta estas condiciones?"
+                    );
+                    if (!ok) return;
+                  }
+                  setFormData({...formData, estadoInicial: v as any});
+                }}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="Encendido">Encendido</TabsTrigger>
                     <TabsTrigger value="Apagado">Apagado</TabsTrigger>
