@@ -93,9 +93,8 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                     <div><strong>Color:</strong> {repair.color || 'N/A'}</div>
                     <div><strong>Serie/IMEI:</strong> {repair.serie || 'N/A'}</div>
                     {repair.tipoPantalla && (
-                      <div style={{ gridColumn: '1 / -1', marginTop: '2px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '6px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1E40AF', textTransform: 'uppercase' }}>🖥️ Tipo de Pantalla:</span>
-                        <span style={{ fontSize: '15px', fontWeight: '900', color: '#1D4ED8', letterSpacing: '1px' }}>{repair.tipoPantalla}</span>
+                      <div style={{ gridColumn: '1 / -1', marginTop: '2px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '6px', padding: '3px 8px', fontSize: '12px', color: '#1E40AF', fontWeight: 'bold' }}>
+                        Pantalla: <span style={{ fontWeight: '900', letterSpacing: '0.5px' }}>{repair.tipoPantalla}</span>
                       </div>
                     )}
                   </div>
@@ -173,36 +172,32 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                 )}
               </div>
 
-              {/* TOTAL A PAGAR */}
-              <div style={{ display: 'flex', gap: '20px', justifyContent: 'flex-end', marginBottom: '8px' }}>
-                <div style={{ width: '250px', border: '2px solid #000', borderRadius: '8px', padding: '10px 15px', background: '#FEF2F2', textAlign: 'right' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#991B1B', textTransform: 'uppercase' }}>Total a Pagar</div>
-                  <div style={{ fontSize: '24px', fontWeight: '900', color: '#DC2626', marginTop: '2px' }}>
+              {/* TRABAJO A REALIZAR + TOTAL A PAGAR (lado a lado) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '8px', marginBottom: '8px', alignItems: 'stretch' }}>
+                <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '4px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
+                    Trabajo a Realizar
+                  </div>
+                  <div style={{ padding: '10px 12px', fontSize: '14px', fontWeight: 'bold', color: '#1E293B', lineHeight: '1.4', flexGrow: 1 }}>
+                    {repair.trabajoARealizar || <span style={{ color: '#94A3B8', fontStyle: 'italic', fontWeight: 'normal' }}>Por definir</span>}
+                  </div>
+                </div>
+
+                <div style={{ border: '2px solid #000', borderRadius: '8px', padding: '10px 14px', background: '#FEF2F2', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#991B1B', textTransform: 'uppercase' }}>Total a Pagar</div>
+                  <div style={{ fontSize: '22px', fontWeight: '900', color: '#DC2626', marginTop: '2px' }}>
                     RD$ {formatMoney(getTotalCosto(repair))}
                   </div>
                   {repair.cargosAdicionales && repair.cargosAdicionales.length > 0 && (
                     <div style={{ marginTop: '5px', fontSize: '10px', color: '#7F1D1D', textAlign: 'right', borderTop: '1px solid #FCA5A5', paddingTop: '5px' }}>
-                      Costo Inicial: RD$ {formatMoney(repair.costo)}<br/>
+                      Base: RD$ {formatMoney(repair.costo)}<br/>
                       {repair.cargosAdicionales.map(c => (
-                        <div key={c.id}>
-                          + {c.desc}: RD$ {formatMoney(c.monto)}
-                        </div>
+                        <div key={c.id}>+ {c.desc}: RD$ {formatMoney(c.monto)}</div>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
-
-              {repair.trabajoARealizar && (
-                <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
-                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '4px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
-                    🔧 Trabajo a Realizar
-                  </div>
-                  <div style={{ padding: '10px 12px', fontSize: '16px', fontWeight: 'bold', color: '#1E293B', lineHeight: '1.4' }}>
-                    {repair.trabajoARealizar}
-                  </div>
-                </div>
-              )}
 
               <div style={{ padding: '0 0 6px 0', fontSize: '14px', color: '#1E293B' }}>
                 <strong>👷 Técnico Asignado:</strong> <span style={{ fontSize: '20px', textTransform: 'uppercase', fontWeight: '900' }}>{repair.tecnico}</span>
