@@ -34,10 +34,10 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
           <div style={{ border: '2px solid #000', borderRadius: '12px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
 
             {/* HEADER */}
-            <div style={{ display: 'flex', borderBottom: '2px solid #000', padding: '10px 14px' }}>
+            <div style={{ display: 'flex', borderBottom: '2px solid #000', padding: '7px 12px' }}>
               <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.png" alt="YACELLTECH" style={{ maxWidth: '120px', maxHeight: '45px', marginBottom: '6px' }} />
+                <img src="/logo.png" alt="YACELLTECH" style={{ maxWidth: '110px', maxHeight: '38px', marginBottom: '4px' }} />
                 <div style={{ fontSize: '11px', color: '#1E293B', lineHeight: '1.5' }}>
                   <div><strong>💬 WhatsApp:</strong> (829) 266-0404 <span style={{fontSize: '9px', fontWeight: 'bold'}}>(SOLO MENSAJES, NO LLAMADAS)</span> 🙅🏻‍♂️📲</div>
                   <div><strong>🛒 L-S:</strong> 8AM - 7:30PM | <strong>D:</strong> 8AM - 3PM</div>
@@ -67,14 +67,14 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
             </div>
 
-            <div style={{ padding: '10px 14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '7px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
               {/* DATOS DEL CLIENTE */}
-              <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
-                <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '6px 12px', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', color: '#334155' }}>
+              <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', marginBottom: '5px', overflow: 'hidden' }}>
+                <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                   Datos del Cliente
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', padding: '8px 12px', fontSize: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', padding: '5px 10px', fontSize: '12px' }}>
                   <div><strong>Nombre/Razón:</strong> {repair.cliente}</div>
                   <div><strong>Teléfono:</strong> {repair.telefono}</div>
                   <div style={{ gridColumn: '1 / -1' }}><strong>Cédula/RNC:</strong> {repair.cedula || 'No especificada'}</div>
@@ -82,12 +82,12 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {/* DATOS DEL EQUIPO & SEGURIDAD */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '6px', marginBottom: '5px' }}>
                 <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '6px 12px', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', color: '#334155' }}>
+                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                     Descripción del Equipo
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '12px', fontSize: '13px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', padding: '7px 10px', fontSize: '12px' }}>
                     <div><strong>Marca:</strong> {repair.marca}</div>
                     <div><strong>Modelo:</strong> {repair.modelo}</div>
                     <div><strong>Color:</strong> {repair.color || 'N/A'}</div>
@@ -101,10 +101,10 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                 </div>
 
                 <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', overflow: 'hidden' }}>
-                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '6px 12px', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', textAlign: 'center', color: '#334155' }}>
+                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center', color: '#334155' }}>
                     Seguridad
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px', height: 'calc(100% - 31px)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '6px', height: 'calc(100% - 25px)' }}>
                     {repair.tipoClave === 'sin clave' && <span style={{ fontWeight: 'bold', color: '#1E293B', fontSize: '14px' }}>SIN CONTRASEÑA</span>}
                     {repair.tipoClave === 'texto' && (
                       <div style={{ textAlign: 'center' }}>
@@ -122,22 +122,22 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {/* SINTOMA Y OBSERVACION */}
-              <div style={{ display: 'grid', gridTemplateColumns: repair.observacion ? '1fr 1fr' : '1fr', gap: '8px', marginBottom: '8px', flexGrow: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: repair.observacion ? '1fr 1fr' : '1fr', gap: '6px', marginBottom: '5px', flexGrow: 1 }}>
                 <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '6px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                     <span>Problema Reportado</span>
                   </div>
-                  <div style={{ padding: '12px', fontSize: '18px', fontWeight: 'bold', lineHeight: '1.4', color: '#1E293B', flexGrow: 1 }}>
+                  <div style={{ padding: '8px 10px', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.3', color: '#1E293B', flexGrow: 1 }}>
                     {repair.sintoma}
                   </div>
                 </div>
 
                 {repair.observacion && (
                   <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '6px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                       <span>Observación</span>
                     </div>
-                    <div style={{ padding: '12px', fontSize: '16px', lineHeight: '1.4', color: '#444', flexGrow: 1, fontStyle: 'italic', fontWeight: '500' }}>
+                    <div style={{ padding: '8px 10px', fontSize: '13px', lineHeight: '1.3', color: '#444', flexGrow: 1, fontStyle: 'italic', fontWeight: '500' }}>
                       {repair.observacion}
                     </div>
                   </div>
@@ -145,15 +145,15 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {/* CHECKLIST INICIAL */}
-              <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
-                <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '4px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
+              <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', marginBottom: '5px', overflow: 'hidden' }}>
+                <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                   Revisión Inicial de Funciones
                 </div>
                 {repair.estadoInicial === 'Encendido' ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', padding: '10px 12px', fontSize: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', padding: '6px 10px', fontSize: '11px' }}>
                     {Object.entries(repair.checklist || {}).map(([key, value]) => (
-                      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '14px' }}>{value ? '✅' : '❌'}</span>
+                      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '12px' }}>{value ? '✅' : '❌'}</span>
                         <span style={{ fontWeight: '600', textTransform: 'capitalize', color: '#334155' }}>
                           {key === 'faceid' ? 'FaceID' :
                            key === 'camara' ? 'Cámara' :
@@ -173,19 +173,19 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {/* TRABAJO A REALIZAR + TOTAL A PAGAR (lado a lado) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '8px', marginBottom: '8px', alignItems: 'stretch' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '6px', marginBottom: '5px', alignItems: 'stretch' }}>
                 <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '4px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
+                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                     Trabajo a Realizar
                   </div>
-                  <div style={{ padding: '10px 12px', fontSize: '14px', fontWeight: 'bold', color: '#1E293B', lineHeight: '1.4', flexGrow: 1 }}>
+                  <div style={{ padding: '7px 10px', fontSize: '13px', fontWeight: 'bold', color: '#1E293B', lineHeight: '1.3', flexGrow: 1 }}>
                     {repair.trabajoARealizar || <span style={{ color: '#94A3B8', fontStyle: 'italic', fontWeight: 'normal' }}>Por definir</span>}
                   </div>
                 </div>
 
-                <div style={{ border: '2px solid #000', borderRadius: '8px', padding: '10px 14px', background: '#FEF2F2', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#991B1B', textTransform: 'uppercase' }}>Total a Pagar</div>
-                  <div style={{ fontSize: '22px', fontWeight: '900', color: '#DC2626', marginTop: '2px' }}>
+                <div style={{ border: '2px solid #000', borderRadius: '8px', padding: '8px 12px', background: '#FEF2F2', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#991B1B', textTransform: 'uppercase' }}>Total a Pagar</div>
+                  <div style={{ fontSize: '20px', fontWeight: '900', color: '#DC2626', marginTop: '2px' }}>
                     RD$ {formatMoney(getTotalCosto(repair))}
                   </div>
                   {repair.cargosAdicionales && repair.cargosAdicionales.length > 0 && (
@@ -199,20 +199,20 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                 </div>
               </div>
 
-              <div style={{ padding: '0 0 6px 0', fontSize: '14px', color: '#1E293B' }}>
-                <strong>👷 Técnico Asignado:</strong> <span style={{ fontSize: '20px', textTransform: 'uppercase', fontWeight: '900' }}>{repair.tecnico}</span>
+              <div style={{ padding: '0 0 4px 0', fontSize: '13px', color: '#1E293B' }}>
+                <strong>👷 Técnico Asignado:</strong> <span style={{ fontSize: '17px', textTransform: 'uppercase', fontWeight: '900' }}>{repair.tecnico}</span>
               </div>
 
               {/* TERMINOS Y CONDICIONES (GARANTÍA) */}
-              <div style={{ padding: '0 0 8px 0', fontSize: '9px', lineHeight: '1.3', color: '#475569', textAlign: 'justify' }}>
+              <div style={{ padding: '0 0 5px 0', fontSize: '9px', lineHeight: '1.3', color: '#475569', textAlign: 'justify' }}>
                 <strong>TÉRMINOS Y GARANTÍA:</strong> Después de 15 días no somos responsables de equipos dejados en el taller; luego de este tiempo el equipo será asumido para cubrir gastos incurridos en dicha reparación. Sin factura no hay reclamaciones ni se le entregará el equipo (pagar a la hora de recibir su equipo). No somos responsables de ninguna Sim Card o Memoria SD dejada en el dispositivo.
-                <div style={{ marginTop: '6px', fontSize: '12px', fontWeight: 'bold', color: '#1E293B' }}>
+                <div style={{ marginTop: '4px', fontSize: '11px', fontWeight: 'bold', color: '#1E293B' }}>
                   No somos responsables de problemas ocultos distintos a los que se reportaron al momento de entregar el equipo en mostrador.
                 </div>
               </div>
 
               {/* FIRMAS */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px 10px 20px', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px 6px 20px', marginTop: 'auto' }}>
                 <div style={{ width: '40%', textAlign: 'center', borderTop: '1px solid #000', paddingTop: '6px', fontSize: '12px', color: '#1E293B' }}>
                   <strong>Firma y Cédula (Cliente)</strong><br/>
                   <span style={{ fontSize: '10px', color: '#64748B' }}>Acepto las condiciones detalladas</span>
@@ -226,7 +226,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
             </div>
 
             {/* MARCA DE AGUA INFERIOR */}
-            <div style={{ borderTop: '2px solid #000', background: '#f1f5f9', color: '#000', textAlign: 'center', padding: '8px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            <div style={{ borderTop: '2px solid #000', background: '#f1f5f9', color: '#000', textAlign: 'center', padding: '5px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
                COPIA DE {index === 0 ? 'CLIENTE / COMPROBANTE DE RECEPCIÓN' : 'TALLER / USO INTERNO'}
             </div>
 
