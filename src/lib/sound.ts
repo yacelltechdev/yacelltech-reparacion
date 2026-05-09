@@ -34,3 +34,21 @@ export function playReadySound() {
     beep(ctx, 880, 0.22, 0.5, t + 0.54);
   } catch { /* silencioso si el browser lo bloquea */ }
 }
+
+// Sonido de alerta persistente para chequeo completado — llama stop() para detenerlo
+function playChequeoPattern() {
+  try {
+    const ctx = new AudioContext();
+    const t = ctx.currentTime;
+    // Patrón de advertencia: dos pulsos agudos + pausa grave
+    beep(ctx, 1480, 0.12, 0.6, t);
+    beep(ctx, 1480, 0.12, 0.6, t + 0.16);
+    beep(ctx, 740,  0.2,  0.5, t + 0.38);
+  } catch { /* silencioso si el browser lo bloquea */ }
+}
+
+export function startChequeoAlarm(): () => void {
+  playChequeoPattern();
+  const interval = setInterval(playChequeoPattern, 2200);
+  return () => clearInterval(interval);
+}

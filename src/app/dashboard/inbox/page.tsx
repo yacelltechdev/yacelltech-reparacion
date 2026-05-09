@@ -9,7 +9,7 @@ import { Search, Eye, Wrench, CheckCircle2 } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { playReadySound } from "@/lib/sound";
+import { playReadySound, startChequeoAlarm } from "@/lib/sound";
 import RepairDetailModal from "@/components/RepairDetailModal";
 
 const formatTime = (iso: string) => {
@@ -94,7 +94,10 @@ export default function InboxPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
   const readyIds = useRef<Set<number>>(new Set());
+  const chequeoIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
+  const stopAlarm = useRef<(() => void) | null>(null);
+  const [chequeoAlerts, setChequeoAlerts] = useState<Repair[]>([]);
 
   useEffect(() => {
     loadRepairs();
@@ -119,10 +122,28 @@ export default function InboxPage() {
           playReadySound();
           nowReady.forEach(r => toast.info(`${r.codigo} — ${r.cliente}: ${r.status}`));
         }
+
+        // Detectar chequeos que pasaron a "En reparación"
+        const completedChequeos = active.filter(r =>
+          r.status === "En reparación" && chequeoIds.current.has(r.id)
+        );
+        if (completedChequeos.length > 0) {
+          setChequeoAlerts(prev => {
+            const existingIds = new Set(prev.map(r => r.id));
+            const nuevos = completedChequeos.filter(r => !existingIds.has(r.id));
+            return nuevos.length > 0 ? [...prev, ...nuevos] : prev;
+          });
+          if (!stopAlarm.current) {
+            stopAlarm.current = startChequeoAlarm();
+          }
+        }
       }
       isFirstLoad.current = false;
       readyIds.current = new Set(
         active.filter(r => r.status === "Listo para entregar" || r.status === "No se pudo reparar").map(r => r.id)
+      );
+      chequeoIds.current = new Set(
+        active.filter(r => r.status === "En chequeo").map(r => r.id)
       );
 
       setRepairs(active);
@@ -249,6 +270,47 @@ export default function InboxPage() {
 
       {selectedRepair && (
         <RepairDetailModal repair={selectedRepair} onClose={() => { setSelectedRepair(null); loadRepairs(); }} />
+      )}
+
+      {chequeoAlerts.length > 0 && (
+        <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-pulse-border">
+            <div className="bg-amber-500 px-6 py-4 flex items-center gap-3">
+              <span className="text-3xl">⚠️</span>
+              <div>
+                <h2 className="text-white font-black text-lg leading-tight">¡Chequeo Completado!</h2>
+                <p className="text-amber-100 text-sm">El técnico registró el diagnóstico</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-3">
+              {chequeoAlerts.map(r => (
+                <div key={r.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-black text-primary text-sm">{r.codigo}</span>
+                    <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">RD$ {(r.costo || 0).toLocaleString()}</span>
+                  </div>
+                  <p className="font-bold text-slate-800">{r.cliente}</p>
+                  <p className="text-xs text-slate-500">{r.marca} {r.modelo}</p>
+                  {r.trabajoARealizar && (
+                    <p className="text-sm text-slate-700 mt-2 font-semibold">🔧 {r.trabajoARealizar}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="px-6 pb-6">
+              <button
+                onClick={() => {
+                  stopAlarm.current?.();
+                  stopAlarm.current = null;
+                  setChequeoAlerts([]);
+                }}
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg transition-colors"
+              >
+                ✔ Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
