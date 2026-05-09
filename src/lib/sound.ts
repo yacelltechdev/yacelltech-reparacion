@@ -52,3 +52,21 @@ export function startChequeoAlarm(): () => void {
   const interval = setInterval(playChequeoPattern, 2200);
   return () => clearInterval(interval);
 }
+
+// Sonido de alerta persistente para equipo listo — patrón alegre/urgente
+function playReadyPattern() {
+  try {
+    const ctx = new AudioContext();
+    const t = ctx.currentTime;
+    beep(ctx, 880,  0.12, 0.5, t);
+    beep(ctx, 1100, 0.12, 0.5, t + 0.14);
+    beep(ctx, 1320, 0.12, 0.5, t + 0.28);
+    beep(ctx, 1100, 0.18, 0.6, t + 0.44);
+  } catch { /* silencioso si el browser lo bloquea */ }
+}
+
+export function startReadyAlarm(): () => void {
+  playReadyPattern();
+  const interval = setInterval(playReadyPattern, 2500);
+  return () => clearInterval(interval);
+}

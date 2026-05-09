@@ -9,7 +9,7 @@ import { Search, Eye, Wrench, CheckCircle2 } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { playReadySound, startChequeoAlarm } from "@/lib/sound";
+import { startReadyAlarm, startChequeoAlarm } from "@/lib/sound";
 import RepairDetailModal from "@/components/RepairDetailModal";
 
 const formatTime = (iso: string) => {
@@ -97,7 +97,9 @@ export default function InboxPage() {
   const chequeoIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
   const stopAlarm = useRef<(() => void) | null>(null);
+  const stopReadyAlarm = useRef<(() => void) | null>(null);
   const [chequeoAlerts, setChequeoAlerts] = useState<Repair[]>([]);
+  const [readyAlerts, setReadyAlerts] = useState<Repair[]>([]);
 
   useEffect(() => {
     loadRepairs();
@@ -119,8 +121,14 @@ export default function InboxPage() {
           !readyIds.current.has(r.id)
         );
         if (nowReady.length > 0) {
-          playReadySound();
-          nowReady.forEach(r => toast.info(`${r.codigo} — ${r.cliente}: ${r.status}`));
+          setReadyAlerts(prev => {
+            const existingIds = new Set(prev.map(r => r.id));
+            const nuevos = nowReady.filter(r => !existingIds.has(r.id));
+            return nuevos.length > 0 ? [...prev, ...nuevos] : prev;
+          });
+          if (!stopReadyAlarm.current) {
+            stopReadyAlarm.current = startReadyAlarm();
+          }
         }
 
         // Detectar chequeos que pasaron a "En reparación"
@@ -176,7 +184,7 @@ export default function InboxPage() {
       r.modelo.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
-      const order = ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"];
+      const order = ["Listo para entregar", "No se pudo reparar", "En reparación", "En chequeo"];
       const ai = order.indexOf(a.status);
       const bi = order.indexOf(b.status);
       if (ai !== bi) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
@@ -270,6 +278,47 @@ export default function InboxPage() {
 
       {selectedRepair && (
         <RepairDetailModal repair={selectedRepair} onClose={() => { setSelectedRepair(null); loadRepairs(); }} />
+      )}
+
+      {readyAlerts.length > 0 && (
+        <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="bg-emerald-500 px-6 py-4 flex items-center gap-3">
+              <span className="text-3xl">✅</span>
+              <div>
+                <h2 className="text-white font-black text-lg leading-tight">¡Equipo Listo!</h2>
+                <p className="text-emerald-100 text-sm">Un equipo está listo para ser entregado</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-3">
+              {readyAlerts.map(r => (
+                <div key={r.id} className={`rounded-xl p-4 border ${r.status === "Listo para entregar" ? "bg-emerald-50 border-emerald-200" : "bg-orange-50 border-orange-200"}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-black text-primary text-sm">{r.codigo}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.status === "Listo para entregar" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"}`}>
+                      {r.status === "Listo para entregar" ? "✔ Listo" : "✖ Sin reparar"}
+                    </span>
+                  </div>
+                  <p className="font-bold text-slate-800">{r.cliente}</p>
+                  <p className="text-xs text-slate-500">{r.marca} {r.modelo}</p>
+                  <p className="text-sm font-bold text-slate-700 mt-1">RD$ {(r.costo + (r.cargosAdicionales?.reduce((a,c)=>a+c.monto,0)||0)).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+            <div className="px-6 pb-6">
+              <button
+                onClick={() => {
+                  stopReadyAlarm.current?.();
+                  stopReadyAlarm.current = null;
+                  setReadyAlerts([]);
+                }}
+                className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg transition-colors"
+              >
+                ✔ Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {chequeoAlerts.length > 0 && (
