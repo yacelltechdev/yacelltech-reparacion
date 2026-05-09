@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, AlertCircle, Printer, X, PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { Check, AlertCircle, Printer, X, PlusCircle, Pencil, Trash2, RefreshCw } from "lucide-react";
 import PrintTicket from "./PrintTicket";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [changingStatus, setChangingStatus] = useState(false);
 
   const handlePrint = () => window.print();
 
@@ -78,6 +79,27 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       toast.error("Error al eliminar");
       setDeleting(false);
     }
+  };
+
+  const handleChangeStatus = async (newStatus: string) => {
+    if (newStatus === repair.status) return;
+    setChangingStatus(true);
+    const payload: any = { status: newStatus };
+    if (newStatus === "Listo para entregar" || newStatus === "No se pudo reparar") {
+      payload.fecha_despacho = null;
+    }
+    const res = await fetch(`/api/repairs/${repair.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      setRepair({ ...repair, status: newStatus as Repair["status"] });
+      toast.success(`Estado cambiado a: ${newStatus}`);
+    } else {
+      toast.error("Error al cambiar estado");
+    }
+    setChangingStatus(false);
   };
 
   const handleAddCargo = async (e: React.FormEvent) => {
@@ -233,9 +255,25 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
             )}
 
             {/* Estado */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-bold text-slate-500">Estado actual:</span>
-              <Badge variant="secondary" className="text-sm">{repair.status}</Badge>
+              {isAdmin ? (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={repair.status}
+                    disabled={changingStatus}
+                    onChange={e => handleChangeStatus(e.target.value)}
+                    className="text-sm border border-slate-200 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {["En chequeo","En reparación","Listo para entregar","No se pudo reparar","Entregado bueno","Entregado malo"].map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  {changingStatus && <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />}
+                </div>
+              ) : (
+                <Badge variant="secondary" className="text-sm">{repair.status}</Badge>
+              )}
             </div>
           </div>
 
