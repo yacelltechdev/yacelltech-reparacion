@@ -23,6 +23,7 @@ export interface Repair {
   patronArray?: number[];
   cargosAdicionales?: { id: number; desc: string; monto: number }[];
   tipoPantalla?: 'InCell' | 'OLED' | null;
+  trabajoARealizar?: string;
 }
 
 export type UserRole = 'admin' | 'caja' | 'tech';

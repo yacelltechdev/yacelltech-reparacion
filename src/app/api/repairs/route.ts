@@ -56,6 +56,7 @@ export async function POST(req: Request) {
         marca: r.marca, modelo: r.modelo, color: r.color, serie: r.serie, sintoma: r.sintoma,
         costo: r.costo, claveTexto: r.claveTexto, tipoClave: r.tipoClave,
         tipoPantalla: r.tipoPantalla ?? null,
+        trabajoARealizar: r.trabajoARealizar ?? null,
         status: r.status, tecnico: r.tecnico, estadoInicial: r.estadoInicial,
         observacion: r.observacion, fecha: r.fecha,
         checklist:         JSON.stringify(r.checklist),

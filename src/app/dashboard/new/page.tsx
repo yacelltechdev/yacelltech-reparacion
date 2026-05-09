@@ -52,6 +52,7 @@ export default function NewRepairPage() {
     tipoClave: "sin clave",
     claveTexto: "",
     tecnico: "Oscar",
+    trabajoARealizar: "",
     checklist: {
       tactil: null,
       imagen: null,
@@ -375,6 +376,16 @@ export default function NewRepairPage() {
                     <TabsTrigger value="Apagado">Apagado</TabsTrigger>
                   </TabsList>
                 </Tabs>
+              </div>
+
+              <div className="space-y-2 md:col-span-3">
+                <Label htmlFor="trabajoARealizar">Trabajo a Realizar</Label>
+                <Input
+                  id="trabajoARealizar"
+                  placeholder="Ej: Cambio de pantalla, reparación de carga..."
+                  value={formData.trabajoARealizar}
+                  onChange={e => setFormData({...formData, trabajoARealizar: e.target.value})}
+                />
               </div>
 
               <div className="space-y-2">

@@ -187,6 +187,12 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                 </div>
               </div>
 
+              {repair.trabajoARealizar && (
+                <div style={{ padding: '0 0 6px 0', fontSize: '12px', color: '#1E293B' }}>
+                  <strong>🔧 Trabajo a Realizar:</strong> {repair.trabajoARealizar}
+                </div>
+              )}
+
               <div style={{ padding: '0 0 6px 0', fontSize: '14px', color: '#1E293B' }}>
                 <strong>👷 Técnico Asignado:</strong> <span style={{ fontSize: '20px', textTransform: 'uppercase', fontWeight: '900' }}>{repair.tecnico}</span>
               </div>
