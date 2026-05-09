@@ -12,7 +12,7 @@ export interface Repair {
   costo: number;
   claveTexto?: string;
   tipoClave?: 'sin clave' | 'texto' | 'patron';
-  status: 'En reparación' | 'Listo para entregar' | 'No se pudo reparar' | 'Entregado bueno' | 'Entregado malo';
+  status: 'En reparación' | 'En chequeo' | 'Listo para entregar' | 'No se pudo reparar' | 'Entregado bueno' | 'Entregado malo';
   tecnico?: string;
   estadoInicial: 'Encendido' | 'Apagado';
   observacion?: string;
@@ -24,6 +24,7 @@ export interface Repair {
   cargosAdicionales?: { id: number; desc: string; monto: number }[];
   tipoPantalla?: 'InCell' | 'OLED' | null;
   trabajoARealizar?: string;
+  esChequeo?: boolean;
 }
 
 export type UserRole = 'admin' | 'caja' | 'tech';

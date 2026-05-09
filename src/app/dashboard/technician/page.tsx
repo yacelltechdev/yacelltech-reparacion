@@ -9,6 +9,46 @@ import { Repair } from "@/lib/types";
 import { toast } from "sonner";
 import { playNewRepairSound } from "@/lib/sound";
 
+function ChequeoModal({ repair, onSave, onCancel }: { repair: Repair; onSave: (data: { trabajoARealizar: string; costo: number }) => void; onCancel: () => void }) {
+  const [trabajo, setTrabajo] = useState(repair.trabajoARealizar || "");
+  const [costo, setCosto] = useState(repair.costo ?? 200);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
+        <h3 className="text-lg font-bold text-amber-700 mb-1">Diagnóstico de Chequeo</h3>
+        <p className="text-sm text-slate-500 mb-4">{repair.codigo} — {repair.cliente}</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-bold text-slate-600 uppercase">Trabajo a Realizar / Diagnóstico</label>
+            <textarea
+              autoFocus
+              value={trabajo}
+              onChange={e => setTrabajo(e.target.value)}
+              rows={3}
+              placeholder="Ej: Cambio de batería necesario, placa en buen estado..."
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-amber-300 mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-600 uppercase">Costo (RD$)</label>
+            <input
+              type="number"
+              value={costo}
+              onChange={e => setCosto(Number(e.target.value))}
+              min={0}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-amber-300"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-5">
+          <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg border text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="button" onClick={() => onSave({ trabajoARealizar: trabajo, costo })} className="px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-bold hover:bg-amber-700">Guardar Diagnóstico</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RejectModal({ onConfirm, onCancel }: { onConfirm: (nota: string) => void; onCancel: () => void }) {
   const [nota, setNota] = useState("");
   return (
@@ -42,6 +82,7 @@ export default function TechnicianPage() {
   const [history, setHistory] = useState<Repair[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rejectId, setRejectId] = useState<number | null>(null);
+  const [chequeoRepair, setChequeoRepair] = useState<Repair | null>(null);
   const knownIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -58,7 +99,7 @@ export default function TechnicianPage() {
       const today = new Date().toISOString().split("T")[0];
       const mine = data.filter(r => r.tecnico?.toLowerCase() === user?.username.toLowerCase());
 
-      const active = mine.filter(r => ["En reparación", "Listo para entregar", "No se pudo reparar"].includes(r.status));
+      const active = mine.filter(r => ["En reparación", "En chequeo", "Listo para entregar", "No se pudo reparar"].includes(r.status));
 
       if (!isFirstLoad.current) {
         const newOnes = active.filter(r => !knownIds.current.has(r.id));
@@ -81,6 +122,22 @@ export default function TechnicianPage() {
       setIsLoading(false);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleSaveChequeo = async (data: { trabajoARealizar: string; costo: number }) => {
+    if (!chequeoRepair) return;
+    try {
+      await fetch(`/api/repairs/${chequeoRepair.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      toast.success("Diagnóstico guardado");
+      setChequeoRepair(null);
+      loadRepairs();
+    } catch {
+      toast.error("Error al guardar diagnóstico");
     }
   };
 
@@ -126,6 +183,7 @@ export default function TechnicianPage() {
                 <div className="flex items-start justify-between">
                   <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded">{r.codigo}</span>
                   {r.status === "En reparación" && <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200">En taller</Badge>}
+                  {r.status === "En chequeo" && <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">Chequeo</Badge>}
                   {r.status === "Listo para entregar" && <Badge className="bg-emerald-500">Listo</Badge>}
                   {r.status === "No se pudo reparar" && <Badge variant="destructive">Sin solución</Badge>}
                 </div>
@@ -138,6 +196,35 @@ export default function TechnicianPage() {
                   <p className="text-xs font-bold text-slate-500 uppercase mb-1">Falla reportada</p>
                   <p className="text-sm font-semibold text-slate-800">{r.sintoma}</p>
                 </div>
+                {r.status === "En chequeo" && (
+                  <div className="mt-auto flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+                      onClick={() => setChequeoRepair(r)}
+                    >
+                      <Wrench className="h-4 w-4 mr-1" /> Registrar Diagnóstico
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+                        onClick={() => updateStatus(r.id, "Listo para entregar")}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-500 border-red-200 hover:bg-red-50"
+                        onClick={() => setRejectId(r.id)}
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 {r.status === "En reparación" && (
                   <div className="mt-auto flex gap-2">
                     <Button
@@ -157,7 +244,7 @@ export default function TechnicianPage() {
                     </Button>
                   </div>
                 )}
-                {r.status !== "En reparación" && (
+                {r.status !== "En reparación" && r.status !== "En chequeo" && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -210,6 +297,14 @@ export default function TechnicianPage() {
         <RejectModal
           onConfirm={nota => updateStatus(rejectId, "No se pudo reparar", nota)}
           onCancel={() => setRejectId(null)}
+        />
+      )}
+
+      {chequeoRepair && (
+        <ChequeoModal
+          repair={chequeoRepair}
+          onSave={handleSaveChequeo}
+          onCancel={() => setChequeoRepair(null)}
         />
       )}
     </div>

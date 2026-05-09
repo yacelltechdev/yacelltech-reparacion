@@ -92,6 +92,12 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                     <div><strong>Modelo:</strong> {repair.modelo}</div>
                     <div><strong>Color:</strong> {repair.color || 'N/A'}</div>
                     <div><strong>Serie/IMEI:</strong> {repair.serie || 'N/A'}</div>
+                    {repair.tipoPantalla && (
+                      <div style={{ gridColumn: '1 / -1', marginTop: '2px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '6px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1E40AF', textTransform: 'uppercase' }}>🖥️ Tipo de Pantalla:</span>
+                        <span style={{ fontSize: '15px', fontWeight: '900', color: '#1D4ED8', letterSpacing: '1px' }}>{repair.tipoPantalla}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -188,8 +194,13 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {repair.trabajoARealizar && (
-                <div style={{ padding: '0 0 6px 0', fontSize: '12px', color: '#1E293B' }}>
-                  <strong>🔧 Trabajo a Realizar:</strong> {repair.trabajoARealizar}
+                <div style={{ border: '1px solid #94A3B8', borderRadius: '8px', marginBottom: '8px', overflow: 'hidden' }}>
+                  <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '4px 12px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
+                    🔧 Trabajo a Realizar
+                  </div>
+                  <div style={{ padding: '10px 12px', fontSize: '16px', fontWeight: 'bold', color: '#1E293B', lineHeight: '1.4' }}>
+                    {repair.trabajoARealizar}
+                  </div>
                 </div>
               )}
 

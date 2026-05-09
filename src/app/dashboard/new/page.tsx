@@ -47,6 +47,7 @@ export default function NewRepairPage() {
     sintoma: "",
     observacion: "",
     costo: 0,
+    esChequeo: false,
     tipoPantalla: null,
     estadoInicial: "Encendido",
     tipoClave: "sin clave",
@@ -106,7 +107,7 @@ export default function NewRepairPage() {
     const repairData = {
       ...formData,
       codigo,
-      status: "En reparación",
+      status: formData.esChequeo ? "En chequeo" : "En reparación",
       fecha: new Date().toISOString(),
       cargosAdicionales: []
     };
@@ -430,6 +431,21 @@ export default function NewRepairPage() {
               </div>
 
               <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Checkbox
+                    id="esChequeo"
+                    checked={!!formData.esChequeo}
+                    onCheckedChange={checked => setFormData(p => ({
+                      ...p,
+                      esChequeo: !!checked,
+                      costo: checked ? 200 : 0,
+                      trabajoARealizar: checked ? "Chequeo" : p.trabajoARealizar
+                    }))}
+                  />
+                  <Label htmlFor="esChequeo" className="cursor-pointer font-semibold text-amber-700">
+                    ¿Es chequeo? <span className="text-xs font-normal text-slate-500">(auto: RD$200)</span>
+                  </Label>
+                </div>
                 <Label htmlFor="costo">Precio de Reparación (RD$)</Label>
                 <Input
                   id="costo"
@@ -438,6 +454,7 @@ export default function NewRepairPage() {
                   placeholder="0.00"
                   value={formData.costo || ""}
                   onChange={e => setFormData({...formData, costo: parseFloat(e.target.value) || 0})}
+                  className={formData.esChequeo ? "border-amber-300 bg-amber-50" : ""}
                 />
               </div>
             </div>
