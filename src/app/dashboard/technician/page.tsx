@@ -16,7 +16,8 @@ function ChequeoModal({ repair, onSave, onCancel }: { repair: Repair; onSave: (d
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
         <h3 className="text-lg font-bold text-amber-700 mb-1">Diagnóstico de Chequeo</h3>
-        <p className="text-sm text-slate-500 mb-4">{repair.codigo} — {repair.cliente}</p>
+        <p className="text-sm text-slate-500 mb-1">{repair.codigo} — {repair.cliente}</p>
+        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">Al guardar, la orden pasa automáticamente a <strong>En reparación</strong>.</p>
         <div className="space-y-3">
           <div>
             <label className="text-xs font-bold text-slate-600 uppercase">Trabajo a Realizar / Diagnóstico</label>
@@ -131,9 +132,9 @@ export default function TechnicianPage() {
       await fetch(`/api/repairs/${chequeoRepair.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ ...data, status: "En reparación" })
       });
-      toast.success("Diagnóstico guardado");
+      toast.success("Diagnóstico guardado — orden pasa a reparación");
       setChequeoRepair(null);
       loadRepairs();
     } catch {
