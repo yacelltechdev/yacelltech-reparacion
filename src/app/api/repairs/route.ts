@@ -49,10 +49,22 @@ export async function POST(req: Request) {
   try {
     const r = await req.json();
 
+    // Generar código secuencial REP-00001, REP-00002, ...
+    const { data: last } = await supabase
+      .from('repairs')
+      .select('codigo')
+      .like('codigo', 'REP-%')
+      .order('id', { ascending: false })
+      .limit(1)
+      .single();
+
+    const lastNum = last?.codigo ? parseInt(last.codigo.replace('REP-', ''), 10) : 0;
+    const codigo = `REP-${(lastNum + 1).toString().padStart(5, '0')}`;
+
     const { data, error } = await supabase
       .from('repairs')
       .insert({
-        codigo: r.codigo, cliente: r.cliente, cedula: r.cedula, telefono: r.telefono,
+        codigo, cliente: r.cliente, cedula: r.cedula, telefono: r.telefono,
         marca: r.marca, modelo: r.modelo, color: r.color, serie: r.serie, sintoma: r.sintoma,
         costo: r.costo, claveTexto: r.claveTexto, tipoClave: r.tipoClave,
         tipoPantalla: r.tipoPantalla ?? null,
@@ -67,7 +79,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ id: data.id });
+    return NextResponse.json({ id: data.id, codigo });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

@@ -101,12 +101,9 @@ export default function NewRepairPage() {
       }
     }
 
-    // Generación de código simple
-    const codigo = `REP-${Date.now().toString().slice(-6)}`;
-    
     const repairData = {
       ...formData,
-      codigo,
+      codigo: "",
       status: formData.esChequeo ? "En chequeo" : "En reparación",
       fecha: new Date().toISOString(),
       cargosAdicionales: []
@@ -120,14 +117,14 @@ export default function NewRepairPage() {
       });
       
       if (res.ok) {
-        const { id } = await res.json();
+        const { id, codigo } = await res.json();
         // Guardar nuevos valores al catálogo
         const saves = [];
         if (formData.marca?.trim()) saves.push(fetch("/api/catalogs/marcas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: formData.marca.trim() }) }));
         if (formData.modelo?.trim()) saves.push(fetch("/api/catalogs/models", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: formData.modelo.trim() }) }));
         if (formData.color?.trim()) saves.push(fetch("/api/catalogs/colores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: formData.color.trim() }) }));
         await Promise.all(saves);
-        const fullRepair: Repair = { ...repairData, id } as Repair;
+        const fullRepair: Repair = { ...repairData, id, codigo } as Repair;
         setSavedRepair(fullRepair);
         toast.success("¡Reparación registrada con éxito!");
         setTimeout(() => {
