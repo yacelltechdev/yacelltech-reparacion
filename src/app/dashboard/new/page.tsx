@@ -31,6 +31,7 @@ export default function NewRepairPage() {
   const router = useRouter();
   const [savedRepair, setSavedRepair] = useState<Repair | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [obsPresets, setObsPresets] = useState<{ id: number; texto: string }[]>([]);
   const [catalogs, setCatalogs] = useState({
     marcas: [],
     models: [],
@@ -81,8 +82,10 @@ export default function NewRepairPage() {
       fetchJson("/api/catalogs/marcas"),
       fetchJson("/api/catalogs/models"),
       fetchJson("/api/catalogs/colores"),
-    ]).then(([marcas, models, colores]) => {
+      fetchJson("/api/observaciones-preset"),
+    ]).then(([marcas, models, colores, presets]) => {
       setCatalogs({ marcas, models, colores });
+      setObsPresets(presets);
     });
   }, []);
 
@@ -381,6 +384,37 @@ export default function NewRepairPage() {
                     <span className="ml-2 text-xs text-red-600 font-semibold">* Requerido (equipo apagado)</span>
                   )}
                 </Label>
+                {obsPresets.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {obsPresets.map(p => {
+                      const activo = formData.observacion?.split(", ").map(s => s.trim()).includes(p.texto);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            const partes = formData.observacion?.split(", ").map(s => s.trim()).filter(Boolean) ?? [];
+                            const idx = partes.indexOf(p.texto);
+                            let nuevas: string[];
+                            if (idx === -1) {
+                              nuevas = [...partes, p.texto];
+                            } else {
+                              nuevas = partes.filter((_, i) => i !== idx);
+                            }
+                            setFormData({ ...formData, observacion: nuevas.join(", ") });
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                            activo
+                              ? "bg-primary text-white border-primary"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-primary hover:text-primary"
+                          }`}
+                        >
+                          {p.texto}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 <Textarea
                   id="observacion"
                   placeholder={formData.estadoInicial === "Apagado" ? "Requerido: estado físico del equipo (pantalla, carcasa, etc.)..." : "Ej: Pantalla astillada, rayones..."}
