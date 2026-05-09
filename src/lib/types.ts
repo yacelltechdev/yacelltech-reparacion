@@ -22,6 +22,7 @@ export interface Repair {
   checklist?: Record<string, boolean | null>;
   patronArray?: number[];
   cargosAdicionales?: { id: number; desc: string; monto: number }[];
+  tipoPantalla?: 'In Cell' | 'OLED' | null;
 }
 
 export type UserRole = 'admin' | 'caja' | 'tech';

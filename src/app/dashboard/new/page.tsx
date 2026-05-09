@@ -47,6 +47,7 @@ export default function NewRepairPage() {
     sintoma: "",
     observacion: "",
     costo: 0,
+    tipoPantalla: null,
     estadoInicial: "Encendido",
     tipoClave: "sin clave",
     claveTexto: "",
@@ -386,6 +387,35 @@ export default function NewRepairPage() {
                     <SelectItem value="Carlos">Carlos</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Checkbox
+                    id="esPantalla"
+                    checked={formData.tipoPantalla !== null && formData.tipoPantalla !== undefined}
+                    onCheckedChange={checked => setFormData({...formData, tipoPantalla: checked ? "In Cell" : null})}
+                  />
+                  <Label htmlFor="esPantalla" className="cursor-pointer">¿Es reparación de pantalla?</Label>
+                </div>
+                {formData.tipoPantalla != null && (
+                  <div className="flex gap-2 mt-1">
+                    {(["In Cell", "OLED"] as const).map(tipo => (
+                      <button
+                        key={tipo}
+                        type="button"
+                        onClick={() => setFormData({...formData, tipoPantalla: tipo})}
+                        className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors ${
+                          formData.tipoPantalla === tipo
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
+                        }`}
+                      >
+                        {tipo}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
