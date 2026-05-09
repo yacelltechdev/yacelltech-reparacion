@@ -27,6 +27,10 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
 
   const btnBase = "text-[11px] font-bold px-3 py-1.5 rounded-md border transition-colors w-full text-left";
 
+  if (status === "En chequeo") {
+    return <span className="text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded px-2 py-1">🔍 En chequeo...</span>;
+  }
+
   if (status === "En reparación") {
     if (!isTech) return <span className="text-[11px] text-slate-400 italic">En taller...</span>;
     return (
@@ -103,7 +107,7 @@ export default function InboxPage() {
       const res = await fetch("/api/repairs");
       const data: Repair[] = await res.json();
       const active = data.filter(r =>
-        ["En reparación", "Listo para entregar", "No se pudo reparar"].includes(r.status)
+        ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"].includes(r.status)
       );
 
       if (!isFirstLoad.current) {
@@ -151,7 +155,7 @@ export default function InboxPage() {
       r.modelo.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
-      const order = ["En reparación", "Listo para entregar", "No se pudo reparar"];
+      const order = ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"];
       const ai = order.indexOf(a.status);
       const bi = order.indexOf(b.status);
       if (ai !== bi) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
@@ -203,7 +207,7 @@ export default function InboxPage() {
                 </TableRow>
               ) : (
                 filtered.map(r => (
-                  <TableRow key={r.id} className={`transition-colors ${r.status === "Listo para entregar" ? "bg-emerald-50/40" : r.status === "No se pudo reparar" ? "bg-orange-50/40" : ""}`}>
+                  <TableRow key={r.id} className={`transition-colors ${r.status === "Listo para entregar" ? "bg-emerald-50/40" : r.status === "No se pudo reparar" ? "bg-orange-50/40" : r.status === "En chequeo" ? "bg-amber-50/40" : ""}`}>
                     <TableCell>
                       <div className="font-black text-primary">{r.codigo}</div>
                       <div className="text-[10px] text-slate-400 mt-0.5">{formatTime(r.fecha)}</div>
