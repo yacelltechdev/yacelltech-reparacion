@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 
 const HARDCODED: Record<string, string> = {
-  freddy: '1234', oscar: '1234', carlos: '1234', admin: 'admin', caja: '1234',
+  freddy: '1234', oscar: 'chachito', carlos: '1234', admin: 'admin', caja: '1234',
 };
 
 export async function POST(req: Request) {
