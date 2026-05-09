@@ -30,6 +30,7 @@ import PatternLock from "@/components/PatternLock";
 export default function NewRepairPage() {
   const router = useRouter();
   const [savedRepair, setSavedRepair] = useState<Repair | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [catalogs, setCatalogs] = useState({
     marcas: [],
     models: [],
@@ -87,6 +88,7 @@ export default function NewRepairPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     if (formData.estadoInicial === "Apagado" && !formData.observacion?.trim()) {
       toast.error("El equipo fue recibido apagado. Debe ingresar una observación sobre su estado físico.");
@@ -109,6 +111,7 @@ export default function NewRepairPage() {
       cargosAdicionales: []
     };
 
+    setIsSubmitting(true);
     try {
       const res = await fetch("/api/repairs", {
         method: "POST",
@@ -134,6 +137,7 @@ export default function NewRepairPage() {
       }
     } catch (error) {
       toast.error("Error al guardar la reparación");
+      setIsSubmitting(false);
     }
   };
 
@@ -502,8 +506,8 @@ export default function NewRepairPage() {
         </Card>
 
         <div className="flex justify-end gap-4 pt-4">
-          <Button type="submit" size="lg" className="w-full md:w-auto px-12 font-bold h-12 shadow-lg shadow-primary/20">
-            <Check className="mr-2 h-5 w-5" /> Crear Orden de Servicio
+          <Button type="submit" size="lg" disabled={isSubmitting} className="w-full md:w-auto px-12 font-bold h-12 shadow-lg shadow-primary/20">
+            <Check className="mr-2 h-5 w-5" /> {isSubmitting ? "Guardando..." : "Crear Orden de Servicio"}
           </Button>
         </div>
       </form>

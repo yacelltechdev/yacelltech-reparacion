@@ -211,7 +211,13 @@ export default function TechnicianPage() {
                       <Button
                         size="sm"
                         className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                        onClick={() => updateStatus(r.id, "Listo para entregar")}
+                        onClick={() => {
+                          if (!r.costo || r.costo <= 0) {
+                            toast.error("Debe registrar el diagnóstico con el monto antes de marcar como lista.");
+                            return;
+                          }
+                          updateStatus(r.id, "Listo para entregar");
+                        }}
                       >
                         <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
                       </Button>
@@ -231,7 +237,13 @@ export default function TechnicianPage() {
                     <Button
                       size="sm"
                       className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                      onClick={() => updateStatus(r.id, "Listo para entregar")}
+                      onClick={() => {
+                        if (!r.costo || r.costo <= 0) {
+                          toast.error("Debe ingresar el monto de la reparación antes de marcar como lista.");
+                          return;
+                        }
+                        updateStatus(r.id, "Listo para entregar");
+                      }}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
                     </Button>
