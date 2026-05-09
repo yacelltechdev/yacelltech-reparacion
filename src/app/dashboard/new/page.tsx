@@ -187,22 +187,22 @@ export default function NewRepairPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="telefono">Teléfono</Label>
-                  <Input 
-                    id="telefono" 
-                    placeholder="809-xxx-xxxx"
-                    value={formData.telefono} 
-                    onChange={e => setFormData({...formData, telefono: e.target.value})} 
-                    required 
+                  <Label htmlFor="cedula">Cédula</Label>
+                  <Input
+                    id="cedula"
+                    placeholder="001-xxxxxxx-x"
+                    value={formData.cedula}
+                    onChange={e => setFormData({...formData, cedula: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cedula">Cédula</Label>
-                  <Input 
-                    id="cedula" 
-                    placeholder="001-xxxxxxx-x"
-                    value={formData.cedula} 
-                    onChange={e => setFormData({...formData, cedula: e.target.value})} 
+                  <Label htmlFor="telefono">Teléfono</Label>
+                  <Input
+                    id="telefono"
+                    placeholder="809-xxx-xxxx"
+                    value={formData.telefono}
+                    onChange={e => setFormData({...formData, telefono: e.target.value})}
+                    required
                   />
                 </div>
               </div>
