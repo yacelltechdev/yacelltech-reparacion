@@ -34,7 +34,8 @@ export async function POST(req: Request) {
 
     const entregadosBueno = parsed.filter((r: any) => r.status === 'Entregado bueno');
     const entregadosMalo  = parsed.filter((r: any) => r.status === 'Entregado malo');
-    const total_ingresos  = entregadosBueno.reduce((sum: number, r: any) =>
+    const cobrados = [...entregadosBueno, ...entregadosMalo.filter((r: any) => (r.costo || 0) > 0)];
+    const total_ingresos  = cobrados.reduce((sum: number, r: any) =>
       sum + (r.costo || 0) + (r.cargosAdicionales?.reduce((a: number, c: any) => a + c.monto, 0) || 0), 0);
 
     const hora_cierre = new Date().toISOString();

@@ -152,7 +152,8 @@ export default function ReportPage() {
 
   const entregadosBueno = filtered.filter(r => r.status === "Entregado bueno");
   const entregadosMalo  = filtered.filter(r => r.status === "Entregado malo");
-  const ingresos = entregadosBueno.reduce((sum, r) => sum + totalCosto(r), 0);
+  const ingresos = [...entregadosBueno, ...entregadosMalo.filter(r => (r.costo || 0) > 0)]
+    .reduce((sum, r) => sum + totalCosto(r), 0);
 
   const handleCerrarCaja = async () => {
     setClosing(true);
