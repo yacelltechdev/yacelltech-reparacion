@@ -92,11 +92,6 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                     <div><strong>Modelo:</strong> {repair.modelo}</div>
                     <div><strong>Color:</strong> {repair.color || 'N/A'}</div>
                     <div><strong>Serie/IMEI:</strong> {repair.serie || 'N/A'}</div>
-                    {repair.tipoPantalla && (
-                      <div style={{ gridColumn: '1 / -1', marginTop: '2px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '6px', padding: '3px 8px', fontSize: '12px', color: '#1E40AF', fontWeight: 'bold' }}>
-                        Pantalla: <span style={{ fontWeight: '900', letterSpacing: '0.5px' }}>{repair.tipoPantalla}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -180,6 +175,11 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                   </div>
                   <div style={{ padding: '7px 10px', fontSize: '13px', fontWeight: 'bold', color: '#1E293B', lineHeight: '1.3', flexGrow: 1 }}>
                     {repair.trabajoARealizar || <span style={{ color: '#94A3B8', fontStyle: 'italic', fontWeight: 'normal' }}>Por definir</span>}
+                    {repair.tipoPantalla && (
+                      <div style={{ marginTop: '4px', display: 'inline-block', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', color: '#1E40AF', fontWeight: 'bold' }}>
+                        Pantalla: {repair.tipoPantalla}
+                      </div>
+                    )}
                   </div>
                 </div>
 
