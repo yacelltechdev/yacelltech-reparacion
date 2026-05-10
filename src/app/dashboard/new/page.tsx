@@ -21,7 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, User, ClipboardList, Check, AlertCircle } from "lucide-react";
+import { Smartphone, User, ClipboardList, Check, AlertCircle, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Repair } from "@/lib/types";
 import PrintTicket from "@/components/PrintTicket";
@@ -32,6 +32,7 @@ export default function NewRepairPage() {
   const [savedRepair, setSavedRepair] = useState<Repair | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [obsPresets, setObsPresets] = useState<{ id: number; texto: string }[]>([]);
+  const [items, setItems] = useState<{ desc: string; monto: number }[]>([{ desc: "", monto: 0 }]);
   const [catalogs, setCatalogs] = useState({
     marcas: [],
     models: [],
@@ -106,12 +107,28 @@ export default function NewRepairPage() {
       }
     }
 
+    const validItems = items.filter(i => i.desc.trim() && i.monto > 0);
+    if (validItems.length === 0) {
+      toast.error("Agregue al menos un ítem con descripción y monto.");
+      return;
+    }
+
+    const costo = validItems[0].monto;
+    const trabajoARealizar = validItems.map(i => i.desc.trim()).join(", ");
+    const cargosAdicionales = validItems.slice(1).map((i, idx) => ({
+      id: Date.now() + idx,
+      desc: i.desc.trim(),
+      monto: i.monto,
+    }));
+
     const repairData = {
       ...formData,
       codigo: "",
+      costo,
+      trabajoARealizar,
+      cargosAdicionales,
       status: formData.esChequeo ? "En chequeo" : "En reparación",
       fecha: new Date().toISOString(),
-      cargosAdicionales: []
     };
 
     setIsSubmitting(true);
@@ -469,14 +486,58 @@ export default function NewRepairPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="space-y-2 md:col-span-3">
-                <Label htmlFor="trabajoARealizar">Trabajo a Realizar</Label>
-                <Input
-                  id="trabajoARealizar"
-                  placeholder="Ej: Cambio de pantalla, reparación de carga..."
-                  value={formData.trabajoARealizar}
-                  onChange={e => setFormData({...formData, trabajoARealizar: e.target.value})}
-                />
+              <div className="space-y-3 md:col-span-3">
+                <div className="flex items-center justify-between">
+                  <Label>Trabajos y Precios</Label>
+                  <span className="text-sm font-bold text-primary">
+                    Total: RD$ {items.filter(i => i.monto > 0).reduce((s, i) => s + i.monto, 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                {items.map((item, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="Ej: Cambio de pantalla"
+                      value={item.desc}
+                      disabled={formData.esChequeo}
+                      onChange={e => setItems(prev => prev.map((it, i) => i === idx ? { ...it, desc: e.target.value } : it))}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0.00"
+                      value={item.monto || ""}
+                      disabled={formData.esChequeo}
+                      onChange={e => setItems(prev => prev.map((it, i) => i === idx ? { ...it, monto: parseFloat(e.target.value) || 0 } : it))}
+                      className={`w-32 ${formData.esChequeo ? "border-amber-300 bg-amber-50" : ""}`}
+                    />
+                    {items.length > 1 && !formData.esChequeo && (
+                      <button type="button" onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-red-400 hover:text-red-600 transition-colors">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {!formData.esChequeo && (
+                  <button type="button" onClick={() => setItems(prev => [...prev, { desc: "", monto: 0 }])}
+                    className="flex items-center gap-1 text-sm text-primary hover:underline">
+                    <Plus className="h-4 w-4" /> Agregar otro ítem
+                  </button>
+                )}
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="esChequeo"
+                    checked={!!formData.esChequeo}
+                    onCheckedChange={checked => {
+                      setFormData(p => ({ ...p, esChequeo: !!checked }));
+                      setItems(checked ? [{ desc: "Chequeo", monto: 200 }] : [{ desc: "", monto: 0 }]);
+                    }}
+                  />
+                  <Label htmlFor="esChequeo" className="cursor-pointer font-semibold text-amber-700">
+                    ¿Es chequeo? <span className="text-xs font-normal text-slate-500">(auto: RD$200)</span>
+                  </Label>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -520,33 +581,6 @@ export default function NewRepairPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <Checkbox
-                    id="esChequeo"
-                    checked={!!formData.esChequeo}
-                    onCheckedChange={checked => setFormData(p => ({
-                      ...p,
-                      esChequeo: !!checked,
-                      costo: checked ? 200 : 0,
-                      trabajoARealizar: checked ? "Chequeo" : p.trabajoARealizar
-                    }))}
-                  />
-                  <Label htmlFor="esChequeo" className="cursor-pointer font-semibold text-amber-700">
-                    ¿Es chequeo? <span className="text-xs font-normal text-slate-500">(auto: RD$200)</span>
-                  </Label>
-                </div>
-                <Label htmlFor="costo">Precio de Reparación (RD$)</Label>
-                <Input
-                  id="costo"
-                  type="number"
-                  min={0}
-                  placeholder="0.00"
-                  value={formData.costo || ""}
-                  onChange={e => setFormData({...formData, costo: parseFloat(e.target.value) || 0})}
-                  className={formData.esChequeo ? "border-amber-300 bg-amber-50" : ""}
-                />
-              </div>
             </div>
 
           </CardContent>

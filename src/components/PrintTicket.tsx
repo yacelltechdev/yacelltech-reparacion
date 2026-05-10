@@ -190,7 +190,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                   </div>
                   {repair.cargosAdicionales && repair.cargosAdicionales.length > 0 && (
                     <div style={{ marginTop: '5px', fontSize: '10px', color: '#7F1D1D', textAlign: 'right', borderTop: '1px solid #FCA5A5', paddingTop: '5px' }}>
-                      Base: RD$ {formatMoney(repair.costo)}<br/>
+                      {repair.trabajoARealizar?.split(", ")[0] || "Base"}: RD$ {formatMoney(repair.costo)}<br/>
                       {repair.cargosAdicionales.map(c => (
                         <div key={c.id}>+ {c.desc}: RD$ {formatMoney(c.monto)}</div>
                       ))}
