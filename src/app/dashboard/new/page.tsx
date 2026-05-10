@@ -51,7 +51,7 @@ export default function NewRepairPage() {
     observacion: "",
     costo: 0,
     esChequeo: false,
-    tipoPantalla: null,
+    tipoPantalla: "" as any,
     estadoInicial: "Encendido",
     tipoClave: "sin clave",
     claveTexto: "",
@@ -93,6 +93,11 @@ export default function NewRepairPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if ((formData.tipoPantalla as any) === "") {
+      toast.error("Selecciona el tipo de pantalla: InCell u OLED.");
+      return;
+    }
 
     if (formData.estadoInicial === "Apagado" && !formData.observacion?.trim()) {
       toast.error("El equipo fue recibido apagado. Debe ingresar una observación sobre su estado físico.");
@@ -557,12 +562,15 @@ export default function NewRepairPage() {
                   <Checkbox
                     id="esPantalla"
                     checked={formData.tipoPantalla !== null && formData.tipoPantalla !== undefined}
-                    onCheckedChange={checked => setFormData({...formData, tipoPantalla: checked ? "InCell" : null})}
+                    onCheckedChange={checked => setFormData({...formData, tipoPantalla: checked ? "" as any : null})}
                   />
                   <Label htmlFor="esPantalla" className="cursor-pointer">¿Es reparación de pantalla?</Label>
                 </div>
                 {formData.tipoPantalla != null && (
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex gap-2 mt-1 items-center">
+                    {(formData.tipoPantalla as any) === "" && (
+                      <span className="text-xs text-red-500 font-semibold mr-1">Elige el tipo:</span>
+                    )}
                     {(["InCell", "OLED"] as const).map(tipo => (
                       <button
                         key={tipo}
@@ -571,7 +579,9 @@ export default function NewRepairPage() {
                         className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors ${
                           formData.tipoPantalla === tipo
                             ? "bg-black text-white border-black"
-                            : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
+                            : (formData.tipoPantalla as any) === ""
+                              ? "bg-white text-red-600 border-red-300 hover:border-red-500"
+                              : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
                         }`}
                       >
                         {tipo}
