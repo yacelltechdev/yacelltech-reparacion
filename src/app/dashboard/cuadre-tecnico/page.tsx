@@ -99,10 +99,16 @@ export default function CuadreTecnicoPage() {
   const buscar = async () => {
     setLoading(true);
     setErrorMsg("");
-    const res = await fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+bueno`);
-    const data: (Repair & { cuadre_tecnico_id?: number | null })[] = await res.json();
-    // Filter only uncuadrado
-    setPendientes((data as any[]).filter((r: any) => r.cuadre_tecnico_id == null));
+    const [resB, resM] = await Promise.all([
+      fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+bueno`),
+      fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+malo`),
+    ]);
+    const [dataB, dataM]: any[] = await Promise.all([resB.json(), resM.json()]);
+    const combined = [
+      ...dataB,
+      ...(dataM as any[]).filter((r: any) => (r.costo || 0) > 0),
+    ];
+    setPendientes(combined.filter((r: any) => r.cuadre_tecnico_id == null));
     setLoading(false);
   };
 

@@ -25,17 +25,19 @@ export async function POST(req: Request) {
       .from('repairs')
       .select('*')
       .eq('tecnico', tecnico)
-      .eq('status', 'Entregado bueno')
+      .in('status', ['Entregado bueno', 'Entregado malo'])
       .is('cuadre_tecnico_id', null)
       .gte('fecha_despacho', desde)
       .lte('fecha_despacho', hasta + 'T23:59:59');
 
     if (repairsError) throw repairsError;
 
-    const parsed = (repairsData || []).map((r: any) => ({
-      ...r,
-      cargosAdicionales: r.cargosAdicionales ? JSON.parse(r.cargosAdicionales) : [],
-    }));
+    const parsed = (repairsData || [])
+      .filter((r: any) => r.status === 'Entregado bueno' || (r.costo || 0) > 0)
+      .map((r: any) => ({
+        ...r,
+        cargosAdicionales: r.cargosAdicionales ? JSON.parse(r.cargosAdicionales) : [],
+      }));
 
     const total_generado = parsed.length * 200;
 
