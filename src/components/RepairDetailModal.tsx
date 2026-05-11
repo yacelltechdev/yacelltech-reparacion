@@ -39,6 +39,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
+  const [changingTecnico, setChangingTecnico] = useState(false);
 
   const handlePrint = () => window.print();
 
@@ -79,6 +80,23 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       toast.error("Error al eliminar");
       setDeleting(false);
     }
+  };
+
+  const handleChangeTecnico = async (newTecnico: string) => {
+    if (newTecnico === repair.tecnico) return;
+    setChangingTecnico(true);
+    const res = await fetch(`/api/repairs/${repair.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tecnico: newTecnico }),
+    });
+    if (res.ok) {
+      setRepair({ ...repair, tecnico: newTecnico });
+      toast.success(`Técnico cambiado a: ${newTecnico}`);
+    } else {
+      toast.error("Error al cambiar técnico");
+    }
+    setChangingTecnico(false);
   };
 
   const handleChangeStatus = async (newStatus: string) => {
@@ -151,7 +169,25 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                 <p className="font-bold text-slate-900">{repair.marca} {repair.modelo}</p>
                 <p className="text-sm text-slate-500">Color: {repair.color || "N/A"} | IMEI: {repair.serie || "N/A"}</p>
                 <p className="text-xs text-slate-400 mt-1">Estado inicial: <strong className={repair.estadoInicial === "Encendido" ? "text-emerald-600" : "text-red-600"}>{repair.estadoInicial}</strong></p>
-                {repair.tecnico && <p className="text-xs text-emerald-700 font-bold mt-1">🛠️ {repair.tecnico}</p>}
+                {isAdmin ? (
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-xs text-emerald-700">🛠️</span>
+                    <select
+                      value={repair.tecnico || ""}
+                      disabled={changingTecnico}
+                      onChange={e => handleChangeTecnico(e.target.value)}
+                      className="text-xs border border-emerald-200 rounded px-1 py-0.5 bg-white text-emerald-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                    >
+                      <option value="">Sin asignar</option>
+                      <option value="Oscar">Oscar</option>
+                      <option value="Freddy">Freddy</option>
+                      <option value="Carlos">Carlos</option>
+                    </select>
+                    {changingTecnico && <RefreshCw className="h-3 w-3 animate-spin text-slate-400" />}
+                  </div>
+                ) : (
+                  repair.tecnico && <p className="text-xs text-emerald-700 font-bold mt-1">🛠️ {repair.tecnico}</p>
+                )}
               </div>
             </div>
 
