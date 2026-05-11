@@ -261,7 +261,7 @@ export default function ReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">RD$ {formatMoney(ingresos)}</div>
-              <p className="text-xs text-slate-400 mt-1">Solo equipos entregados bueno</p>
+              <p className="text-xs text-slate-400 mt-1">Bueno cobrado + Malo con chequeo</p>
             </CardContent>
           </Card>
           <Card className="border-none shadow-sm">
