@@ -33,6 +33,9 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
   const [addingCargo, setAddingCargo] = useState(false);
   const [cargoDesc, setCargoDesc] = useState("");
   const [cargoMonto, setCargoMonto] = useState("");
+  const [editingCargoId, setEditingCargoId] = useState<number | null>(null);
+  const [editCargoDesc, setEditCargoDesc] = useState("");
+  const [editCargoMonto, setEditCargoMonto] = useState("");
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Repair>>({});
   const [saving, setSaving] = useState(false);
@@ -118,6 +121,30 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       toast.error("Error al cambiar estado");
     }
     setChangingStatus(false);
+  };
+
+  const handleDeleteCargo = async (id: number) => {
+    const updatedCargos = (repair.cargosAdicionales || []).filter(c => c.id !== id);
+    await fetch(`/api/repairs/${repair.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cargosAdicionales: updatedCargos })
+    });
+    setRepair({ ...repair, cargosAdicionales: updatedCargos });
+  };
+
+  const handleSaveEditCargo = async (id: number) => {
+    if (!editCargoDesc.trim() || !editCargoMonto) return;
+    const updatedCargos = (repair.cargosAdicionales || []).map(c =>
+      c.id === id ? { ...c, desc: editCargoDesc.trim(), monto: Number(editCargoMonto) } : c
+    );
+    await fetch(`/api/repairs/${repair.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cargosAdicionales: updatedCargos })
+    });
+    setRepair({ ...repair, cargosAdicionales: updatedCargos });
+    setEditingCargoId(null);
   };
 
   const handleAddCargo = async (e: React.FormEvent) => {
@@ -243,10 +270,40 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                 <p className="text-[10px] uppercase font-bold text-emerald-600 mb-2">Total a Pagar</p>
                 <p className="text-3xl font-black text-emerald-700">RD$ {formatMoney(getTotalCosto(repair))}</p>
                 {repair.cargosAdicionales && repair.cargosAdicionales.length > 0 && (
-                  <div className="mt-2 text-[11px] text-emerald-700 text-center w-full bg-emerald-100 rounded-lg p-2">
-                    <div>Base: RD$ {formatMoney(repair.costo)}</div>
+                  <div className="mt-2 text-[11px] text-emerald-700 w-full bg-emerald-100 rounded-lg p-2 space-y-1">
+                    <div className="text-center">Base: RD$ {formatMoney(repair.costo)}</div>
                     {repair.cargosAdicionales.map(c => (
-                      <div key={c.id}>+ {c.desc}: RD$ {formatMoney(c.monto)}</div>
+                      <div key={c.id}>
+                        {editingCargoId === c.id ? (
+                          <div className="flex gap-1 items-center">
+                            <input
+                              type="text"
+                              value={editCargoDesc}
+                              onChange={e => setEditCargoDesc(e.target.value)}
+                              className="flex-[2] h-7 rounded border border-emerald-300 bg-white px-2 text-xs"
+                            />
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={editCargoMonto}
+                              onChange={e => setEditCargoMonto(e.target.value)}
+                              className="flex-1 h-7 rounded border border-emerald-300 bg-white px-2 text-xs w-16"
+                            />
+                            <button onClick={() => handleSaveEditCargo(c.id)} className="text-emerald-700 hover:text-emerald-900"><Check className="h-3 w-3" /></button>
+                            <button onClick={() => setEditingCargoId(null)} className="text-slate-400 hover:text-slate-600"><X className="h-3 w-3" /></button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-1">
+                            <span>+ {c.desc}: RD$ {formatMoney(c.monto)}</span>
+                            {!repair.status.includes("Entregado") && (
+                              <div className="flex gap-1">
+                                <button onClick={() => { setEditingCargoId(c.id); setEditCargoDesc(c.desc); setEditCargoMonto(String(c.monto)); }} className="text-emerald-600 hover:text-emerald-800"><Pencil className="h-3 w-3" /></button>
+                                <button onClick={() => handleDeleteCargo(c.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
@@ -275,13 +332,12 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                     className="flex-[2] h-9 rounded-md border border-input bg-white px-3 py-1 text-sm"
                   />
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="RD$"
                     value={cargoMonto}
                     onChange={e => setCargoMonto(e.target.value)}
                     required
-                    min="0"
-                    step="0.01"
                     className="flex-1 h-9 rounded-md border border-input bg-white px-3 py-1 text-sm"
                   />
                   <Button type="submit" size="sm">Guardar</Button>
@@ -364,7 +420,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                 </div>
                 <div className="space-y-1">
                   <Label>Precio (RD$)</Label>
-                  <Input type="number" min={0} value={editData.costo ?? ""} onChange={e => setEditData(p => ({ ...p, costo: parseFloat(e.target.value) || 0 }))} />
+                  <Input type="text" inputMode="decimal" value={editData.costo ?? ""} onChange={e => setEditData(p => ({ ...p, costo: parseFloat(e.target.value) || 0 }))} />
                 </div>
                 <div className="space-y-1">
                   <Label>Marca</Label>

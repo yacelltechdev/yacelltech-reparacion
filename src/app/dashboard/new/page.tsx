@@ -508,8 +508,8 @@ export default function NewRepairPage() {
                       className="flex-1"
                     />
                     <Input
-                      type="number"
-                      min={0}
+                      type="text"
+                      inputMode="decimal"
                       placeholder="0.00"
                       value={item.monto || ""}
                       disabled={formData.esChequeo}
