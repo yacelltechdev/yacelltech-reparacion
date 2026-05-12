@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, Clock, Wrench } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { todayRD } from "@/lib/date";
 import { toast } from "sonner";
 import { playNewRepairSound } from "@/lib/sound";
 
@@ -97,7 +98,7 @@ export default function TechnicianPage() {
     try {
       const res = await fetch("/api/repairs");
       const data: Repair[] = await res.json();
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayRD();
       const mine = data.filter(r => r.tecnico?.toLowerCase() === user?.username.toLowerCase());
 
       const active = mine.filter(r => ["En reparación", "En chequeo", "Listo para entregar", "No se pudo reparar"].includes(r.status));

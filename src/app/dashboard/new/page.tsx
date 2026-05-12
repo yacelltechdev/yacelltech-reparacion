@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { Repair } from "@/lib/types";
 import PrintTicket from "@/components/PrintTicket";
 import PatternLock from "@/components/PatternLock";
+import { nowRD } from "@/lib/date";
 
 export default function NewRepairPage() {
   const router = useRouter();
@@ -135,7 +136,7 @@ export default function NewRepairPage() {
       trabajoARealizar,
       cargosAdicionales,
       status: formData.esChequeo ? "En chequeo" : "En reparación",
-      fecha: new Date().toISOString(),
+      fecha: nowRD(),
     };
 
     setIsSubmitting(true);

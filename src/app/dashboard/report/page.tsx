@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, RefreshCcw, PackageCheck, PackageX, Download, Lock, ChevronDown, ChevronUp, Printer } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { todayRD } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 
 const totalCosto = (r: Repair) =>
@@ -104,7 +105,7 @@ export default function ReportPage() {
   const { user } = useAuth();
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [cierres, setCierres] = useState<Cierre[]>([]);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(todayRD());
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);

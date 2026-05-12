@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Smartphone, Wrench, CheckCircle2, DollarSign, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Repair } from "@/lib/types";
+import { todayRD, yesterdayRD } from "@/lib/date";
 
 const totalCosto = (r: Repair) =>
   (r.costo || 0) + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0);
@@ -32,8 +33,8 @@ export default function AdminDashboard() {
       .catch(console.error);
   }, []);
 
-  const today     = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 864e5).toISOString().split("T")[0];
+  const today     = todayRD();
+  const yesterday = yesterdayRD();
 
   const recibidosHoy   = data.filter(r => r.fecha?.startsWith(today)).length;
   const recibidosAyer  = data.filter(r => r.fecha?.startsWith(yesterday)).length;

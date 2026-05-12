@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CheckCircle2, RefreshCcw, Wrench, DollarSign, ChevronDown, ChevronUp, Printer } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { todayRD } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -75,7 +76,7 @@ export default function CuadreTecnicoPage() {
     if (user && user.role !== "admin") router.replace("/dashboard");
   }, [user, router]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayRD();
   const [tecnico, setTecnico] = useState(TECNICOS[0]);
   const [desde, setDesde] = useState(today);
   const [hasta, setHasta] = useState(today);
