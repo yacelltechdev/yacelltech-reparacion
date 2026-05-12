@@ -38,65 +38,65 @@ function CierreFactura({ cierre }: { cierre: Cierre }) {
   const line   = "━".repeat(50);
 
   return (
-    <div style={{
+    <div className="cuadre-reporte" style={{
       fontFamily: "'Courier New', Courier, monospace",
-      fontSize: "12px",
+      fontSize: "10px",
       color: "#000",
       maxWidth: "620px",
       margin: "0 auto",
-      padding: "20px 24px",
-      lineHeight: "1.5",
+      padding: "8px 14px",
+      lineHeight: "1.2",
     }}>
       {/* Encabezado */}
-      <div style={{ textAlign: "center", marginBottom: "8px" }}>
-        <img src="/logo.png" alt="YACELLTECH" style={{ maxWidth: "180px", maxHeight: "70px", objectFit: "contain", display: "block", margin: "0 auto" }} />
+      <div style={{ textAlign: "center", marginBottom: "4px" }}>
+        <img src="/logo.png" alt="YACELLTECH" style={{ maxWidth: "120px", maxHeight: "45px", objectFit: "contain", display: "block", margin: "0 auto" }} />
       </div>
 
-      <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "6px 0" }}>{line}</div>
+      <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "3px 0" }}>{line}</div>
 
       {/* Título */}
-      <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "14px", letterSpacing: "2px", marginBottom: "6px" }}>
+      <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "11px", letterSpacing: "2px", marginBottom: "2px" }}>
         CIERRE DE CAJA
       </div>
-      <div style={{ textAlign: "center", fontSize: "12px" }}>Fecha: {cierre.fecha}</div>
-      <div style={{ textAlign: "center", fontSize: "12px" }}>Cerrado a las: {formatDatetime(cierre.hora_cierre)}</div>
-      <div style={{ textAlign: "center", fontSize: "12px" }}>Cajero: {cierre.cerrado_por}</div>
+      <div style={{ textAlign: "center" }}>Fecha: {cierre.fecha}</div>
+      <div style={{ textAlign: "center" }}>Cerrado a las: {formatDatetime(cierre.hora_cierre)}</div>
+      <div style={{ textAlign: "center" }}>Cajero: {cierre.cerrado_por}</div>
 
-      <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "8px 0" }}>{line}</div>
+      <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "3px 0" }}>{line}</div>
 
       {/* Detalle */}
-      <div style={{ fontWeight: "bold", marginBottom: "6px" }}>DETALLE DE DESPACHOS</div>
+      <div style={{ fontWeight: "bold", marginBottom: "2px" }}>DETALLE DE DESPACHOS</div>
       {buenos.map(r => (
-        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", padding: "1px 0" }}>
+        <div key={r.id} style={{ display: "flex", justifyContent: "space-between" }}>
           <span>{r.codigo} {r.cliente}</span>
           <span style={{ fontWeight: "bold", whiteSpace: "nowrap" }}>RD$ {formatMoney(totalCosto(r))}</span>
         </div>
       ))}
       {malos.map(r => (
-        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", color: "#666", padding: "1px 0" }}>
+        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", color: "#666" }}>
           <span>{r.codigo} {r.cliente}</span>
           <span style={{ fontStyle: "italic" }}>Devuelto</span>
         </div>
       ))}
 
-      <div style={{ margin: "10px 0 6px", borderTop: "1px dashed #999" }} />
+      <div style={{ margin: "4px 0 3px", borderTop: "1px dashed #999" }} />
 
       {/* Totales */}
-      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", padding: "1px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold" }}>
         <span>Entregados buenos:</span><span>{cierre.cantidad_reparados}</span>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "1px 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
         <span>Devueltos (malo):</span><span>{cierre.cantidad_devueltos}</span>
       </div>
 
-      <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "8px 0" }}>{line}</div>
+      <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "4px 0" }}>{line}</div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "900", fontSize: "15px", marginTop: "6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "900", fontSize: "12px" }}>
         <span>TOTAL INGRESOS:</span>
         <span>RD$ {formatMoney(cierre.total_ingresos)}</span>
       </div>
 
-      <div style={{ textAlign: "center", fontSize: "11px", marginTop: "24px", color: "#555" }}>— Fin del cierre —</div>
+      <div style={{ textAlign: "center", fontSize: "9px", marginTop: "6px", color: "#555" }}>— Fin del cierre —</div>
     </div>
   );
 }
