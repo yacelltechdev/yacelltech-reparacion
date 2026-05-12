@@ -160,7 +160,7 @@
   @page { margin: 4mm; size: Letter portrait; }
 
   .cuadre-reporte {
-    zoom: 0.75;
+    zoom: 0.88;
     transform-origin: top left;
   }
 }

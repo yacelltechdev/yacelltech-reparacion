@@ -40,12 +40,12 @@ function CierreFactura({ cierre }: { cierre: Cierre }) {
   return (
     <div className="cuadre-reporte" style={{
       fontFamily: "'Courier New', Courier, monospace",
-      fontSize: "10px",
+      fontSize: "11.5px",
       color: "#000",
       maxWidth: "620px",
       margin: "0 auto",
       padding: "8px 14px",
-      lineHeight: "1.2",
+      lineHeight: "1.35",
     }}>
       {/* Encabezado */}
       <div style={{ textAlign: "center", marginBottom: "4px" }}>
@@ -428,7 +428,7 @@ export default function ReportPage() {
             </div>
 
             {/* Tabla de equipos */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "6px", fontSize: "9px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "6px", fontSize: "11px" }}>
               <thead>
                 <tr style={{ backgroundColor: "#000", color: "#fff" }}>
                   <th style={{ padding: "3px 4px", textAlign: "left" }}>#</th>
