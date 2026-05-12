@@ -71,6 +71,7 @@ export async function POST(req: Request) {
         trabajoARealizar: r.trabajoARealizar ?? null,
         status: r.status, tecnico: r.tecnico, estadoInicial: r.estadoInicial,
         observacion: r.observacion, fecha: r.fecha,
+        fecha_despacho: r.fecha_despacho ?? null,
         checklist:         JSON.stringify(r.checklist),
         patronArray:       JSON.stringify(r.patronArray),
         cargosAdicionales: JSON.stringify(r.cargosAdicionales || []),
