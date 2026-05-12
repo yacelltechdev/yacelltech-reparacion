@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, Clock, Wrench } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD } from "@/lib/date";
 import { toast } from "sonner";
@@ -78,6 +78,153 @@ function RejectModal({ onConfirm, onCancel }: { onConfirm: (nota: string) => voi
   );
 }
 
+function EditFacturaModal({ repair, onSave, onCancel }: {
+  repair: Repair;
+  onSave: (data: { trabajoARealizar: string; costo: number; cargosAdicionales: { id: number; desc: string; monto: number }[] }) => void;
+  onCancel: () => void;
+}) {
+  const [trabajo, setTrabajo] = useState(repair.trabajoARealizar || "");
+  const [costo, setCosto] = useState(repair.costo ?? 0);
+  const [cargos, setCargos] = useState<{ id: number; desc: string; monto: number }[]>(repair.cargosAdicionales || []);
+  const [addingCargo, setAddingCargo] = useState(false);
+  const [cargoDesc, setCargoDesc] = useState("");
+  const [cargoMonto, setCargoMonto] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDesc, setEditDesc] = useState("");
+  const [editMonto, setEditMonto] = useState("");
+
+  const total = costo + cargos.reduce((a, c) => a + c.monto, 0);
+
+  const handleAddCargo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cargoDesc.trim() || !cargoMonto) return;
+    setCargos(prev => [...prev, { id: Date.now(), desc: cargoDesc.trim(), monto: Number(cargoMonto) }]);
+    setCargoDesc(""); setCargoMonto(""); setAddingCargo(false);
+  };
+
+  const handleSaveEditCargo = (id: number) => {
+    if (!editDesc.trim() || !editMonto) return;
+    setCargos(prev => prev.map(c => c.id === id ? { ...c, desc: editDesc.trim(), monto: Number(editMonto) } : c));
+    setEditingId(null);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-bold text-slate-800 mb-1">Editar Factura</h3>
+        <p className="text-sm text-slate-500 mb-4">{repair.codigo} — {repair.cliente}</p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-600 uppercase">Trabajo Realizado</label>
+            <textarea
+              autoFocus
+              value={trabajo}
+              onChange={e => setTrabajo(e.target.value)}
+              rows={3}
+              placeholder="Ej: Cambio de pantalla, limpieza de placa..."
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm resize-vertical focus:outline-none focus:ring-2 focus:ring-primary/30 mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-600 uppercase">Costo Base (RD$)</label>
+            <input
+              type="number"
+              value={costo}
+              onChange={e => setCosto(Number(e.target.value))}
+              min={0}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+
+          {/* Cargos adicionales */}
+          <div>
+            <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Cargos Adicionales</label>
+            {cargos.length > 0 && (
+              <div className="space-y-1 mb-2">
+                {cargos.map(c => (
+                  <div key={c.id}>
+                    {editingId === c.id ? (
+                      <div className="flex gap-1 items-center">
+                        <input
+                          type="text"
+                          value={editDesc}
+                          onChange={e => setEditDesc(e.target.value)}
+                          className="flex-[2] h-8 rounded border border-slate-200 px-2 text-xs"
+                        />
+                        <input
+                          type="number"
+                          value={editMonto}
+                          onChange={e => setEditMonto(e.target.value)}
+                          className="flex-1 h-8 rounded border border-slate-200 px-2 text-xs w-20"
+                        />
+                        <button onClick={() => handleSaveEditCargo(c.id)} className="text-emerald-600 hover:text-emerald-800"><Check className="h-4 w-4" /></button>
+                        <button onClick={() => setEditingId(null)} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-1.5 text-sm border border-slate-100">
+                        <span className="text-slate-700">{c.desc} — <strong>RD$ {c.monto.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+                        <div className="flex gap-1">
+                          <button onClick={() => { setEditingId(c.id); setEditDesc(c.desc); setEditMonto(String(c.monto)); }} className="text-slate-400 hover:text-slate-600"><Pencil className="h-3.5 w-3.5" /></button>
+                          <button onClick={() => setCargos(prev => prev.filter(x => x.id !== c.id))} className="text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {addingCargo ? (
+              <form onSubmit={handleAddCargo} className="flex gap-2 items-center mt-1">
+                <input
+                  type="text"
+                  placeholder="Concepto"
+                  value={cargoDesc}
+                  onChange={e => setCargoDesc(e.target.value)}
+                  required
+                  className="flex-[2] h-8 rounded-md border border-slate-200 px-2 text-sm"
+                />
+                <input
+                  type="number"
+                  placeholder="RD$"
+                  value={cargoMonto}
+                  onChange={e => setCargoMonto(e.target.value)}
+                  required
+                  className="flex-1 h-8 rounded-md border border-slate-200 px-2 text-sm"
+                />
+                <button type="submit" className="text-emerald-600 hover:text-emerald-800"><Check className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setAddingCargo(false)} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setAddingCargo(true)}
+                className="text-xs text-primary border border-primary/30 bg-white rounded-md px-3 py-1.5 hover:bg-primary/5 flex items-center gap-1 mt-1"
+              >
+                <PlusCircle className="h-3.5 w-3.5" /> Añadir Cargo
+              </button>
+            )}
+          </div>
+
+          <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-200 text-center">
+            <p className="text-xs text-emerald-600 font-bold uppercase mb-0.5">Total</p>
+            <p className="text-2xl font-black text-emerald-700">RD$ {total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-5">
+          <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg border text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button
+            type="button"
+            onClick={() => onSave({ trabajoARealizar: trabajo, costo, cargosAdicionales: cargos })}
+            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary/90"
+          >
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TechnicianPage() {
   const { user } = useAuth();
   const [repairs, setRepairs] = useState<Repair[]>([]);
@@ -85,6 +232,7 @@ export default function TechnicianPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [chequeoRepair, setChequeoRepair] = useState<Repair | null>(null);
+  const [editFacturaRepair, setEditFacturaRepair] = useState<Repair | null>(null);
   const knownIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
 
@@ -140,6 +288,22 @@ export default function TechnicianPage() {
       loadRepairs();
     } catch {
       toast.error("Error al guardar diagnóstico");
+    }
+  };
+
+  const handleSaveEditFactura = async (data: { trabajoARealizar: string; costo: number; cargosAdicionales: { id: number; desc: string; monto: number }[] }) => {
+    if (!editFacturaRepair) return;
+    try {
+      await fetch(`/api/repairs/${editFacturaRepair.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      toast.success("Factura actualizada");
+      setEditFacturaRepair(null);
+      loadRepairs();
+    } catch {
+      toast.error("Error al guardar factura");
     }
   };
 
@@ -234,28 +398,38 @@ export default function TechnicianPage() {
                   </div>
                 )}
                 {r.status === "En reparación" && (
-                  <div className="mt-auto flex gap-2">
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                      onClick={() => {
-                        if (!r.costo || r.costo <= 0) {
-                          toast.error("Debe ingresar el monto de la reparación antes de marcar como lista.");
-                          return;
-                        }
-                        updateStatus(r.id, "Listo para entregar");
-                      }}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
-                    </Button>
+                  <div className="mt-auto flex flex-col gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-red-500 border-red-200 hover:bg-red-50"
-                      onClick={() => setRejectId(r.id)}
+                      className="w-full border-primary/30 text-primary hover:bg-primary/5"
+                      onClick={() => setEditFacturaRepair(r)}
                     >
-                      <AlertTriangle className="h-4 w-4" />
+                      <Pencil className="h-4 w-4 mr-1" /> Editar Factura
                     </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+                        onClick={() => {
+                          if (!r.costo || r.costo <= 0) {
+                            toast.error("Debe ingresar el monto de la reparación antes de marcar como lista.");
+                            return;
+                          }
+                          updateStatus(r.id, "Listo para entregar");
+                        }}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-500 border-red-200 hover:bg-red-50"
+                        onClick={() => setRejectId(r.id)}
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
                 {r.status !== "En reparación" && r.status !== "En chequeo" && (
@@ -319,6 +493,14 @@ export default function TechnicianPage() {
           repair={chequeoRepair}
           onSave={handleSaveChequeo}
           onCancel={() => setChequeoRepair(null)}
+        />
+      )}
+
+      {editFacturaRepair && (
+        <EditFacturaModal
+          repair={editFacturaRepair}
+          onSave={handleSaveEditFactura}
+          onCancel={() => setEditFacturaRepair(null)}
         />
       )}
     </div>
