@@ -79,6 +79,10 @@ export async function POST(req: Request) {
       .single();
 
     if (error) throw error;
+
+    // Avanzar turno de técnico (rotación Oscar → Freddy → Carlos → Oscar)
+    await supabase.rpc('increment_tecnico_turno');
+
     return NextResponse.json({ id: data.id, codigo });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

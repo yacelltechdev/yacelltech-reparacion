@@ -84,9 +84,11 @@ export default function NewRepairPage() {
       fetchJson("/api/catalogs/models"),
       fetchJson("/api/catalogs/colores"),
       fetchJson("/api/observaciones-preset"),
-    ]).then(([marcas, models, colores, presets]) => {
+      fetchJson("/api/tecnico-turno"),
+    ]).then(([marcas, models, colores, presets, turno]) => {
       setCatalogs({ marcas, models, colores });
       setObsPresets(presets);
+      if (turno?.tecnico) setFormData(prev => ({ ...prev, tecnico: turno.tecnico }));
     });
   }, []);
 
@@ -547,7 +549,7 @@ export default function NewRepairPage() {
 
               <div className="space-y-2">
                 <Label>Asignar Técnico</Label>
-                <Select defaultValue="Oscar" onValueChange={v => setFormData({...formData, tecnico: v ?? undefined})}>
+                <Select value={formData.tecnico ?? "Oscar"} onValueChange={v => setFormData({...formData, tecnico: v ?? undefined})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Oscar">Oscar</SelectItem>
