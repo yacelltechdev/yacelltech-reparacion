@@ -157,7 +157,12 @@
   .ticket { page-break-after: always; break-after: page; }
   .ticket:last-child { page-break-after: auto; break-after: auto; }
 
-  @page { margin: 6mm; size: Letter; }
+  @page { margin: 4mm; size: Letter portrait; }
+
+  .cuadre-reporte {
+    zoom: 0.75;
+    transform-origin: top left;
+  }
 }
 
 .print-only { display: none !important; }

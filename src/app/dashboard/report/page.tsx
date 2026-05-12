@@ -419,7 +419,7 @@ export default function ReportPage() {
       {/* Reporte actual para impresión */}
       {printReport && (
         <div className="print-only">
-          <div style={{ fontFamily: "Arial, sans-serif", padding: "6px 10px", color: "#000" }}>
+          <div className="cuadre-reporte" style={{ fontFamily: "Arial, sans-serif", padding: "6px 10px", color: "#000" }}>
             {/* Encabezado */}
             <div style={{ textAlign: "center", borderBottom: "1.5px solid #000", paddingBottom: "4px", marginBottom: "6px" }}>
               <p style={{ fontSize: "15px", fontWeight: "900", margin: 0, letterSpacing: "1px" }}>YACELLTECH</p>
