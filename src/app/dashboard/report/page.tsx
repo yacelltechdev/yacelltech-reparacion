@@ -419,56 +419,47 @@ export default function ReportPage() {
       {/* Reporte actual para impresión */}
       {printReport && (
         <div className="print-only">
-          <div style={{ fontFamily: "Arial, sans-serif", padding: "12px 16px", color: "#000", maxWidth: "700px", margin: "0 auto" }}>
+          <div style={{ fontFamily: "Arial, sans-serif", padding: "6px 10px", color: "#000" }}>
             {/* Encabezado */}
-            <div style={{ textAlign: "center", borderBottom: "2px solid #000", paddingBottom: "8px", marginBottom: "10px" }}>
-              <p style={{ fontSize: "18px", fontWeight: "900", margin: 0 }}>YACELLTECH</p>
-              <p style={{ fontSize: "12px", fontWeight: "bold", margin: "2px 0 0" }}>REPORTE DE INGRESOS DEL DÍA</p>
-              <p style={{ fontSize: "11px", margin: "3px 0 0", color: "#444" }}>Fecha: <strong>{date}</strong> &nbsp;|&nbsp; Generado: {new Date().toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" })}</p>
+            <div style={{ textAlign: "center", borderBottom: "1.5px solid #000", paddingBottom: "4px", marginBottom: "6px" }}>
+              <p style={{ fontSize: "15px", fontWeight: "900", margin: 0, letterSpacing: "1px" }}>YACELLTECH</p>
+              <p style={{ fontSize: "10px", fontWeight: "bold", margin: "1px 0 0" }}>REPORTE DE INGRESOS DEL DÍA</p>
+              <p style={{ fontSize: "9px", margin: "1px 0 0", color: "#444" }}>Fecha: <strong>{date}</strong> &nbsp;|&nbsp; Generado: {new Date().toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" })}</p>
             </div>
 
             {/* Tabla de equipos */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px", fontSize: "11px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "6px", fontSize: "9px" }}>
               <thead>
                 <tr style={{ backgroundColor: "#000", color: "#fff" }}>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>#</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Código</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Cliente</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Equipo</th>
-                  <th style={{ padding: "4px 6px", textAlign: "left" }}>Técnico</th>
-                  <th style={{ padding: "4px 6px", textAlign: "right" }}>Total</th>
+                  <th style={{ padding: "3px 4px", textAlign: "left" }}>#</th>
+                  <th style={{ padding: "3px 4px", textAlign: "left" }}>Código</th>
+                  <th style={{ padding: "3px 4px", textAlign: "left" }}>Cliente</th>
+                  <th style={{ padding: "3px 4px", textAlign: "left" }}>Equipo</th>
+                  <th style={{ padding: "3px 4px", textAlign: "left" }}>Técnico</th>
+                  <th style={{ padding: "3px 4px", textAlign: "right" }}>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {entregadosBueno.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: "10px", textAlign: "center", color: "#888", fontStyle: "italic" }}>No hay equipos entregados buenos para esta fecha.</td></tr>
+                  <tr><td colSpan={6} style={{ padding: "8px", textAlign: "center", color: "#888", fontStyle: "italic" }}>No hay equipos entregados buenos para esta fecha.</td></tr>
                 ) : entregadosBueno.map((r, i) => (
-                  <tr key={r.id} style={{ backgroundColor: i % 2 === 0 ? "#f9f9f9" : "#fff", borderBottom: "1px solid #ddd" }}>
-                    <td style={{ padding: "3px 6px", color: "#666" }}>{i + 1}</td>
-                    <td style={{ padding: "3px 6px", fontWeight: "bold" }}>{r.codigo}</td>
-                    <td style={{ padding: "3px 6px" }}>
-                      <div style={{ fontWeight: "600" }}>{r.cliente}</div>
-                      <div style={{ fontSize: "10px", color: "#666" }}>{r.telefono}</div>
-                    </td>
-                    <td style={{ padding: "3px 6px" }}>{r.marca} {r.modelo}</td>
-                    <td style={{ padding: "3px 6px", color: "#555" }}>{r.tecnico || "—"}</td>
-                    <td style={{ padding: "3px 6px", textAlign: "right", fontWeight: "bold" }}>RD$ {formatMoney(totalCosto(r))}</td>
+                  <tr key={r.id} style={{ backgroundColor: i % 2 === 0 ? "#f5f5f5" : "#fff", borderBottom: "1px solid #e0e0e0" }}>
+                    <td style={{ padding: "2px 4px", color: "#666" }}>{i + 1}</td>
+                    <td style={{ padding: "2px 4px", fontWeight: "bold" }}>{r.codigo}</td>
+                    <td style={{ padding: "2px 4px" }}>{r.cliente}</td>
+                    <td style={{ padding: "2px 4px" }}>{r.marca} {r.modelo}</td>
+                    <td style={{ padding: "2px 4px", color: "#555" }}>{r.tecnico || "—"}</td>
+                    <td style={{ padding: "2px 4px", textAlign: "right", fontWeight: "bold" }}>RD$ {formatMoney(totalCosto(r))}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {/* Total */}
-            <div style={{ borderTop: "2px solid #000", paddingTop: "6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: "11px", color: "#555" }}>
-                <span>{entregadosBueno.length} equipo{entregadosBueno.length !== 1 ? "s" : ""} entregado{entregadosBueno.length !== 1 ? "s" : ""}</span>
-              </div>
-              <div style={{ fontSize: "15px", fontWeight: "900" }}>
-                TOTAL: RD$ {formatMoney(ingresos)}
-              </div>
+            <div style={{ borderTop: "1.5px solid #000", paddingTop: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "9px", color: "#555" }}>{entregadosBueno.length} equipo{entregadosBueno.length !== 1 ? "s" : ""} entregado{entregadosBueno.length !== 1 ? "s" : ""}</span>
+              <span style={{ fontSize: "13px", fontWeight: "900" }}>TOTAL: RD$ {formatMoney(ingresos)}</span>
             </div>
-
-            <p style={{ textAlign: "center", fontSize: "10px", color: "#aaa", marginTop: "10px", marginBottom: 0 }}>— Fin del reporte —</p>
           </div>
         </div>
       )}
