@@ -199,6 +199,20 @@ export default function AdminPage() {
             </table>
           </div>
 
+          {/* Total en vivo */}
+          {(() => {
+            const total = filas.reduce((sum, f) => sum + (parseFloat(f.costo) || 0), 0);
+            const count = filas.filter(f => f.cliente.trim() && parseFloat(f.costo) > 0).length;
+            return total > 0 ? (
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
+                <span className="text-sm text-emerald-700 font-medium">{count} factura(s) con monto</span>
+                <span className="text-xl font-black text-emerald-700">
+                  RD$ {total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            ) : null;
+          })()}
+
           <div className="flex gap-3">
             <Button variant="outline" size="sm" onClick={() => setFilas(prev => [...prev, filaVacia()])}>
               <Plus className="h-4 w-4 mr-1" /> Agregar fila
