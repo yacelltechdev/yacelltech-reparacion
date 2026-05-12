@@ -154,7 +154,7 @@
     background: #fff !important;
   }
 
-  .ticket { page-break-after: always; break-after: page; }
+  .ticket { page-break-after: always; break-after: page; height: calc(11in - 8mm); }
   .ticket:last-child { page-break-after: auto; break-after: auto; }
 
   @page { margin: 4mm; size: Letter portrait; }
