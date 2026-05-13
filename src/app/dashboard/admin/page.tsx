@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, MessageSquare, FileText } from "lucide-react";
+import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search } from "lucide-react";
+
+import { Repair } from "@/lib/types";
 
 type Preset = { id: number; texto: string; orden: number };
 
@@ -38,6 +40,12 @@ export default function AdminPage() {
   const [filas, setFilas] = useState<FilaManual[]>([filaVacia()]);
   const [subiendoManual, setSubiendoManual] = useState(false);
 
+  // Corrección de fechas
+  const [todasReparaciones, setTodasReparaciones] = useState<Repair[]>([]);
+  const [busquedaFecha, setBusquedaFecha] = useState("");
+  const [editandoFecha, setEditandoFecha] = useState<{ id: number; fecha: string; fecha_despacho: string } | null>(null);
+  const [guardandoFecha, setGuardandoFecha] = useState(false);
+
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
   }, [user, router]);
@@ -47,7 +55,10 @@ export default function AdminPage() {
     setPresets(await res.json());
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch("/api/repairs").then(r => r.json()).then(setTodasReparaciones).catch(() => {});
+  }, []);
 
   const agregar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,6 +126,31 @@ export default function AdminPage() {
     setSubiendoManual(false);
     if (ok > 0) { toast.success(`${ok} factura(s) ingresada(s) correctamente.`); setFilas([filaVacia()]); }
     if (fail > 0) toast.error(`${fail} factura(s) fallaron.`);
+  };
+
+  const guardarFecha = async () => {
+    if (!editandoFecha) return;
+    setGuardandoFecha(true);
+    try {
+      const payload: any = { fecha: editandoFecha.fecha + "T12:00:00" };
+      if (editandoFecha.fecha_despacho) payload.fecha_despacho = editandoFecha.fecha_despacho;
+      await fetch(`/api/repairs/${editandoFecha.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      toast.success("Fecha actualizada correctamente");
+      setTodasReparaciones(prev => prev.map(r =>
+        r.id === editandoFecha.id
+          ? { ...r, fecha: payload.fecha, fecha_despacho: payload.fecha_despacho ?? r.fecha_despacho }
+          : r
+      ));
+      setEditandoFecha(null);
+      setBusquedaFecha("");
+    } catch {
+      toast.error("Error al guardar fecha");
+    }
+    setGuardandoFecha(false);
   };
 
   const eliminar = async (id: number) => {
@@ -221,6 +257,95 @@ export default function AdminPage() {
               {subiendoManual ? "Guardando..." : `Guardar ${filas.filter(f => f.cliente.trim()).length || ""} factura(s)`}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Corrección de fechas */}
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-primary text-md">
+            <CalendarDays className="h-4 w-4" /> Corrección de Fechas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-slate-500">Busca una reparación y ajusta su fecha de entrada o despacho para el cuadre.</p>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <input
+              type="search"
+              placeholder="Buscar por código o cliente..."
+              value={busquedaFecha}
+              onChange={e => { setBusquedaFecha(e.target.value); setEditandoFecha(null); }}
+              className="w-full h-10 pl-9 pr-4 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+
+          {busquedaFecha.trim().length >= 2 && (() => {
+            const q = busquedaFecha.toLowerCase().trim();
+            const resultados = todasReparaciones.filter(r =>
+              r.codigo.toLowerCase().includes(q) || r.cliente.toLowerCase().includes(q)
+            ).slice(0, 8);
+
+            if (resultados.length === 0) return <p className="text-sm text-slate-400 text-center py-2">Sin resultados.</p>;
+
+            return (
+              <div className="border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-100">
+                {resultados.map(r => {
+                  const isEditing = editandoFecha?.id === r.id;
+                  const fechaEntrada = r.fecha ? r.fecha.slice(0, 10) : "";
+                  const fechaDespacho = r.fecha_despacho ? r.fecha_despacho.slice(0, 10) : "";
+                  return (
+                    <div key={r.id} className="bg-white px-4 py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded mr-2">{r.codigo}</span>
+                          <span className="text-sm font-semibold text-slate-800">{r.cliente}</span>
+                          <span className="text-xs text-slate-400 ml-2">{r.marca} {r.modelo}</span>
+                        </div>
+                        {!isEditing && (
+                          <button
+                            onClick={() => setEditandoFecha({ id: r.id, fecha: fechaEntrada, fecha_despacho: fechaDespacho })}
+                            className="text-xs font-bold text-primary border border-primary/30 bg-primary/5 px-3 py-1.5 rounded-lg hover:bg-primary/10 shrink-0"
+                          >
+                            Editar
+                          </button>
+                        )}
+                      </div>
+
+                      {isEditing && (
+                        <div className="mt-3 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Fecha de entrada</label>
+                              <Input
+                                type="date"
+                                value={editandoFecha.fecha}
+                                onChange={e => setEditandoFecha(prev => prev ? { ...prev, fecha: e.target.value } : prev)}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Fecha despacho</label>
+                              <Input
+                                type="date"
+                                value={editandoFecha.fecha_despacho}
+                                onChange={e => setEditandoFecha(prev => prev ? { ...prev, fecha_despacho: e.target.value } : prev)}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button variant="outline" size="sm" onClick={() => setEditandoFecha(null)}>Cancelar</Button>
+                            <Button size="sm" onClick={guardarFecha} disabled={guardandoFecha}>
+                              {guardandoFecha ? "Guardando..." : "Guardar fecha"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 
