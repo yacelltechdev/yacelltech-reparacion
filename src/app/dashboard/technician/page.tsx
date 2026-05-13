@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X, Phone, KeyRound, CalendarDays, StickyNote } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X, Phone, KeyRound, CalendarDays, StickyNote, Search } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD } from "@/lib/date";
 import { toast } from "sonner";
@@ -229,6 +229,7 @@ export default function TechnicianPage() {
   const { user } = useAuth();
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [history, setHistory] = useState<Repair[]>([]);
+  const [busqueda, setBusqueda] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [chequeoRepair, setChequeoRepair] = useState<Repair | null>(null);
@@ -335,6 +336,20 @@ export default function TechnicianPage() {
         <p className="text-slate-500 text-sm">Equipos asignados a {user?.username} pendientes de atención.</p>
       </div>
 
+      {/* Buscador */}
+      {repairs.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+          <input
+            type="search"
+            placeholder="Buscar por código, cliente, modelo..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            className="w-full h-11 pl-9 pr-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm"
+          />
+        </div>
+      )}
+
       {repairs.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 p-16 text-center">
           <CheckCircle2 className="h-12 w-12 text-emerald-400" />
@@ -343,7 +358,17 @@ export default function TechnicianPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {repairs.map(r => {
+          {repairs.filter(r => {
+            const q = busqueda.toLowerCase().trim();
+            if (!q) return true;
+            return (
+              r.codigo.toLowerCase().includes(q) ||
+              r.cliente.toLowerCase().includes(q) ||
+              r.modelo.toLowerCase().includes(q) ||
+              r.marca.toLowerCase().includes(q) ||
+              r.telefono?.toLowerCase().includes(q)
+            );
+          }).map(r => {
             const total = (r.costo ?? 0) + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) ?? 0);
             const fechaEntrada = r.fecha ? new Date(r.fecha).toLocaleDateString("es-DO", { day: "2-digit", month: "short", year: "numeric" }) : "";
             return (
