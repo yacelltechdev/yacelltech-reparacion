@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X, Phone, KeyRound, CalendarDays, StickyNote } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD } from "@/lib/date";
 import { toast } from "sonner";
@@ -342,109 +342,189 @@ export default function TechnicianPage() {
           <p className="text-slate-500">No tienes reparaciones pendientes asignadas.</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {repairs.map(r => (
-            <Card key={r.id} className="border-none shadow-sm flex flex-col">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded">{r.codigo}</span>
-                  {r.status === "En reparación" && <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200">En taller</Badge>}
-                  {r.status === "En chequeo" && <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">Chequeo</Badge>}
-                  {r.status === "Listo para entregar" && <Badge className="bg-emerald-500">Listo</Badge>}
-                  {r.status === "No se pudo reparar" && <Badge variant="destructive">Sin solución</Badge>}
-                </div>
-                <CardTitle className="text-lg mt-1">{r.modelo}</CardTitle>
-                <p className="text-xs text-slate-400 -mt-1">{r.marca}</p>
-                <p className="text-xs text-slate-500">Cliente: <strong>{r.cliente}</strong></p>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3 flex-1">
-                <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
-                  <p className="text-xs font-bold text-slate-500 uppercase mb-1">Falla reportada</p>
-                  <p className="text-sm font-semibold text-slate-800">{r.sintoma}</p>
-                </div>
-                {r.status === "En chequeo" && (
-                  <div className="mt-auto flex flex-col gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
-                      onClick={() => setChequeoRepair(r)}
-                    >
-                      <Wrench className="h-4 w-4 mr-1" /> Registrar Diagnóstico
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                        onClick={() => {
-                          if (!r.costo || r.costo <= 0) {
-                            toast.error("Debe registrar el diagnóstico con el monto antes de marcar como lista.");
-                            return;
-                          }
-                          updateStatus(r.id, "Listo para entregar");
-                        }}
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-500 border-red-200 hover:bg-red-50"
-                        onClick={() => setRejectId(r.id)}
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                      </Button>
-                    </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {repairs.map(r => {
+            const total = (r.costo ?? 0) + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) ?? 0);
+            const fechaEntrada = r.fecha ? new Date(r.fecha).toLocaleDateString("es-DO", { day: "2-digit", month: "short", year: "numeric" }) : "";
+            return (
+              <Card key={r.id} className="border-none shadow-md flex flex-col overflow-hidden">
+                {/* Header coloreado por estado */}
+                <div className={`px-4 pt-4 pb-3 ${
+                  r.status === "En chequeo" ? "bg-orange-50 border-b border-orange-100" :
+                  r.status === "En reparación" ? "bg-amber-50 border-b border-amber-100" :
+                  r.status === "Listo para entregar" ? "bg-emerald-50 border-b border-emerald-100" :
+                  "bg-red-50 border-b border-red-100"
+                }`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-black text-primary bg-white border border-primary/20 px-2.5 py-0.5 rounded-full">{r.codigo}</span>
+                    {r.status === "En reparación" && <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200 text-xs">En taller</Badge>}
+                    {r.status === "En chequeo" && <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200 text-xs">Chequeo</Badge>}
+                    {r.status === "Listo para entregar" && <Badge className="bg-emerald-500 text-xs">Listo</Badge>}
+                    {r.status === "No se pudo reparar" && <Badge variant="destructive" className="text-xs">Sin solución</Badge>}
                   </div>
-                )}
-                {r.status === "En reparación" && (
-                  <div className="mt-auto flex flex-col gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full border-primary/30 text-primary hover:bg-primary/5"
-                      onClick={() => setEditFacturaRepair(r)}
-                    >
-                      <Pencil className="h-4 w-4 mr-1" /> Editar Factura
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                        onClick={() => {
-                          if (!r.costo || r.costo <= 0) {
-                            toast.error("Debe ingresar el monto de la reparación antes de marcar como lista.");
-                            return;
-                          }
-                          updateStatus(r.id, "Listo para entregar");
-                        }}
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-1" /> Está Lista
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-500 border-red-200 hover:bg-red-50"
-                        onClick={() => setRejectId(r.id)}
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                      </Button>
+                  <p className="text-lg font-bold text-slate-800 leading-tight">{r.marca} {r.modelo}</p>
+                  {r.color && <p className="text-xs text-slate-400">{r.color}{r.serie ? ` · S/N: ${r.serie}` : ""}</p>}
+                  {fechaEntrada && (
+                    <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                      <CalendarDays className="h-3 w-3" /> Entrada: {fechaEntrada}
+                    </p>
+                  )}
+                </div>
+
+                <CardContent className="flex flex-col gap-3 flex-1 p-4">
+                  {/* Cliente + Teléfono */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs text-slate-400 font-semibold uppercase">Cliente</p>
+                      <p className="text-sm font-bold text-slate-800">{r.cliente}</p>
                     </div>
+                    {r.telefono && (
+                      <a
+                        href={`tel:${r.telefono}`}
+                        className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-sm px-3 py-1.5 rounded-xl hover:bg-emerald-100 active:bg-emerald-200 shrink-0"
+                      >
+                        <Phone className="h-4 w-4" /> {r.telefono}
+                      </a>
+                    )}
                   </div>
-                )}
-                {r.status !== "En reparación" && r.status !== "En chequeo" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-auto w-full text-slate-500 border-dashed"
-                    onClick={() => updateStatus(r.id, "En reparación")}
-                  >
-                    ↺ Revertir a pendiente
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+
+                  {/* Clave */}
+                  {r.tipoClave && r.tipoClave !== "sin clave" && (
+                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+                      <KeyRound className="h-4 w-4 text-slate-400 shrink-0" />
+                      <div>
+                        <span className="text-xs text-slate-400 font-semibold uppercase">Clave</span>
+                        <p className="text-sm font-bold text-slate-700">{r.tipoClave === "texto" ? r.claveTexto : "Patrón"}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Falla */}
+                  <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Falla reportada</p>
+                    <p className="text-sm font-semibold text-slate-800">{r.sintoma}</p>
+                    <p className="text-xs text-slate-400 mt-1">Estado al ingreso: <strong>{r.estadoInicial}</strong></p>
+                  </div>
+
+                  {/* Trabajo / Diagnóstico */}
+                  {r.trabajoARealizar && (
+                    <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
+                      <p className="text-xs font-bold text-blue-400 uppercase mb-1">Trabajo / Diagnóstico</p>
+                      <p className="text-sm text-blue-900">{r.trabajoARealizar}</p>
+                    </div>
+                  )}
+
+                  {/* Observaciones */}
+                  {r.observacion && (
+                    <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-100 rounded-lg px-3 py-2">
+                      <StickyNote className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-yellow-800">{r.observacion}</p>
+                    </div>
+                  )}
+
+                  {/* Monto */}
+                  {total > 0 && (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+                      {r.cargosAdicionales && r.cargosAdicionales.length > 0 ? (
+                        <>
+                          <p className="text-xs text-slate-500">Base: <strong>RD$ {(r.costo ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></p>
+                          {r.cargosAdicionales.map(c => (
+                            <p key={c.id} className="text-xs text-slate-500">{c.desc}: <strong>RD$ {c.monto.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></p>
+                          ))}
+                          <div className="border-t border-emerald-200 mt-1.5 pt-1.5 flex justify-between items-center">
+                            <span className="text-xs font-bold text-emerald-700 uppercase">Total</span>
+                            <span className="text-xl font-black text-emerald-700">RD$ {total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-emerald-700 uppercase">Monto</span>
+                          <span className="text-xl font-black text-emerald-700">RD$ {total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Acciones */}
+                  <div className="mt-auto pt-1 flex flex-col gap-2">
+                    {r.status === "En chequeo" && (
+                      <>
+                        <Button
+                          className="w-full h-12 text-base border-orange-300 text-orange-700 hover:bg-orange-50"
+                          variant="outline"
+                          onClick={() => setChequeoRepair(r)}
+                        >
+                          <Wrench className="h-5 w-5 mr-2" /> Registrar Diagnóstico
+                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            className="flex-1 h-12 text-base bg-emerald-500 hover:bg-emerald-600"
+                            onClick={() => {
+                              if (!r.costo || r.costo <= 0) {
+                                toast.error("Debe registrar el diagnóstico con el monto antes de marcar como lista.");
+                                return;
+                              }
+                              updateStatus(r.id, "Listo para entregar");
+                            }}
+                          >
+                            <CheckCircle2 className="h-5 w-5 mr-2" /> Está Lista
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-12 px-4 text-red-500 border-red-200 hover:bg-red-50"
+                            onClick={() => setRejectId(r.id)}
+                          >
+                            <AlertTriangle className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                    {r.status === "En reparación" && (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 text-base border-primary/30 text-primary hover:bg-primary/5"
+                          onClick={() => setEditFacturaRepair(r)}
+                        >
+                          <Pencil className="h-5 w-5 mr-2" /> Editar Factura
+                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            className="flex-1 h-12 text-base bg-emerald-500 hover:bg-emerald-600"
+                            onClick={() => {
+                              if (!r.costo || r.costo <= 0) {
+                                toast.error("Debe ingresar el monto de la reparación antes de marcar como lista.");
+                                return;
+                              }
+                              updateStatus(r.id, "Listo para entregar");
+                            }}
+                          >
+                            <CheckCircle2 className="h-5 w-5 mr-2" /> Está Lista
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-12 px-4 text-red-500 border-red-200 hover:bg-red-50"
+                            onClick={() => setRejectId(r.id)}
+                          >
+                            <AlertTriangle className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                    {r.status !== "En reparación" && r.status !== "En chequeo" && (
+                      <Button
+                        variant="outline"
+                        className="w-full h-11 text-slate-500 border-dashed"
+                        onClick={() => updateStatus(r.id, "En reparación")}
+                      >
+                        ↺ Revertir a pendiente
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
