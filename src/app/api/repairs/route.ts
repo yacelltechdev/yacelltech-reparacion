@@ -7,8 +7,10 @@ export async function GET(req: Request) {
     const q       = searchParams.get("q")?.trim() || "";
     const status  = searchParams.get("status") || "";
     const tecnico = searchParams.get("tecnico") || "";
-    const desde   = searchParams.get("desde") || "";
-    const hasta   = searchParams.get("hasta") || "";
+    const desde          = searchParams.get("desde") || "";
+    const hasta          = searchParams.get("hasta") || "";
+    const despachoDesde  = searchParams.get("despacho_desde") || "";
+    const despachoHasta  = searchParams.get("despacho_hasta") || "";
     const page    = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit   = parseInt(searchParams.get("limit") || "0");
 
@@ -17,10 +19,12 @@ export async function GET(req: Request) {
     if (q) {
       query = query.or(`codigo.ilike.%${q}%,cliente.ilike.%${q}%,telefono.ilike.%${q}%,modelo.ilike.%${q}%,marca.ilike.%${q}%,serie.ilike.%${q}%`);
     }
-    if (status)  query = query.eq('status', status);
-    if (tecnico) query = query.eq('tecnico', tecnico);
-    if (desde)   query = query.gte('fecha', desde);
-    if (hasta)   query = query.lte('fecha', hasta + 'T23:59:59');
+    if (status)        query = query.eq('status', status);
+    if (tecnico)       query = query.eq('tecnico', tecnico);
+    if (desde)         query = query.gte('fecha', desde);
+    if (hasta)         query = query.lte('fecha', hasta + 'T23:59:59');
+    if (despachoDesde) query = query.gte('fecha_despacho', despachoDesde);
+    if (despachoHasta) query = query.lte('fecha_despacho', despachoHasta);
 
     query = query.order('id', { ascending: false });
 

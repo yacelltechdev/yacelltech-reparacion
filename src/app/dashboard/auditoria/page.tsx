@@ -1,12 +1,10 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ClipboardCheck, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { ClipboardCheck, AlertTriangle, CheckCircle2, Clock, Scan, X } from "lucide-react";
 import { Repair } from "@/lib/types";
 
 const STORAGE_KEY = "yacell_auditoria";
@@ -35,6 +33,8 @@ function statusColor(status: string) {
   return "bg-slate-100 text-slate-700";
 }
 
+type ScanFeedback = { tipo: "ok"; codigo: string } | { tipo: "error"; codigo: string } | { tipo: "ya"; codigo: string } | null;
+
 export default function AuditoriaPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -43,6 +43,11 @@ export default function AuditoriaPage() {
   const [reparaciones, setReparaciones] = useState<Repair[]>([]);
   const [loading, setLoading] = useState(false);
   const [reviewed, setReviewed] = useState<Record<string, Record<string, boolean>>>({});
+  const [scanInput, setScanInput] = useState("");
+  const [feedback, setFeedback] = useState<ScanFeedback>(null);
+  const scanRef = useRef<HTMLInputElement>(null);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
@@ -55,7 +60,7 @@ export default function AuditoriaPage() {
   const cargar = useCallback(async (f: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/repairs?desde=${f}&hasta=${f}`);
+      const res = await fetch(`/api/repairs?despacho_desde=${f}&despacho_hasta=${f}`);
       const data = await res.json();
       const sorted = (Array.isArray(data) ? data : data.data || []).sort(
         (a: Repair, b: Repair) => codeNum(a.codigo) - codeNum(b.codigo)
@@ -71,21 +76,77 @@ export default function AuditoriaPage() {
     cargar(fecha);
   }, [fecha, cargar]);
 
-  const toggleRevisada = (codigo: string) => {
+  // Mantener foco en el input de escaneo
+  const refocusScan = () => {
+    setTimeout(() => scanRef.current?.focus(), 50);
+  };
+
+  useEffect(() => {
+    refocusScan();
+  }, [loading]);
+
+  const mostrarFeedback = (fb: ScanFeedback) => {
+    setFeedback(fb);
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = setTimeout(() => setFeedback(null), 2500);
+  };
+
+  const procesarCodigo = (raw: string) => {
+    // Normalizar: quitar espacios, convertir a mayúsculas
+    const codigo = raw.trim().toUpperCase();
+    if (!codigo) return;
+
+    const codigoMapa: Record<string, Repair> = {};
+    reparaciones.forEach(r => { codigoMapa[r.codigo] = r; });
+
+    const diaReviewed = reviewed[fecha] || {};
+
+    if (!codigoMapa[codigo]) {
+      mostrarFeedback({ tipo: "error", codigo });
+      return;
+    }
+
+    if (diaReviewed[codigo]) {
+      mostrarFeedback({ tipo: "ya", codigo });
+      // Igual hace scroll a la factura
+      rowRefs.current[codigo]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     setReviewed(prev => {
       const diaActual = { ...(prev[fecha] || {}) };
-      diaActual[codigo] = !diaActual[codigo];
+      diaActual[codigo] = true;
       const next = { ...prev, [fecha]: diaActual };
       saveReviewed(next);
       return next;
     });
+
+    mostrarFeedback({ tipo: "ok", codigo });
+    rowRefs.current[codigo]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const handleScanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      procesarCodigo(scanInput);
+      setScanInput("");
+    }
+  };
+
+  const desmarcar = (codigo: string) => {
+    setReviewed(prev => {
+      const diaActual = { ...(prev[fecha] || {}) };
+      delete diaActual[codigo];
+      const next = { ...prev, [fecha]: diaActual };
+      saveReviewed(next);
+      return next;
+    });
+    refocusScan();
   };
 
   const diaReviewed = reviewed[fecha] || {};
   const revisadas = reparaciones.filter(r => diaReviewed[r.codigo]).length;
   const pendientes = reparaciones.length - revisadas;
 
-  // Detectar brechas en la secuencia de códigos del día
   const brechas: number[] = [];
   for (let i = 0; i < reparaciones.length - 1; i++) {
     const curr = codeNum(reparaciones[i].codigo);
@@ -96,26 +157,64 @@ export default function AuditoriaPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-5">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Auditoría de Facturas</h1>
-        <p className="text-slate-500 text-sm">Revisa las facturas del día y marca las que ya verificaste</p>
+        <p className="text-slate-500 text-sm">Facturas despachadas en la fecha seleccionada — escanea el código de barras para marcar cada una</p>
       </div>
 
       {/* Selector de fecha */}
       <Card className="border-none shadow-sm">
-        <CardContent className="pt-5">
+        <CardContent className="pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Fecha a revisar:</label>
+            <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Fecha de despacho:</label>
             <Input
               type="date"
               value={fecha}
-              onChange={e => setFecha(e.target.value)}
+              onChange={e => { setFecha(e.target.value); refocusScan(); }}
               className="w-44"
             />
           </div>
         </CardContent>
       </Card>
+
+      {/* Input de escaneo — siempre visible si hay facturas */}
+      {!loading && reparaciones.length > 0 && (
+        <div
+          className="rounded-xl border-2 border-primary/40 bg-primary/5 px-5 py-4 space-y-2 cursor-text"
+          onClick={() => scanRef.current?.focus()}
+        >
+          <div className="flex items-center gap-2 text-primary font-semibold text-sm">
+            <Scan className="h-4 w-4" />
+            Zona de escaneo — apunta el lector aquí
+          </div>
+          <Input
+            ref={scanRef}
+            value={scanInput}
+            onChange={e => setScanInput(e.target.value.toUpperCase())}
+            onKeyDown={handleScanKeyDown}
+            placeholder="REP-00001"
+            className="font-mono text-lg tracking-widest bg-white border-primary/30 focus:border-primary"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          {/* Feedback del último escaneo */}
+          {feedback && (
+            <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all ${
+              feedback.tipo === "ok"
+                ? "bg-emerald-100 text-emerald-800"
+                : feedback.tipo === "ya"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-red-100 text-red-800"
+            }`}>
+              {feedback.tipo === "ok" && <><CheckCircle2 className="h-4 w-4" /> {feedback.codigo} — marcada como revisada</>}
+              {feedback.tipo === "ya" && <><CheckCircle2 className="h-4 w-4" /> {feedback.codigo} — ya estaba revisada</>}
+              {feedback.tipo === "error" && <><AlertTriangle className="h-4 w-4" /> {feedback.codigo} — no encontrada en este día</>}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Resumen */}
       {!loading && reparaciones.length > 0 && (
@@ -177,12 +276,15 @@ export default function AuditoriaPage() {
             <div className="divide-y divide-slate-100">
               {reparaciones.map((r, idx) => {
                 const esRevisada = !!diaReviewed[r.codigo];
-                // Detectar si hay brecha justo antes de esta factura
+                const esUltimaEscaneada = feedback?.tipo === "ok" && feedback.codigo === r.codigo;
                 const hayBrecha = idx > 0 &&
                   codeNum(r.codigo) - codeNum(reparaciones[idx - 1].codigo) > 1;
 
                 return (
-                  <div key={r.id}>
+                  <div
+                    key={r.id}
+                    ref={el => { rowRefs.current[r.codigo] = el; }}
+                  >
                     {hayBrecha && (
                       <div className="flex items-center gap-2 py-2 px-1">
                         <div className="flex-1 border-t border-dashed border-amber-300" />
@@ -192,23 +294,23 @@ export default function AuditoriaPage() {
                         <div className="flex-1 border-t border-dashed border-amber-300" />
                       </div>
                     )}
-                    <div
-                      className={`flex items-center gap-3 py-3 px-1 transition-colors rounded-lg ${
-                        esRevisada ? "opacity-60" : ""
-                      }`}
-                    >
-                      <Checkbox
-                        id={`chk-${r.codigo}`}
-                        checked={esRevisada}
-                        onCheckedChange={() => toggleRevisada(r.codigo)}
-                        className="shrink-0"
-                      />
-                      <label
-                        htmlFor={`chk-${r.codigo}`}
-                        className="flex-1 cursor-pointer min-w-0"
-                      >
+                    <div className={`flex items-center gap-3 py-3 px-2 rounded-lg transition-all duration-300 ${
+                      esUltimaEscaneada
+                        ? "bg-emerald-50 ring-1 ring-emerald-300"
+                        : esRevisada
+                        ? "opacity-50"
+                        : ""
+                    }`}>
+                      {/* Indicador visual */}
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${esRevisada ? "bg-emerald-400" : "bg-slate-200"}`} />
+
+                      <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`text-xs font-black px-2 py-0.5 rounded bg-primary/10 text-primary ${esRevisada ? "line-through" : ""}`}>
+                          <span className={`text-xs font-black px-2 py-0.5 rounded font-mono ${
+                            esRevisada
+                              ? "bg-emerald-100 text-emerald-700 line-through"
+                              : "bg-primary/10 text-primary"
+                          }`}>
                             {r.codigo}
                           </span>
                           <span className="text-sm font-semibold text-slate-800 truncate">
@@ -230,9 +332,18 @@ export default function AuditoriaPage() {
                             <span className="text-xs text-slate-400">· {r.tecnico}</span>
                           )}
                         </div>
-                      </label>
-                      {esRevisada && (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                      </div>
+
+                      {esRevisada ? (
+                        <button
+                          onClick={() => desmarcar(r.codigo)}
+                          title="Desmarcar"
+                          className="shrink-0 p-1 rounded hover:bg-red-50 text-emerald-500 hover:text-red-400 transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <div className="w-5 shrink-0" />
                       )}
                     </div>
                   </div>
@@ -243,7 +354,7 @@ export default function AuditoriaPage() {
         </CardContent>
       </Card>
 
-      {/* Barra de progreso si hay facturas */}
+      {/* Barra de progreso */}
       {!loading && reparaciones.length > 0 && (
         <div className="rounded-xl border bg-white px-5 py-4 shadow-sm space-y-2">
           <div className="flex justify-between text-xs font-semibold text-slate-600">
