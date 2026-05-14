@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ClipboardCheck, CheckCircle2, Clock, Scan, X } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, Clock, Scan, X, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
 
 const STORAGE_KEY = "yacell_auditoria";
@@ -106,8 +106,6 @@ export default function AuditoriaPage() {
 
     if (diaReviewed[codigo]) {
       mostrarFeedback({ tipo: "ya", codigo });
-      // Igual hace scroll a la factura
-      rowRefs.current[codigo]?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -120,7 +118,6 @@ export default function AuditoriaPage() {
     });
 
     mostrarFeedback({ tipo: "ok", codigo });
-    rowRefs.current[codigo]?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   const handleScanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -128,6 +125,15 @@ export default function AuditoriaPage() {
       procesarCodigo(scanInput);
       setScanInput("");
     }
+  };
+
+  const limpiarDia = () => {
+    setReviewed(prev => {
+      const next = { ...prev, [fecha]: {} };
+      saveReviewed(next);
+      return next;
+    });
+    refocusScan();
   };
 
   const desmarcar = (codigo: string) => {
@@ -144,6 +150,10 @@ export default function AuditoriaPage() {
   const diaReviewed = reviewed[fecha] || {};
   const revisadas = reparaciones.filter(r => diaReviewed[r.codigo]).length;
   const pendientes = reparaciones.length - revisadas;
+  const reparacionesOrdenadas = [
+    ...reparaciones.filter(r => !diaReviewed[r.codigo]),
+    ...reparaciones.filter(r => diaReviewed[r.codigo]),
+  ];
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
@@ -230,13 +240,25 @@ export default function AuditoriaPage() {
       {/* Lista de facturas */}
       <Card className="border-none shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-primary text-md">
-            <ClipboardCheck className="h-4 w-4" />
-            {loading
-              ? "Cargando..."
-              : reparaciones.length === 0
-              ? `Sin facturas para ${fecha}`
-              : `${reparaciones.length} factura(s) — ${fecha}`}
+          <CardTitle className="flex items-center justify-between text-primary text-md">
+            <span className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4" />
+              {loading
+                ? "Cargando..."
+                : reparaciones.length === 0
+                ? `Sin facturas para ${fecha}`
+                : `${reparaciones.length} factura(s) — ${fecha}`}
+            </span>
+            {!loading && revisadas > 0 && (
+              <button
+                onClick={limpiarDia}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 transition-colors font-normal"
+                title="Limpiar todo"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Limpiar todo
+              </button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -246,7 +268,7 @@ export default function AuditoriaPage() {
             <div className="py-8 text-center text-slate-400 text-sm">No hay facturas registradas para esta fecha.</div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {reparaciones.map((r, idx) => {
+              {reparacionesOrdenadas.map((r, idx) => {
                 const esRevisada = !!diaReviewed[r.codigo];
                 const esUltimaEscaneada = feedback?.tipo === "ok" && feedback.codigo === r.codigo;
 
@@ -304,7 +326,13 @@ export default function AuditoriaPage() {
                           <X className="h-3.5 w-3.5" />
                         </button>
                       ) : (
-                        <div className="w-5 shrink-0" />
+                        <button
+                          onClick={() => { procesarCodigo(r.codigo); refocusScan(); }}
+                          title="Marcar como revisada"
+                          className="shrink-0 p-1 rounded hover:bg-emerald-50 text-slate-300 hover:text-emerald-500 transition-colors"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </button>
                       )}
                     </div>
                   </div>
