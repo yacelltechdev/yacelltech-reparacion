@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     if (desde)         query = query.gte('fecha', desde);
     if (hasta)         query = query.lte('fecha', hasta + 'T23:59:59');
     if (despachoDesde) query = query.gte('fecha_despacho', despachoDesde);
-    if (despachoHasta) query = query.lte('fecha_despacho', despachoHasta);
+    if (despachoHasta) query = query.lte('fecha_despacho', despachoHasta + 'T23:59:59');
 
     query = query.order('id', { ascending: false });
 
