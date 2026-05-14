@@ -171,7 +171,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 pb-[72px] lg:pb-4"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -400,7 +400,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
 
       {/* Modal Editar */}
       {editing && (
-        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between border-b px-6 py-4">
               <h2 className="text-lg font-bold">Editar Reparación — <span className="text-primary">{repair.codigo}</span></h2>
@@ -524,7 +524,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
 
       {/* Confirmación eliminar */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
             <Trash2 className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-black mb-2">¿Eliminar esta orden?</h2>
