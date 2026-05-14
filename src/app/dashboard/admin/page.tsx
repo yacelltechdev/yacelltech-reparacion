@@ -15,6 +15,7 @@ type Preset = { id: number; texto: string; orden: number };
 
 type FilaManual = {
   cliente: string;
+  cedula: string;
   telefono: string;
   marca: string;
   modelo: string;
@@ -24,7 +25,7 @@ type FilaManual = {
 };
 
 const filaVacia = (): FilaManual => ({
-  cliente: "", telefono: "", marca: "", modelo: "", trabajo: "", costo: "", tecnico: "Oscar",
+  cliente: "", cedula: "", telefono: "", marca: "", modelo: "", trabajo: "", costo: "", tecnico: "Oscar",
 });
 
 export default function AdminPage() {
@@ -99,7 +100,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           cliente: f.cliente.trim(),
           telefono: f.telefono.trim(),
-          cedula: "",
+          cedula: f.cedula.trim(),
           marca: f.marca.trim(),
           modelo: f.modelo.trim(),
           color: "",
@@ -193,6 +194,7 @@ export default function AdminPage() {
               <thead>
                 <tr className="text-slate-500 text-xs uppercase tracking-wide">
                   <th className="pb-2 text-left font-semibold pr-2">Cliente</th>
+                  <th className="pb-2 text-left font-semibold pr-2">Cédula</th>
                   <th className="pb-2 text-left font-semibold pr-2">Teléfono</th>
                   <th className="pb-2 text-left font-semibold pr-2">Marca</th>
                   <th className="pb-2 text-left font-semibold pr-2">Modelo</th>
@@ -206,6 +208,7 @@ export default function AdminPage() {
                 {filas.map((f, idx) => (
                   <tr key={idx} className="align-top">
                     <td className="pr-2 pb-2"><Input placeholder="Nombre" value={f.cliente} onChange={e => actualizarFila(idx, "cliente", e.target.value)} className="min-w-[130px]" /></td>
+                    <td className="pr-2 pb-2"><Input placeholder="000-0000000-0" value={f.cedula} onChange={e => actualizarFila(idx, "cedula", e.target.value)} className="min-w-[120px]" /></td>
                     <td className="pr-2 pb-2"><Input placeholder="809-xxx-xxxx" value={f.telefono} onChange={e => actualizarFila(idx, "telefono", e.target.value)} className="min-w-[120px]" /></td>
                     <td className="pr-2 pb-2"><Input placeholder="Samsung" value={f.marca} onChange={e => actualizarFila(idx, "marca", e.target.value)} className="min-w-[100px]" /></td>
                     <td className="pr-2 pb-2"><Input placeholder="Galaxy A54" value={f.modelo} onChange={e => actualizarFila(idx, "modelo", e.target.value)} className="min-w-[110px]" /></td>
