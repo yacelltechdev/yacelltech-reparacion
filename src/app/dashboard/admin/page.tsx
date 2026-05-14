@@ -86,7 +86,7 @@ export default function AdminPage() {
   };
 
   const subirManuales = async () => {
-    const validas = filas.filter(f => f.cliente.trim() && f.telefono.trim() && f.marca.trim() && f.modelo.trim() && f.trabajo.trim() && parseFloat(f.costo) > 0);
+    const validas = filas.filter(f => f.cliente.trim() && parseFloat(f.costo) > 0);
     if (validas.length === 0) {
       toast.error("Completa al menos una fila con todos los campos.");
       return;
