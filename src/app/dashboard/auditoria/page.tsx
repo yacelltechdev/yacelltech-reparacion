@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ClipboardCheck, AlertTriangle, CheckCircle2, Clock, Scan, X } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, Clock, Scan, X } from "lucide-react";
 import { Repair } from "@/lib/types";
 
 const STORAGE_KEY = "yacell_auditoria";
@@ -21,9 +21,6 @@ function saveReviewed(data: Record<string, Record<string, boolean>>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function codeNum(codigo: string) {
-  return parseInt(codigo.replace("REP-", ""), 10);
-}
 
 function statusColor(status: string) {
   if (status === "Entregado bueno") return "bg-emerald-100 text-emerald-800";
@@ -63,7 +60,8 @@ export default function AuditoriaPage() {
       const res = await fetch(`/api/repairs?despacho_desde=${f}&despacho_hasta=${f}`);
       const data = await res.json();
       const sorted = (Array.isArray(data) ? data : data.data || []).sort(
-        (a: Repair, b: Repair) => codeNum(a.codigo) - codeNum(b.codigo)
+        (a: Repair, b: Repair) =>
+          parseInt(a.codigo.replace("REP-", ""), 10) - parseInt(b.codigo.replace("REP-", ""), 10)
       );
       setReparaciones(sorted);
     } catch {
@@ -147,15 +145,6 @@ export default function AuditoriaPage() {
   const revisadas = reparaciones.filter(r => diaReviewed[r.codigo]).length;
   const pendientes = reparaciones.length - revisadas;
 
-  const brechas: number[] = [];
-  for (let i = 0; i < reparaciones.length - 1; i++) {
-    const curr = codeNum(reparaciones[i].codigo);
-    const next = codeNum(reparaciones[i + 1].codigo);
-    if (next - curr > 1) {
-      for (let m = curr + 1; m < next; m++) brechas.push(m);
-    }
-  }
-
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
@@ -210,7 +199,7 @@ export default function AuditoriaPage() {
             }`}>
               {feedback.tipo === "ok" && <><CheckCircle2 className="h-4 w-4" /> {feedback.codigo} — marcada como revisada</>}
               {feedback.tipo === "ya" && <><CheckCircle2 className="h-4 w-4" /> {feedback.codigo} — ya estaba revisada</>}
-              {feedback.tipo === "error" && <><AlertTriangle className="h-4 w-4" /> {feedback.codigo} — no encontrada en este día</>}
+              {feedback.tipo === "error" && <><X className="h-4 w-4" /> {feedback.codigo} — no encontrada en este día</>}
             </div>
           )}
         </div>
@@ -238,23 +227,6 @@ export default function AuditoriaPage() {
         </div>
       )}
 
-      {/* Alerta de brechas */}
-      {!loading && brechas.length > 0 && (
-        <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-amber-800">
-              {brechas.length} código(s) no pertenecen a este día
-            </p>
-            <p className="text-xs text-amber-700 mt-0.5">
-              Faltan en la secuencia:{" "}
-              {brechas.slice(0, 10).map(n => `REP-${n.toString().padStart(5, "0")}`).join(", ")}
-              {brechas.length > 10 && ` y ${brechas.length - 10} más`}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Lista de facturas */}
       <Card className="border-none shadow-sm">
         <CardHeader>
@@ -277,23 +249,12 @@ export default function AuditoriaPage() {
               {reparaciones.map((r, idx) => {
                 const esRevisada = !!diaReviewed[r.codigo];
                 const esUltimaEscaneada = feedback?.tipo === "ok" && feedback.codigo === r.codigo;
-                const hayBrecha = idx > 0 &&
-                  codeNum(r.codigo) - codeNum(reparaciones[idx - 1].codigo) > 1;
 
                 return (
                   <div
                     key={r.id}
                     ref={el => { rowRefs.current[r.codigo] = el; }}
                   >
-                    {hayBrecha && (
-                      <div className="flex items-center gap-2 py-2 px-1">
-                        <div className="flex-1 border-t border-dashed border-amber-300" />
-                        <span className="text-xs text-amber-500 font-semibold whitespace-nowrap">
-                          ⚠ salto en secuencia
-                        </span>
-                        <div className="flex-1 border-t border-dashed border-amber-300" />
-                      </div>
-                    )}
                     <div className={`flex items-center gap-3 py-3 px-2 rounded-lg transition-all duration-300 ${
                       esUltimaEscaneada
                         ? "bg-emerald-50 ring-1 ring-emerald-300"
