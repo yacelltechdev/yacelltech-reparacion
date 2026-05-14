@@ -180,7 +180,7 @@ export default function AuditoriaPage() {
           <Input
             ref={scanRef}
             value={scanInput}
-            onChange={e => setScanInput(e.target.value.toUpperCase())}
+            onChange={e => setScanInput(e.target.value.toUpperCase().replace(/'/g, '-'))}
             onKeyDown={handleScanKeyDown}
             placeholder="REP-00001"
             className="font-mono text-lg tracking-widest bg-white border-primary/30 focus:border-primary"
