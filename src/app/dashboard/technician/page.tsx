@@ -506,13 +506,6 @@ export default function TechnicianPage() {
                     )}
                     {r.status === "En reparación" && (
                       <>
-                        <Button
-                          variant="outline"
-                          className="w-full h-12 text-base border-primary/30 text-primary hover:bg-primary/5"
-                          onClick={() => setEditFacturaRepair(r)}
-                        >
-                          <Pencil className="h-5 w-5 mr-2" /> Editar Factura
-                        </Button>
                         <div className="flex gap-2">
                           <Button
                             className="flex-1 h-12 text-base bg-emerald-500 hover:bg-emerald-600"
