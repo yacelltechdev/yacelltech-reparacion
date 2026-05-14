@@ -234,12 +234,17 @@ export default function TechnicianPage() {
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [chequeoRepair, setChequeoRepair] = useState<Repair | null>(null);
   const [editFacturaRepair, setEditFacturaRepair] = useState<Repair | null>(null);
+  const [diagnosticoEnabled, setDiagnosticoEnabled] = useState(false);
   const knownIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
     loadRepairs();
     const interval = setInterval(loadRepairs, 10000);
+    fetch("/api/config/tecnico_diagnostico_enabled")
+      .then(r => r.json())
+      .then(d => setDiagnosticoEnabled(d.value === "true"))
+      .catch(() => {});
     return () => clearInterval(interval);
   }, [user]);
 
@@ -474,13 +479,15 @@ export default function TechnicianPage() {
                   <div className="mt-auto pt-1 flex flex-col gap-2">
                     {r.status === "En chequeo" && (
                       <>
-                        <Button
-                          className="w-full h-12 text-base border-orange-300 text-orange-700 hover:bg-orange-50"
-                          variant="outline"
-                          onClick={() => setChequeoRepair(r)}
-                        >
-                          <Wrench className="h-5 w-5 mr-2" /> Registrar Diagnóstico
-                        </Button>
+                        {diagnosticoEnabled && (
+                          <Button
+                            className="w-full h-12 text-base border-orange-300 text-orange-700 hover:bg-orange-50"
+                            variant="outline"
+                            onClick={() => setChequeoRepair(r)}
+                          >
+                            <Wrench className="h-5 w-5 mr-2" /> Registrar Diagnóstico
+                          </Button>
+                        )}
                         <div className="flex gap-2">
                           <Button
                             className="flex-1 h-12 text-base bg-emerald-500 hover:bg-emerald-600"

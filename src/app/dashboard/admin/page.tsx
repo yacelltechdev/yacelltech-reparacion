@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search } from "lucide-react";
+import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search, Settings2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import { Repair } from "@/lib/types";
 
@@ -47,9 +48,36 @@ export default function AdminPage() {
   const [editandoFecha, setEditandoFecha] = useState<{ id: number; fecha: string; fecha_despacho: string } | null>(null);
   const [guardandoFecha, setGuardandoFecha] = useState(false);
 
+  // Ajustes
+  const [diagnosticoEnabled, setDiagnosticoEnabled] = useState(false);
+  const [togglingDiagnostico, setTogglingDiagnostico] = useState(false);
+
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
   }, [user, router]);
+
+  useEffect(() => {
+    fetch("/api/config/tecnico_diagnostico_enabled")
+      .then(r => r.json())
+      .then(d => setDiagnosticoEnabled(d.value === "true"))
+      .catch(() => {});
+  }, []);
+
+  const toggleDiagnostico = async (val: boolean) => {
+    setTogglingDiagnostico(true);
+    try {
+      await fetch("/api/config/tecnico_diagnostico_enabled", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: val }),
+      });
+      setDiagnosticoEnabled(val);
+      toast.success(val ? "Diagnóstico habilitado para técnicos" : "Diagnóstico deshabilitado para técnicos");
+    } catch {
+      toast.error("Error al actualizar ajuste");
+    }
+    setTogglingDiagnostico(false);
+  };
 
   const load = async () => {
     const res = await fetch("/api/observaciones-preset");
@@ -349,6 +377,27 @@ export default function AdminPage() {
               </div>
             );
           })()}
+        </CardContent>
+      </Card>
+
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-primary text-md">
+            <Settings2 className="h-4 w-4" /> Ajustes de Técnicos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between rounded-lg border bg-slate-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-700">Registro de diagnóstico</p>
+              <p className="text-xs text-slate-500">Permite a los técnicos registrar el diagnóstico en órdenes &quot;En chequeo&quot;</p>
+            </div>
+            <Switch
+              checked={diagnosticoEnabled}
+              onCheckedChange={toggleDiagnostico}
+              disabled={togglingDiagnostico}
+            />
+          </div>
         </CardContent>
       </Card>
 
