@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, AlertCircle, Printer, X, PlusCircle, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { Check, AlertCircle, Printer, X, PlusCircle, Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
 import PrintTicket from "./PrintTicket";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -52,6 +52,8 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       marca: repair.marca, modelo: repair.modelo, color: repair.color, serie: repair.serie,
       sintoma: repair.sintoma, observacion: repair.observacion, costo: repair.costo,
       tecnico: repair.tecnico, tipoClave: repair.tipoClave, claveTexto: repair.claveTexto,
+      trabajoARealizar: repair.trabajoARealizar || "",
+      cargosAdicionales: repair.cargosAdicionales ? [...repair.cargosAdicionales] : [],
     });
     setEditing(true);
   };
@@ -312,7 +314,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                     onClick={() => setAddingCargo(true)}
                     className="mt-3 text-[11px] text-emerald-700 border border-emerald-300 bg-white rounded-md px-3 py-1 hover:bg-emerald-50 flex items-center gap-1"
                   >
-                    <PlusCircle className="h-3 w-3" /> Añadir Cargo
+                    <PlusCircle className="h-3 w-3" /> Agregar reparación
                   </button>
                 )}
               </div>
@@ -321,7 +323,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
             {/* Formulario añadir cargo */}
             {addingCargo && (
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                <p className="text-xs font-bold text-slate-600 mb-3">Añadir Cargo Adicional</p>
+                <p className="text-xs font-bold text-slate-600 mb-3">Agregar Reparación Adicional</p>
                 <form onSubmit={handleAddCargo} className="flex gap-2 items-center">
                   <input
                     type="text"
@@ -453,12 +455,63 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                 </div>
               </div>
               <div className="space-y-1">
+                <Label>Trabajo / Concepto de reparación</Label>
+                <Input value={editData.trabajoARealizar || ""} onChange={e => setEditData(p => ({ ...p, trabajoARealizar: e.target.value }))} placeholder="Ej: Cambio de pantalla, Cambio de batería..." />
+              </div>
+              <div className="space-y-1">
                 <Label>Síntoma</Label>
-                <Textarea value={editData.sintoma || ""} onChange={e => setEditData(p => ({ ...p, sintoma: e.target.value }))} className="min-h-[70px]" />
+                <Textarea value={editData.sintoma || ""} onChange={e => setEditData(p => ({ ...p, sintoma: e.target.value }))} className="min-h-[60px]" />
               </div>
               <div className="space-y-1">
                 <Label>Observación</Label>
-                <Textarea value={editData.observacion || ""} onChange={e => setEditData(p => ({ ...p, observacion: e.target.value }))} className="min-h-[70px]" />
+                <Textarea value={editData.observacion || ""} onChange={e => setEditData(p => ({ ...p, observacion: e.target.value }))} className="min-h-[60px]" />
+              </div>
+
+              {/* Reparaciones adicionales */}
+              <div className="space-y-2">
+                <Label>Reparaciones adicionales</Label>
+                {(editData.cargosAdicionales || []).map((c, idx) => (
+                  <div key={c.id} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="Descripción"
+                      value={c.desc}
+                      onChange={e => setEditData(p => ({
+                        ...p,
+                        cargosAdicionales: (p.cargosAdicionales || []).map((x, i) => i === idx ? { ...x, desc: e.target.value } : x)
+                      }))}
+                      className="flex-[2]"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="RD$"
+                      value={c.monto || ""}
+                      onChange={e => setEditData(p => ({
+                        ...p,
+                        cargosAdicionales: (p.cargosAdicionales || []).map((x, i) => i === idx ? { ...x, monto: parseFloat(e.target.value) || 0 } : x)
+                      }))}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button" variant="ghost" size="icon"
+                      className="h-9 w-9 text-red-400 hover:text-red-600 shrink-0"
+                      onClick={() => setEditData(p => ({
+                        ...p,
+                        cargosAdicionales: (p.cargosAdicionales || []).filter((_, i) => i !== idx)
+                      }))}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button" variant="outline" size="sm"
+                  onClick={() => setEditData(p => ({
+                    ...p,
+                    cargosAdicionales: [...(p.cargosAdicionales || []), { id: Date.now(), desc: "", monto: 0 }]
+                  }))}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Agregar reparación
+                </Button>
               </div>
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-2 bg-slate-50 rounded-b-2xl">
