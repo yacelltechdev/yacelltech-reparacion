@@ -234,6 +234,14 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
               )}
             </div>
 
+            {/* Trabajo a realizar */}
+            {repair.trabajoARealizar && (
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <p className="text-[10px] uppercase font-bold text-slate-400 mb-2">Trabajo a Realizar</p>
+                <p className="text-sm font-semibold text-slate-800 leading-relaxed">{repair.trabajoARealizar}</p>
+              </div>
+            )}
+
             {/* Checklist */}
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
               <p className="text-[10px] uppercase font-bold text-slate-400 mb-3">Revisión de Entrada</p>
