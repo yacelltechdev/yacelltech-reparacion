@@ -207,17 +207,22 @@ export default function CuadreTecnicoPage() {
 
             {/* Último pago */}
             {ultimoCuadre ? (
-              <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
-                <span className="text-blue-400 text-lg">💳</span>
-                <div>
-                  <span className="font-bold text-blue-800">Último pago a {tecnico}:</span>
-                  <span className="ml-2 text-blue-700">
-                    {new Date(ultimoCuadre.creado_en).toLocaleDateString("es-DO", { day: "2-digit", month: "long", year: "numeric" })}
-                  </span>
-                  <span className="ml-3 text-blue-600 font-semibold">
-                    {ultimoCuadre.cantidad_reparados} reparaciones — RD$ {formatMoney(ultimoCuadre.total_generado)}
-                  </span>
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-blue-400 text-lg">💳</span>
+                  <div>
+                    <span className="font-bold text-blue-800">Último pago a {tecnico}:</span>
+                    <span className="ml-2 text-blue-700">
+                      {new Date(ultimoCuadre.creado_en).toLocaleDateString("es-DO", { day: "2-digit", month: "long", year: "numeric" })}
+                    </span>
+                    <span className="ml-3 text-blue-600 font-semibold">
+                      {ultimoCuadre.cantidad_reparados} reparaciones — RD$ {formatMoney(ultimoCuadre.total_generado)}
+                    </span>
+                  </div>
                 </div>
+                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50 shrink-0" onClick={() => { setAnularCuadre(ultimoCuadre); setAnularError(""); }}>
+                  <RotateCcw className="h-3 w-3" /> Reabrir
+                </Button>
               </div>
             ) : (
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400 italic">
