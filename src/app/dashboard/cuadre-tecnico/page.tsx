@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, RefreshCcw, Wrench, DollarSign, ChevronDown, ChevronUp, Printer } from "lucide-react";
+import { CheckCircle2, RefreshCcw, Wrench, DollarSign, ChevronDown, ChevronUp, Printer, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
@@ -88,6 +88,9 @@ export default function CuadreTecnicoPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [printCuadre, setPrintCuadre] = useState<CuadreTecnico | null>(null);
+  const [anularCuadre, setAnularCuadre] = useState<CuadreTecnico | null>(null);
+  const [anulando, setAnulando] = useState(false);
+  const [anularError, setAnularError] = useState("");
 
   useEffect(() => { loadHistorial(); }, []);
 
@@ -138,6 +141,23 @@ export default function CuadreTecnicoPage() {
       setPrintCuadre(nuevo);
       setTimeout(() => window.print(), 300);
     }
+  };
+
+  const handleAnular = async () => {
+    if (!anularCuadre) return;
+    setAnulando(true);
+    setAnularError("");
+    const res = await fetch(`/api/cuadres-tecnico/${anularCuadre.id}`, { method: "DELETE" });
+    const result = await res.json();
+    if (!res.ok) {
+      setAnularError(result.error || "Error al anular el cuadre");
+      setAnulando(false);
+      return;
+    }
+    setAnularCuadre(null);
+    setAnulando(false);
+    await loadHistorial();
+    await buscar();
   };
 
   const RATE = 200;
@@ -314,12 +334,19 @@ export default function CuadreTecnicoPage() {
                           <TableCell className="text-center font-bold text-emerald-700">{c.cantidad_reparados}</TableCell>
                           <TableCell className="text-right font-black text-emerald-700">RD$ {formatMoney(c.total_generado)}</TableCell>
                           <TableCell>
-                            <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => {
-                              setPrintCuadre(c);
-                              setTimeout(() => window.print(), 200);
-                            }}>
-                              <Printer className="h-3 w-3" /> Imprimir
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => {
+                                setPrintCuadre(c);
+                                setTimeout(() => window.print(), 200);
+                              }}>
+                                <Printer className="h-3 w-3" /> Imprimir
+                              </Button>
+                              {c.id === historialTecnico[0]?.id && (
+                                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50" onClick={() => { setAnularCuadre(c); setAnularError(""); }}>
+                                  <RotateCcw className="h-3 w-3" /> Reabrir
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -359,6 +386,32 @@ export default function CuadreTecnicoPage() {
           </div>
         )}
       </div>
+
+      {/* Modal confirmación anulación */}
+      {anularCuadre && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
+            <RotateCcw className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-black mb-2">¿Reabrir este cuadre?</h2>
+            <p className="text-slate-500 text-sm mb-1">
+              <strong className="capitalize">{anularCuadre.tecnico}</strong> — {anularCuadre.desde} al {anularCuadre.hasta}
+            </p>
+            <p className="text-slate-500 text-sm mb-1">
+              <strong>{anularCuadre.cantidad_reparados} reparaciones</strong> — RD$ {formatMoney(anularCuadre.total_generado)}
+            </p>
+            <p className="text-slate-400 text-xs mb-6">
+              Las reparaciones quedan libres para corregirlas y volver a cuadrar.
+            </p>
+            {anularError && <p className="text-red-600 text-sm bg-red-50 rounded-lg p-2 mb-2">{anularError}</p>}
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => { setAnularCuadre(null); setAnularError(""); }} disabled={anulando}>Cancelar</Button>
+              <Button onClick={handleAnular} disabled={anulando} className="bg-amber-600 hover:bg-amber-700 text-white gap-2">
+                {anulando ? "Reabriendo..." : "Confirmar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Factura para impresión */}
       {printCuadre && (
