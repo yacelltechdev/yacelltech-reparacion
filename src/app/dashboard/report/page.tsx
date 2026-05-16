@@ -417,7 +417,7 @@ export default function ReportPage() {
                               <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handlePrintCierre(c)}>
                                 <Printer className="h-3 w-3" /> Imprimir
                               </Button>
-                              {c.id === cierres[0]?.id && (
+                              {c.id === cierres[0]?.id && user?.role === "admin" && (
                                 <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50" onClick={() => { setReobrirCierre(c); setReobrirError(""); }}>
                                   <RotateCcw className="h-3 w-3" /> Reabrir
                                 </Button>
