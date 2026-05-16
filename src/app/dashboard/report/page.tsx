@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DollarSign, RefreshCcw, PackageCheck, PackageX, Download, Lock, ChevronDown, ChevronUp, Printer } from "lucide-react";
+import { DollarSign, RefreshCcw, PackageCheck, PackageX, Download, Lock, ChevronDown, ChevronUp, Printer, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
@@ -113,6 +113,9 @@ export default function ReportPage() {
   const [printCierre, setPrintCierre] = useState<Cierre | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [reabrirCierre, setReobrirCierre] = useState<Cierre | null>(null);
+  const [reabriendo, setReabriendo] = useState(false);
+  const [reabrirError, setReobrirError] = useState("");
 
 
   useEffect(() => {
@@ -197,6 +200,22 @@ export default function ReportPage() {
   };
 
   const [printReport, setPrintReport] = useState(false);
+
+  const handleReabrir = async () => {
+    if (!reabrirCierre) return;
+    setReabriendo(true);
+    setReobrirError("");
+    const res = await fetch(`/api/cierres/${reabrirCierre.id}`, { method: "DELETE" });
+    const result = await res.json();
+    if (!res.ok) {
+      setReobrirError(result.error || "Error al reabrir el cierre");
+      setReabriendo(false);
+      return;
+    }
+    setReobrirCierre(null);
+    setReabriendo(false);
+    await loadAll();
+  };
 
   const handlePrintReport = () => {
     setPrintReport(true);
@@ -394,9 +413,16 @@ export default function ReportPage() {
                           <TableCell className="text-center text-red-600">{c.cantidad_devueltos}</TableCell>
                           <TableCell className="text-right font-black text-emerald-700">RD$ {formatMoney(c.total_ingresos)}</TableCell>
                           <TableCell>
-                            <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handlePrintCierre(c)}>
-                              <Printer className="h-3 w-3" /> Imprimir
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handlePrintCierre(c)}>
+                                <Printer className="h-3 w-3" /> Imprimir
+                              </Button>
+                              {c.id === cierres[0]?.id && (
+                                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50" onClick={() => { setReobrirCierre(c); setReobrirError(""); }}>
+                                  <RotateCcw className="h-3 w-3" /> Reabrir
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -408,6 +434,32 @@ export default function ReportPage() {
           </div>
         )}
       </div>
+
+      {/* Modal reabrir cierre */}
+      {reabrirCierre && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
+            <RotateCcw className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-black mb-2">¿Reabrir este cierre de caja?</h2>
+            <p className="text-slate-500 text-sm mb-1">
+              Fecha: <strong>{reabrirCierre.fecha}</strong> — Cajero: <strong>{reabrirCierre.cerrado_por}</strong>
+            </p>
+            <p className="text-slate-500 text-sm mb-1">
+              <strong>{reabrirCierre.cantidad_reparados} reparados</strong> · <strong>{reabrirCierre.cantidad_devueltos} devueltos</strong> — RD$ {formatMoney(reabrirCierre.total_ingresos)}
+            </p>
+            <p className="text-slate-400 text-xs mb-6">
+              Las facturas vuelven a estar disponibles para corregirlas y cerrar de nuevo.
+            </p>
+            {reabrirError && <p className="text-red-600 text-sm bg-red-50 rounded-lg p-2 mb-2">{reabrirError}</p>}
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => { setReobrirCierre(null); setReobrirError(""); }} disabled={reabriendo}>Cancelar</Button>
+              <Button onClick={handleReabrir} disabled={reabriendo} className="bg-amber-600 hover:bg-amber-700 text-white gap-2">
+                {reabriendo ? "Reabriendo..." : "Confirmar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Factura de cierre para impresión */}
       {printCierre && (
