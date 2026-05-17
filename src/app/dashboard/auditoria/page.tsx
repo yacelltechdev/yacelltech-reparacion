@@ -148,11 +148,12 @@ export default function AuditoriaPage() {
   };
 
   const diaReviewed = reviewed[fecha] || {};
-  const revisadas = reparaciones.filter(r => diaReviewed[r.codigo]).length;
-  const pendientes = reparaciones.length - revisadas;
+  const auditables = reparaciones.filter(r => r.costo > 0);
+  const revisadas = auditables.filter(r => diaReviewed[r.codigo]).length;
+  const pendientes = auditables.length - revisadas;
   const reparacionesOrdenadas = [
-    ...reparaciones.filter(r => !diaReviewed[r.codigo]),
-    ...reparaciones.filter(r => diaReviewed[r.codigo]),
+    ...auditables.filter(r => !diaReviewed[r.codigo]),
+    ...auditables.filter(r => diaReviewed[r.codigo]),
   ];
 
   return (
@@ -178,7 +179,7 @@ export default function AuditoriaPage() {
       </Card>
 
       {/* Input de escaneo — siempre visible si hay facturas */}
-      {!loading && reparaciones.length > 0 && (
+      {!loading && auditables.length > 0 && (
         <div
           className="rounded-xl border-2 border-primary/40 bg-primary/5 px-5 py-4 space-y-2 cursor-text"
           onClick={() => scanRef.current?.focus()}
@@ -216,10 +217,10 @@ export default function AuditoriaPage() {
       )}
 
       {/* Resumen */}
-      {!loading && reparaciones.length > 0 && (
+      {!loading && auditables.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl border bg-white px-4 py-3 text-center shadow-sm">
-            <p className="text-2xl font-black text-slate-800">{reparaciones.length}</p>
+            <p className="text-2xl font-black text-slate-800">{auditables.length}</p>
             <p className="text-xs text-slate-500 mt-0.5">Total del día</p>
           </div>
           <div className="rounded-xl border bg-white px-4 py-3 text-center shadow-sm">
@@ -245,9 +246,9 @@ export default function AuditoriaPage() {
               <ClipboardCheck className="h-4 w-4" />
               {loading
                 ? "Cargando..."
-                : reparaciones.length === 0
+                : auditables.length === 0
                 ? `Sin facturas para ${fecha}`
-                : `${reparaciones.length} factura(s) — ${fecha}`}
+                : `${auditables.length} factura(s) — ${fecha}`}
             </span>
             {!loading && revisadas > 0 && (
               <button
@@ -264,7 +265,7 @@ export default function AuditoriaPage() {
         <CardContent>
           {loading ? (
             <div className="py-8 text-center text-slate-400 text-sm">Cargando facturas...</div>
-          ) : reparaciones.length === 0 ? (
+          ) : auditables.length === 0 ? (
             <div className="py-8 text-center text-slate-400 text-sm">No hay facturas registradas para esta fecha.</div>
           ) : (
             <div className="divide-y divide-slate-100">
@@ -344,19 +345,19 @@ export default function AuditoriaPage() {
       </Card>
 
       {/* Barra de progreso */}
-      {!loading && reparaciones.length > 0 && (
+      {!loading && auditables.length > 0 && (
         <div className="rounded-xl border bg-white px-5 py-4 shadow-sm space-y-2">
           <div className="flex justify-between text-xs font-semibold text-slate-600">
             <span>Progreso de revisión</span>
-            <span>{revisadas}/{reparaciones.length}</span>
+            <span>{revisadas}/{auditables.length}</span>
           </div>
           <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all duration-300"
-              style={{ width: `${reparaciones.length > 0 ? (revisadas / reparaciones.length) * 100 : 0}%` }}
+              style={{ width: `${auditables.length > 0 ? (revisadas / auditables.length) * 100 : 0}%` }}
             />
           </div>
-          {revisadas === reparaciones.length && reparaciones.length > 0 && (
+          {revisadas === auditables.length && auditables.length > 0 && (
             <p className="text-xs text-emerald-600 font-semibold text-center">
               ✓ Todas las facturas del día han sido revisadas
             </p>
