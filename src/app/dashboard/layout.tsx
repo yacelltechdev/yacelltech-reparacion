@@ -17,6 +17,7 @@ import {
   Settings,
   ShieldCheck,
   Bell,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,6 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Historial", icon: History, path: "/dashboard/history", roles: ["admin", "caja", "tech"] },
     { name: "Cuadre", icon: BarChart3, path: "/dashboard/report", roles: ["admin", "caja"] },
     { name: "Avisos Retiro", icon: Bell, path: "/dashboard/avisos-retiro", roles: ["admin", "caja"] },
+    { name: "Seguimiento", icon: MessageCircle, path: "/dashboard/seguimiento-clientes", roles: ["admin", "caja"] },
     { name: "Pago Técnico", icon: BadgeDollarSign, path: "/dashboard/cuadre-tecnico", roles: ["admin"] },
     { name: "Auditoría", icon: ShieldCheck, path: "/dashboard/auditoria", roles: ["admin"] },
     { name: "Admin", icon: Settings, path: "/dashboard/admin", roles: ["admin"] },
