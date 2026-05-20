@@ -18,6 +18,8 @@ const checklistLabels: Record<string, string> = {
   altavoz: "Altavoz", carga: "Carga", botones: "Botones",
 };
 
+const deliveredStatuses = ["Entregado bueno", "Entregado malo"];
+
 function formatMoney(n: number) {
   return Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -117,7 +119,11 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       body: JSON.stringify(payload),
     });
     if (res.ok) {
-      setRepair({ ...repair, status: newStatus as Repair["status"] });
+      setRepair({
+        ...repair,
+        status: newStatus as Repair["status"],
+        fecha_despacho: deliveredStatuses.includes(newStatus) ? repair.fecha_despacho || new Date().toISOString() : payload.fecha_despacho ?? repair.fecha_despacho,
+      });
       toast.success(`Estado cambiado a: ${newStatus}`);
     } else {
       toast.error("Error al cambiar estado");

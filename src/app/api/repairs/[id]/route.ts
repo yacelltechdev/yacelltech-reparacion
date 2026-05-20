@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
+import { nowRD } from '@/lib/date';
+
+const DELIVERED_STATUSES = ['Entregado bueno', 'Entregado malo'];
 
 export async function DELETE(
   _req: Request,
@@ -30,6 +33,14 @@ export async function PATCH(
       if (k in updateData && typeof updateData[k] !== 'string') {
         updateData[k] = JSON.stringify(updateData[k]);
       }
+    }
+
+    if (
+      'status' in updateData &&
+      DELIVERED_STATUSES.includes(updateData.status) &&
+      !updateData.fecha_despacho
+    ) {
+      updateData.fecha_despacho = nowRD();
     }
 
     const { error } = await supabase.from('repairs').update(updateData).eq('id', id);

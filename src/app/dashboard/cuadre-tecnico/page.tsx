@@ -103,9 +103,10 @@ export default function CuadreTecnicoPage() {
   const buscar = async () => {
     setLoading(true);
     setErrorMsg("");
+    const queryBase = `tecnico=${encodeURIComponent(tecnico)}&despacho_desde=${desde}&despacho_hasta=${hasta}`;
     const [resB, resM] = await Promise.all([
-      fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+bueno`),
-      fetch(`/api/repairs?tecnico=${encodeURIComponent(tecnico)}&status=Entregado+malo`),
+      fetch(`/api/repairs?${queryBase}&status=Entregado+bueno`),
+      fetch(`/api/repairs?${queryBase}&status=Entregado+malo`),
     ]);
     const [dataB, dataM]: any[] = await Promise.all([resB.json(), resM.json()]);
     const combined = [
