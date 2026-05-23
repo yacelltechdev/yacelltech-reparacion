@@ -11,11 +11,15 @@ export async function GET(req: Request) {
     const hasta          = searchParams.get("hasta") || "";
     const despachoDesde  = searchParams.get("despacho_desde") || "";
     const despachoHasta  = searchParams.get("despacho_hasta") || "";
+    const active         = searchParams.get("active") === "true";
     const page    = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit   = parseInt(searchParams.get("limit") || "0");
 
     let query = supabase.from('repairs').select('*', { count: 'exact' });
 
+    if (active) {
+      query = query.in('status', ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"]);
+    }
     if (q) {
       query = query.or(`codigo.ilike.%${q}%,cliente.ilike.%${q}%,telefono.ilike.%${q}%,modelo.ilike.%${q}%,marca.ilike.%${q}%,serie.ilike.%${q}%`);
     }

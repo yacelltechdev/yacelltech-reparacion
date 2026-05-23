@@ -50,7 +50,11 @@ export default function AvisosRetiroPage() {
 
   const loadRepairs = async () => {
     try {
-      const res = await fetch("/api/repairs");
+      const dateLimit = new Date();
+      dateLimit.setDate(dateLimit.getDate() - 30);
+      const hasta = dateLimit.toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+
+      const res = await fetch(`/api/repairs?active=true&hasta=${hasta}`);
       const data: Repair[] = await res.json();
       setRepairs(data);
     } catch (e) { console.error(e); }

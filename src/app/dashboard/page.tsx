@@ -27,11 +27,44 @@ export default function AdminDashboard() {
   const [anio, setAnio] = useState(now.getFullYear());
 
   useEffect(() => {
-    fetch("/api/repairs")
-      .then(r => r.json())
-      .then(setData)
-      .catch(console.error);
-  }, []);
+    const fetchDashboardData = async () => {
+      try {
+        const monthStr = String(mesIdx + 1).padStart(2, "0");
+        const startOfSelectedMonth = `${anio}-${monthStr}-01`;
+        const lastDay = new Date(anio, mesIdx + 1, 0).getDate();
+        const endOfSelectedMonth = `${anio}-${monthStr}-${String(lastDay).padStart(2, "0")}`;
+
+        let minDate = startOfSelectedMonth;
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+
+        if (anio === currentYear && mesIdx === currentMonth) {
+          const yesterdayVal = yesterdayRD();
+          if (yesterdayVal < minDate) {
+            minDate = yesterdayVal;
+          }
+        }
+
+        const [resActive, resMonth] = await Promise.all([
+          fetch("/api/repairs?active=true"),
+          fetch(`/api/repairs?desde=${minDate}&hasta=${endOfSelectedMonth}`)
+        ]);
+
+        const activeData: Repair[] = await resActive.json();
+        const monthData: Repair[] = await resMonth.json();
+
+        const mergedMap = new Map<number, Repair>();
+        activeData.forEach(r => mergedMap.set(r.id, r));
+        monthData.forEach(r => mergedMap.set(r.id, r));
+
+        setData(Array.from(mergedMap.values()));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchDashboardData();
+  }, [mesIdx, anio]);
 
   const today     = todayRD();
   const yesterday = yesterdayRD();

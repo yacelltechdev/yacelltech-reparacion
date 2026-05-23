@@ -250,12 +250,16 @@ export default function TechnicianPage() {
 
   const loadRepairs = async () => {
     try {
-      const res = await fetch("/api/repairs");
-      const data: Repair[] = await res.json();
+      const username = user?.username || "";
       const today = todayRD();
-      const mine = data.filter(r => r.tecnico?.toLowerCase() === user?.username.toLowerCase());
 
-      const active = mine.filter(r => ["En reparación", "En chequeo", "Listo para entregar", "No se pudo reparar"].includes(r.status));
+      const [resActive, resHistory] = await Promise.all([
+        fetch(`/api/repairs?tecnico=${encodeURIComponent(username)}&active=true`),
+        fetch(`/api/repairs?tecnico=${encodeURIComponent(username)}&despacho_desde=${today}&despacho_hasta=${today}`)
+      ]);
+
+      const active: Repair[] = await resActive.json();
+      const historyData: Repair[] = await resHistory.json();
 
       if (!isFirstLoad.current) {
         const newOnes = active.filter(r => !knownIds.current.has(r.id));
@@ -270,9 +274,8 @@ export default function TechnicianPage() {
       setRepairs(active);
 
       // Historial del día: completados o entregados hoy
-      setHistory(mine.filter(r =>
-        ["Entregado bueno", "Entregado malo"].includes(r.status) &&
-        r.fecha_despacho?.startsWith(today)
+      setHistory(historyData.filter(r =>
+        ["Entregado bueno", "Entregado malo"].includes(r.status)
       ));
 
       setIsLoading(false);

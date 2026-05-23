@@ -86,8 +86,24 @@ export default function AdminPage() {
 
   useEffect(() => {
     load();
-    fetch("/api/repairs").then(r => r.json()).then(setTodasReparaciones).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!busquedaFecha.trim() || busquedaFecha.trim().length < 2) {
+      setTodasReparaciones([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      fetch(`/api/repairs?q=${encodeURIComponent(busquedaFecha.trim())}&limit=8`)
+        .then(r => r.json())
+        .then(res => {
+          // La API con limit > 0 devuelve { data, total }
+          setTodasReparaciones(res.data || []);
+        })
+        .catch(() => {});
+    }, 350);
+    return () => clearTimeout(t);
+  }, [busquedaFecha]);
 
   const agregar = async (e: React.FormEvent) => {
     e.preventDefault();

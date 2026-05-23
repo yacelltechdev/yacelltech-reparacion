@@ -109,11 +109,8 @@ export default function InboxPage() {
 
   const loadRepairs = async () => {
     try {
-      const res = await fetch("/api/repairs");
-      const data: Repair[] = await res.json();
-      const active = data.filter(r =>
-        ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"].includes(r.status)
-      );
+      const res = await fetch("/api/repairs?active=true");
+      const active: Repair[] = await res.json();
 
       if (!isFirstLoad.current) {
         const nowReady = active.filter(r =>

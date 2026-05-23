@@ -120,17 +120,20 @@ export default function ReportPage() {
 
   useEffect(() => {
     loadAll();
-    const interval = setInterval(loadRepairs, 15000);
+  }, [date]);
+
+  useEffect(() => {
+    const interval = setInterval(() => loadRepairs(date), 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [date]);
 
   const loadAll = async () => {
-    await Promise.all([loadRepairs(), loadCierres()]);
+    await Promise.all([loadRepairs(date), loadCierres()]);
   };
 
-  const loadRepairs = async () => {
+  const loadRepairs = async (targetDate = date) => {
     try {
-      const res = await fetch("/api/repairs");
+      const res = await fetch(`/api/repairs?despacho_desde=${targetDate}&despacho_hasta=${targetDate}`);
       const data: Repair[] = await res.json();
       setRepairs(data);
       setIsLoading(false);
