@@ -41,8 +41,9 @@ export default function LoginPage() {
         return;
       }
 
-      login(username, data.role);
-      toast.success(`¡Bienvenido de nuevo, ${username}!`);
+      const loggedInUsername = data.username || username;
+      login(loggedInUsername, data.role);
+      toast.success(`¡Bienvenido de nuevo, ${loggedInUsername}!`);
       router.push(data.role === "tech" ? "/dashboard/technician" : data.role === "caja" ? "/dashboard/inbox" : "/dashboard");
     } catch {
       toast.error("Error de conexión");

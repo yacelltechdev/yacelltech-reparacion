@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const { data: repairsData, error: repairsError } = await supabase
       .from('repairs')
       .select('*')
-      .eq('tecnico', tecnico)
+      .ilike('tecnico', tecnico)
       .in('status', ['Entregado bueno', 'Entregado malo'])
       .is('cuadre_tecnico_id', null)
       .gte('fecha_despacho', desde)

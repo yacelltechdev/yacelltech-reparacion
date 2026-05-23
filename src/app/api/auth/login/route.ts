@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 
-const HARDCODED: Record<string, { password: string; role: string }> = {
-  freddy: { password: '1234', role: 'tech' },
-  oscar:  { password: 'chachito', role: 'tech' },
-  carlos: { password: '1234', role: 'tech' },
-  admin:  { password: 'admin', role: 'admin' },
-  caja:   { password: '1234', role: 'caja' },
+const HARDCODED: Record<string, { username: string; password: string; role: string }> = {
+  freddy: { username: 'Freddy', password: '1234', role: 'tech' },
+  oscar:  { username: 'Oscar', password: 'chachito', role: 'tech' },
+  carlos: { username: 'Carlos', password: '1234', role: 'tech' },
+  admin:  { username: 'admin', password: 'admin', role: 'admin' },
+  caja:   { username: 'caja', password: '1234', role: 'caja' },
 };
 
 export async function POST(req: Request) {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   // Check DB first (overrides hardcoded)
   const { data } = await supabase
     .from('users')
-    .select('password, role')
+    .select('username, password, role')
     .eq('username', key)
     .single();
 
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     if (data.password !== password) {
       return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 });
     }
-    return NextResponse.json({ role: data.role });
+    return NextResponse.json({ username: data.username || username, role: data.role });
   }
 
   // Fallback to hardcoded
@@ -32,5 +32,5 @@ export async function POST(req: Request) {
   if (!hardcoded || hardcoded.password !== password) {
     return NextResponse.json({ error: 'Credenciales incorrectas' }, { status: 401 });
   }
-  return NextResponse.json({ role: hardcoded.role });
+  return NextResponse.json({ username: hardcoded.username, role: hardcoded.role });
 }

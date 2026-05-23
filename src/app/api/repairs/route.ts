@@ -24,7 +24,7 @@ export async function GET(req: Request) {
       query = query.or(`codigo.ilike.%${q}%,cliente.ilike.%${q}%,telefono.ilike.%${q}%,modelo.ilike.%${q}%,marca.ilike.%${q}%,serie.ilike.%${q}%`);
     }
     if (status)        query = query.eq('status', status);
-    if (tecnico)       query = query.eq('tecnico', tecnico);
+    if (tecnico)       query = query.ilike('tecnico', tecnico.trim());
     if (desde)         query = query.gte('fecha', desde);
     if (hasta)         query = query.lte('fecha', hasta + 'T23:59:59');
     if (despachoDesde) query = query.gte('fecha_despacho', despachoDesde);
