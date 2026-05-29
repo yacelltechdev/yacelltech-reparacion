@@ -10,6 +10,7 @@ import { Check, AlertCircle, Printer, X, PlusCircle, Plus, Pencil, Trash2, Refre
 import PrintTicket from "./PrintTicket";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const checklistLabels: Record<string, string> = {
   faceid: "FaceID", camara: "Cámara", senal: "Señal",
@@ -56,11 +57,16 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
       tecnico: repair.tecnico, tipoClave: repair.tipoClave, claveTexto: repair.claveTexto,
       trabajoARealizar: repair.trabajoARealizar || "",
       cargosAdicionales: repair.cargosAdicionales ? [...repair.cargosAdicionales] : [],
+      tipoPantalla: repair.tipoPantalla,
     });
     setEditing(true);
   };
 
   const handleSaveEdit = async () => {
+    if ((editData.tipoPantalla as any) === "") {
+      toast.error("Selecciona el tipo de pantalla: InCell u OLED.");
+      return;
+    }
     setSaving(true);
     const res = await fetch(`/api/repairs/${repair.id}`, {
       method: "PATCH",
@@ -204,6 +210,11 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                 <p className="font-bold text-slate-900">{repair.marca} {repair.modelo}</p>
                 <p className="text-sm text-slate-500">Color: {repair.color || "N/A"} | IMEI: {repair.serie || "N/A"}</p>
                 <p className="text-xs text-slate-400 mt-1">Estado inicial: <strong className={repair.estadoInicial === "Encendido" ? "text-emerald-600" : "text-red-600"}>{repair.estadoInicial}</strong></p>
+                {repair.tipoPantalla && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    Tipo de Pantalla: <strong className="text-indigo-600 font-bold">{repair.tipoPantalla}</strong>
+                  </p>
+                )}
                 {isAdmin ? (
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-xs text-emerald-700">🛠️</span>
@@ -471,6 +482,39 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
               <div className="space-y-1">
                 <Label>Trabajo / Concepto de reparación</Label>
                 <Input value={editData.trabajoARealizar || ""} onChange={e => setEditData(p => ({ ...p, trabajoARealizar: e.target.value }))} placeholder="Ej: Cambio de pantalla, Cambio de batería..." />
+              </div>
+              <div className="space-y-2 border-t pt-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="editEsPantalla"
+                    checked={editData.tipoPantalla !== null && editData.tipoPantalla !== undefined}
+                    onCheckedChange={checked => setEditData(p => ({ ...p, tipoPantalla: checked ? "" as any : null }))}
+                  />
+                  <Label htmlFor="editEsPantalla" className="cursor-pointer font-semibold">¿Es reparación de pantalla?</Label>
+                </div>
+                {editData.tipoPantalla != null && (
+                  <div className="flex gap-2 mt-1 items-center">
+                    {(editData.tipoPantalla as any) === "" && (
+                      <span className="text-xs text-red-500 font-semibold mr-1">Elige el tipo:</span>
+                    )}
+                    {(["InCell", "OLED"] as const).map(tipo => (
+                      <button
+                        key={tipo}
+                        type="button"
+                        onClick={() => setEditData(p => ({ ...p, tipoPantalla: tipo }))}
+                        className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors ${
+                          editData.tipoPantalla === tipo
+                            ? "bg-black text-white border-black"
+                            : (editData.tipoPantalla as any) === ""
+                              ? "bg-white text-red-600 border-red-300 hover:border-red-500"
+                              : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
+                        }`}
+                      >
+                        {tipo}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Síntoma</Label>
