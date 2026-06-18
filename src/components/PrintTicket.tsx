@@ -119,7 +119,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                   <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                     <span>Problema Reportado</span>
                   </div>
-                  <div style={{ padding: '7px 10px', fontSize: '13px', fontWeight: '600', lineHeight: '1.2', color: '#1E293B' }}>
+                  <div style={{ padding: '15px 10px', fontSize: '13px', fontWeight: '600', lineHeight: '1.2', color: '#1E293B' }}>
                     {repair.sintoma}
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                     <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                       <span>Observación</span>
                     </div>
-                    <div style={{ padding: '7px 10px', fontSize: '14px', lineHeight: '1.25', color: '#444', fontStyle: 'italic', fontWeight: '500' }}>
+                    <div style={{ padding: '15px 10px', fontSize: '14px', lineHeight: '1.25', color: '#444', fontStyle: 'italic', fontWeight: '500' }}>
                       {repair.observacion}
                     </div>
                   </div>
