@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MessageCircle, RefreshCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { todayRD, formatDateSlash } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 
 type SeguimientoRecord = { repair_id: number; enviado_en: string; enviado_por: string };
@@ -38,9 +39,11 @@ export default function SeguimientoClientesPage() {
 
   const loadRepairs = async () => {
     try {
-      const dateLimit = new Date();
-      dateLimit.setDate(dateLimit.getDate() - 15);
-      const despachoHasta = dateLimit.toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+      // Calcular "hace 15 días" en hora RD (no en UTC del servidor ni del navegador)
+      const [yyyy, mm, dd] = todayRD().split("-").map(Number);
+      const dateLimit = new Date(Date.UTC(yyyy, mm - 1, dd));
+      dateLimit.setUTCDate(dateLimit.getUTCDate() - 15);
+      const despachoHasta = `${dateLimit.getUTCFullYear()}-${String(dateLimit.getUTCMonth() + 1).padStart(2, "0")}-${String(dateLimit.getUTCDate()).padStart(2, "0")}`; // "YYYY-MM-DD"
 
       const res = await fetch(`/api/repairs?status=Entregado+bueno&despacho_hasta=${despachoHasta}`);
       const data: Repair[] = await res.json();
@@ -148,7 +151,7 @@ export default function SeguimientoClientesPage() {
                         }>{dias}d</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-slate-500">
-                        {new Date(r.fecha_despacho!).toLocaleDateString('es-DO')}
+                        {formatDateSlash(r.fecha_despacho!)}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1.5">
@@ -205,13 +208,13 @@ export default function SeguimientoClientesPage() {
                           <Badge variant="secondary" className="bg-slate-100 text-slate-500">{dias}d</Badge>
                         </TableCell>
                         <TableCell className="text-sm text-slate-500">
-                          {new Date(r.fecha_despacho!).toLocaleDateString('es-DO')}
+                          {formatDateSlash(r.fecha_despacho!)}
                         </TableCell>
                         <TableCell>
                           <div className="text-xs text-green-700 font-medium">✓ Contactado</div>
                           {reg && (
                             <div className="text-[10px] text-slate-400">
-                              {new Date(reg.enviado_en).toLocaleDateString('es-DO')} — {reg.enviado_por}
+                              {formatDateSlash(reg.enviado_en)} — {reg.enviado_por}
                             </div>
                           )}
                         </TableCell>

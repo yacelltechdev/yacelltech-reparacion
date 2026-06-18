@@ -7,15 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Eye, Wrench, CheckCircle2 } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { formatDateTimeCompact } from "@/lib/date";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { startReadyAlarm, startChequeoAlarm } from "@/lib/sound";
 import RepairDetailModal from "@/components/RepairDetailModal";
 
-const formatTime = (iso: string) => {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString("en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true });
-};
+const formatTime = (iso: string) => formatDateTimeCompact(iso);
 
 // ── Selector de estado por fila ────────────────────────────────────────────
 function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusChange: (id: number, status: string) => void }) {

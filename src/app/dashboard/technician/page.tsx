@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X, Phone, KeyRound, CalendarDays, StickyNote, Search } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { todayRD } from "@/lib/date";
+import { todayRD, formatDateShort } from "@/lib/date";
 import { toast } from "sonner";
 import { playNewRepairSound } from "@/lib/sound";
 
@@ -378,7 +378,7 @@ export default function TechnicianPage() {
             );
           }).map(r => {
             const total = (r.costo ?? 0) + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) ?? 0);
-            const fechaEntrada = r.fecha ? new Date(r.fecha).toLocaleDateString("es-DO", { day: "2-digit", month: "short", year: "numeric" }) : "";
+            const fechaEntrada = r.fecha ? formatDateShort(r.fecha) : "";
             return (
               <Card key={r.id} className="border-none shadow-md flex flex-col overflow-hidden">
                 {/* Header coloreado por estado */}

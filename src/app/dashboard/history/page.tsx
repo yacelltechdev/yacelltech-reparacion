@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Database, Eye, X } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { formatDateTimeCompact } from "@/lib/date";
 import RepairDetailModal from "@/components/RepairDetailModal";
 
 const PER_PAGE = 50;
@@ -20,8 +21,7 @@ const statusColors: Record<string, string> = {
   "Entregado malo":     "bg-red-100 text-red-700 border-red-200",
 };
 
-const formatDate = (s?: string) =>
-  s ? new Date(s).toLocaleString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true }) : "—";
+const formatDate = (s?: string) => (s ? formatDateTimeCompact(s) : "—");
 
 const totalCosto = (r: Repair) =>
   (r.costo || 0) + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0);

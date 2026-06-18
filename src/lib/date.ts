@@ -16,3 +16,114 @@ export function yesterdayRD(): string {
   d.setDate(d.getDate() - 1);
   return d.toLocaleDateString("en-CA");
 }
+
+/**
+ * Helpers de formateo — TODOS usan America/Santo_Domingo (UTC-4 fijo, sin DST).
+ *
+ * Por qué importan: el `toLocaleString` / `toLocaleDateString` inline que estaba
+ * en el proyecto dependía del timezone del navegador del usuario o del server
+ * (Vercel corre en UTC). Resultado: a las 8pm RD se veía como "12:00 AM del
+ * día siguiente" porque se renderizaba en UTC. Estos helpers centralizan el
+ * timezone y evitan la sorpresa.
+ */
+
+/** "15 ene 2024" — fecha corta en español RD */
+export function formatDateShort(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("es-DO", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** "15 de enero de 2024" — fecha larga en español RD */
+export function formatDateLong(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("es-DO", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** "15/01/2024" — fecha con barras, locale neutro */
+export function formatDateSlash(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("es-DO", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+/** "15/01/24, 08:30 PM" — fecha+hora corta (estilo ticket) */
+export function formatDateTimeShort(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("es-DO", {
+    timeZone: TZ,
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+/** "15/01/2024, 20:30" — fecha+hora 24h */
+export function formatDateTime24(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("es-DO", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+/** "01/15, 08:30 PM" — mes/día + hora 12h, compacto (history/inbox) */
+export function formatDateTimeCompact(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", {
+    timeZone: TZ,
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+/** "miércoles, 15 de enero de 2024" — para cabeceras tipo dashboard */
+export function formatDateHeader(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("es-DO", {
+    timeZone: TZ,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/** Devuelve la fecha de hoy en RD formateada para cabecera (acepta 0 args) */
+export function formatTodayHeader(): string {
+  return formatDateHeader(new Date());
+}

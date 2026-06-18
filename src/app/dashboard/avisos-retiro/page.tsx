@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MessageCircle, RefreshCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
+import { todayRD, formatDateSlash } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 
 type AvisoRetiro = { repair_id: number; tipo: string; enviado_en: string; enviado_por: string };
@@ -50,9 +51,11 @@ export default function AvisosRetiroPage() {
 
   const loadRepairs = async () => {
     try {
-      const dateLimit = new Date();
-      dateLimit.setDate(dateLimit.getDate() - 30);
-      const hasta = dateLimit.toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+      // Calcular "hace 30 días" en hora RD (no en UTC del servidor ni del navegador)
+      const [yyyy, mm, dd] = todayRD().split("-").map(Number);
+      const dateLimit = new Date(Date.UTC(yyyy, mm - 1, dd));
+      dateLimit.setUTCDate(dateLimit.getUTCDate() - 30);
+      const hasta = `${dateLimit.getUTCFullYear()}-${String(dateLimit.getUTCMonth() + 1).padStart(2, "0")}-${String(dateLimit.getUTCDate()).padStart(2, "0")}`; // "YYYY-MM-DD"
 
       const res = await fetch(`/api/repairs?active=true&hasta=${hasta}`);
       const data: Repair[] = await res.json();
@@ -254,7 +257,7 @@ export default function AvisosRetiroPage() {
                           <div className="text-xs text-green-700 font-medium">✓ Enviado</div>
                           {last && (
                             <div className="text-[10px] text-slate-400">
-                              {new Date(last.enviado_en).toLocaleDateString('es-DO')}
+                              {formatDateSlash(last.enviado_en)}
                             </div>
                           )}
                           {next && (

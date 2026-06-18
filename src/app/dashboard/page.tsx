@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Smartphone, Wrench, CheckCircle2, DollarSign, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Repair } from "@/lib/types";
-import { todayRD, yesterdayRD } from "@/lib/date";
+import { todayRD, yesterdayRD, formatTodayHeader } from "@/lib/date";
 
 const totalCosto = (r: Repair) =>
   (r.costo || 0) + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0);
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Panel Principal</h1>
-        <p className="text-slate-500">Resumen operativo de Yacelltech — {new Date().toLocaleDateString("es-DO", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}.</p>
+        <p className="text-slate-500">Resumen operativo de Yacelltech — {formatTodayHeader()}.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

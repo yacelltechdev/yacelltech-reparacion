@@ -2,6 +2,7 @@
 import Barcode from "react-barcode";
 import PatternLock from "./PatternLock";
 import { Repair } from "@/lib/types";
+import { formatDateTimeCompact } from "@/lib/date";
 
 const formatMoney = (amount: number) =>
   Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -16,11 +17,7 @@ const getTotalCosto = (r: Repair) => {
 
 const formatDate = (isoString: string) => {
   if (!isoString) return "";
-  const date = new Date(isoString);
-  return date.toLocaleString("en-US", {
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hour12: true
-  });
+  return formatDateTimeCompact(isoString);
 };
 
 export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; copies?: number }) {
