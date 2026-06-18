@@ -201,9 +201,9 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {/* TERMINOS Y CONDICIONES (GARANTÍA) */}
-              <div style={{ padding: '0 0 5px 0', fontSize: '11px', lineHeight: '1.4', color: '#1E293B', textAlign: 'justify' }}>
-                <strong style={{ fontSize: '12px' }}>TÉRMINOS Y GARANTÍA:</strong> Después de 15 días no somos responsables de equipos dejados en el taller; luego de este tiempo el equipo será asumido para cubrir gastos incurridos en dicha reparación. Sin factura no hay reclamaciones ni se le entregará el equipo (pagar a la hora de recibir su equipo). No somos responsables de ninguna Sim Card o Memoria SD dejada en el dispositivo.
-                <div style={{ marginTop: '4px', fontSize: '12px', fontWeight: 'bold', color: '#0F172A' }}>
+              <div style={{ padding: '0 0 5px 0', fontSize: '12px', lineHeight: '1.4', color: '#1E293B', textAlign: 'justify' }}>
+                <strong style={{ fontSize: '13px' }}>TÉRMINOS Y GARANTÍA:</strong> Después de 15 días no somos responsables de equipos dejados en el taller; luego de este tiempo el equipo será asumido para cubrir gastos incurridos en dicha reparación. Sin factura no hay reclamaciones ni se le entregará el equipo (pagar a la hora de recibir su equipo). No somos responsables de ninguna Sim Card o Memoria SD dejada en el dispositivo.
+                <div style={{ marginTop: '4px', fontSize: '13px', fontWeight: 'bold', color: '#0F172A' }}>
                   No somos responsables de problemas ocultos distintos a los que se reportaron al momento de entregar el equipo en mostrador.
                 </div>
               </div>
