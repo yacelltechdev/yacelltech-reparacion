@@ -11,6 +11,7 @@ import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search, Settings2 
 import { Switch } from "@/components/ui/switch";
 
 import { Repair } from "@/lib/types";
+import { todayRD } from "@/lib/date";
 
 type Preset = { id: number; texto: string; orden: number };
 
@@ -37,7 +38,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   // Ingreso manual
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayRD();
   const [fechaManual, setFechaManual] = useState(hoy);
   const [filas, setFilas] = useState<FilaManual[]>([filaVacia()]);
   const [subiendoManual, setSubiendoManual] = useState(false);
