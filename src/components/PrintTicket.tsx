@@ -119,7 +119,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                   <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                     <span>Problema Reportado</span>
                   </div>
-                  <div style={{ padding: '8px 10px', fontSize: '15px', fontWeight: 'bold', lineHeight: '1.3', color: '#1E293B', flexGrow: 1 }}>
+                  <div style={{ padding: '6px 10px', fontSize: '13px', fontWeight: '600', lineHeight: '1.25', color: '#1E293B', flexGrow: 1 }}>
                     {repair.sintoma}
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                     <div style={{ background: '#F1F5F9', borderBottom: '1px solid #94A3B8', padding: '3px 10px', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', color: '#334155' }}>
                       <span>Observación</span>
                     </div>
-                    <div style={{ padding: '8px 10px', fontSize: '13px', lineHeight: '1.3', color: '#444', flexGrow: 1, fontStyle: 'italic', fontWeight: '500' }}>
+                    <div style={{ padding: '6px 10px', fontSize: '14px', lineHeight: '1.3', color: '#444', flexGrow: 1, fontStyle: 'italic', fontWeight: '500' }}>
                       {repair.observacion}
                     </div>
                   </div>
@@ -201,9 +201,9 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
               </div>
 
               {/* TERMINOS Y CONDICIONES (GARANTÍA) */}
-              <div style={{ padding: '0 0 5px 0', fontSize: '9px', lineHeight: '1.3', color: '#475569', textAlign: 'justify' }}>
-                <strong>TÉRMINOS Y GARANTÍA:</strong> Después de 15 días no somos responsables de equipos dejados en el taller; luego de este tiempo el equipo será asumido para cubrir gastos incurridos en dicha reparación. Sin factura no hay reclamaciones ni se le entregará el equipo (pagar a la hora de recibir su equipo). No somos responsables de ninguna Sim Card o Memoria SD dejada en el dispositivo.
-                <div style={{ marginTop: '4px', fontSize: '11px', fontWeight: 'bold', color: '#1E293B' }}>
+              <div style={{ padding: '0 0 5px 0', fontSize: '11px', lineHeight: '1.4', color: '#1E293B', textAlign: 'justify' }}>
+                <strong style={{ fontSize: '12px' }}>TÉRMINOS Y GARANTÍA:</strong> Después de 15 días no somos responsables de equipos dejados en el taller; luego de este tiempo el equipo será asumido para cubrir gastos incurridos en dicha reparación. Sin factura no hay reclamaciones ni se le entregará el equipo (pagar a la hora de recibir su equipo). No somos responsables de ninguna Sim Card o Memoria SD dejada en el dispositivo.
+                <div style={{ marginTop: '4px', fontSize: '12px', fontWeight: 'bold', color: '#0F172A' }}>
                   No somos responsables de problemas ocultos distintos a los que se reportaron al momento de entregar el equipo en mostrador.
                 </div>
               </div>
