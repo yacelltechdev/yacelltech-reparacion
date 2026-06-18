@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, RefreshCcw, PackageCheck, PackageX, Download, Lock, ChevronDown, ChevronUp, Printer, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { todayRD } from "@/lib/date";
+import { todayRD, formatDateTimeShort } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 
 const totalCosto = (r: Repair) =>
@@ -18,7 +18,7 @@ function formatMoney(n: number) {
 }
 
 function formatDatetime(iso: string) {
-  return new Date(iso).toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" });
+  return formatDateTimeShort(iso);
 }
 
 interface Cierre {
@@ -479,7 +479,7 @@ export default function ReportPage() {
             <div style={{ textAlign: "center", borderBottom: "1.5px solid #000", paddingBottom: "4px", marginBottom: "6px" }}>
               <p style={{ fontSize: "15px", fontWeight: "900", margin: 0, letterSpacing: "1px" }}>YACELLTECH</p>
               <p style={{ fontSize: "10px", fontWeight: "bold", margin: "1px 0 0" }}>REPORTE DE INGRESOS DEL DÍA</p>
-              <p style={{ fontSize: "9px", margin: "1px 0 0", color: "#444" }}>Fecha: <strong>{date}</strong> &nbsp;|&nbsp; Generado: {new Date().toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" })}</p>
+              <p style={{ fontSize: "9px", margin: "1px 0 0", color: "#444" }}>Fecha: <strong>{date}</strong> &nbsp;|&nbsp; Generado: {formatDatetime(new Date().toISOString())}</p>
             </div>
 
             {/* Tabla de equipos */}

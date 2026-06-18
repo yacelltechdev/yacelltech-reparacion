@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CheckCircle2, RefreshCcw, Wrench, DollarSign, ChevronDown, ChevronUp, Printer, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { todayRD } from "@/lib/date";
+import { todayRD, formatDateTimeShort, formatDateLong } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -43,7 +43,7 @@ function FacturaCuadre({ cuadre }: { cuadre: CuadreTecnico }) {
       <div style={{ textAlign: "center", fontSize: "12px" }}>Técnico: <strong>{cuadre.tecnico.toUpperCase()}</strong></div>
       <div style={{ textAlign: "center", fontSize: "12px" }}>Período: {cuadre.desde} al {cuadre.hasta}</div>
       <div style={{ textAlign: "center", fontSize: "12px" }}>Cuadrado por: {cuadre.creado_por}</div>
-      <div style={{ textAlign: "center", fontSize: "12px" }}>Fecha: {new Date(cuadre.creado_en).toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" })}</div>
+      <div style={{ textAlign: "center", fontSize: "12px" }}>Fecha: {formatDateTimeShort(cuadre.creado_en)}</div>
       <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "8px 0" }}>{line}</div>
       <div style={{ fontWeight: "bold", marginBottom: "6px" }}>REPARACIONES INCLUIDAS</div>
       {cuadre.snapshot.map((r, i) => (
@@ -214,7 +214,7 @@ export default function CuadreTecnicoPage() {
                   <div>
                     <span className="font-bold text-blue-800">Último pago a {tecnico}:</span>
                     <span className="ml-2 text-blue-700">
-                      {new Date(ultimoCuadre.creado_en).toLocaleDateString("es-DO", { day: "2-digit", month: "long", year: "numeric" })}
+                      {formatDateLong(ultimoCuadre.creado_en)}
                     </span>
                     <span className="ml-3 text-blue-600 font-semibold">
                       {ultimoCuadre.cantidad_reparados} reparaciones — RD$ {formatMoney(ultimoCuadre.total_generado)}
@@ -335,7 +335,7 @@ export default function CuadreTecnicoPage() {
                           <TableCell className="text-sm font-medium">{c.desde} → {c.hasta}</TableCell>
                           <TableCell className="text-sm text-slate-500">{c.creado_por}</TableCell>
                           <TableCell className="text-sm text-slate-500">
-                            {new Date(c.creado_en).toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" })}
+                            {formatDateTimeShort(c.creado_en)}
                           </TableCell>
                           <TableCell className="text-center font-bold text-emerald-700">{c.cantidad_reparados}</TableCell>
                           <TableCell className="text-right font-black text-emerald-700">RD$ {formatMoney(c.total_generado)}</TableCell>
