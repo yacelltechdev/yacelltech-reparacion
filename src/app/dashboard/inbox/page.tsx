@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Eye, Wrench, CheckCircle2 } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { formatDateTimeCompact } from "@/lib/date";
+import { formatDateTimeCompact, nowRD } from "@/lib/date";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { startReadyAlarm, startChequeoAlarm } from "@/lib/sound";
@@ -159,7 +159,7 @@ export default function InboxPage() {
   const handleStatusChange = async (id: number, newStatus: string) => {
     const payload: any = { status: newStatus };
     if (newStatus === "Entregado bueno" || newStatus === "Entregado malo") {
-      payload.fecha_despacho = new Date().toISOString();
+      payload.fecha_despacho = nowRD();
     } else {
       payload.fecha_despacho = null;
     }
