@@ -127,3 +127,35 @@ export function formatDateHeader(iso: string | Date | null | undefined): string 
 export function formatTodayHeader(): string {
   return formatDateHeader(new Date());
 }
+
+/**
+ * Regla de negocio "cuadre dominical":
+ *   - Domingo (0) → devuelve la fecha del LUNES siguiente
+ *   - Cualquier otro día → devuelve todayRD()
+ *
+ * Contexto: la chica de caja no trabaja los domingos. Las facturas
+ * despachadas el domingo se agrupan en el cuadre del lunes para que
+ * el cierre de caja sea consistente. Esto aplica tanto a la fecha
+ * de despacho auto-asignada como al default del filtro del cuadre.
+ *
+ * NO afecta fecha_despacho en la BD cuando se cambia manualmente
+ * desde /admin (esos siguen su valor real).
+ */
+export function cuadreDateRD(): string {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: TZ }));
+  if (d.getDay() === 0) {
+    d.setDate(d.getDate() + 1);
+  }
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Devuelve true si la fecha YYYY-MM-DD cae en domingo en RD. */
+export function isSundayRD(iso: string): boolean {
+  const [y, m, day] = iso.split("-").map(Number);
+  // Crear fecha a mediodía UTC para evitar boundary issues con DST
+  const d = new Date(Date.UTC(y, m - 1, day, 12, 0, 0));
+  return d.getUTCDay() === 0;
+}

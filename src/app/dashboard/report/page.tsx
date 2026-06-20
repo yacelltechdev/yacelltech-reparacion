@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, RefreshCcw, PackageCheck, PackageX, Download, Lock, ChevronDown, ChevronUp, Printer, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { todayRD, formatDateTimeShort } from "@/lib/date";
+import { todayRD, cuadreDateRD, isSundayRD, formatDateTimeShort } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
 
 const totalCosto = (r: Repair) =>
@@ -105,7 +105,7 @@ export default function ReportPage() {
   const { user } = useAuth();
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [cierres, setCierres] = useState<Cierre[]>([]);
-  const [date, setDate] = useState(todayRD());
+  const [date, setDate] = useState(cuadreDateRD());
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -133,7 +133,18 @@ export default function ReportPage() {
 
   const loadRepairs = async (targetDate = date) => {
     try {
-      const res = await fetch(`/api/repairs?despacho_desde=${targetDate}&despacho_hasta=${targetDate}`);
+      // Regla "cuadre dominical": si la fecha objetivo es lunes, incluir
+      // también las facturas del domingo anterior (no se cerraron).
+      let desde = targetDate;
+      const [ty, tm, td] = targetDate.split("-").map(Number);
+      const target = new Date(Date.UTC(ty, tm - 1, td, 12, 0, 0));
+      if (target.getUTCDay() === 1) {
+        // lunes → incluir domingo anterior
+        const prev = new Date(target);
+        prev.setUTCDate(prev.getUTCDate() - 1);
+        desde = `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-${String(prev.getUTCDate()).padStart(2, "0")}`;
+      }
+      const res = await fetch(`/api/repairs?despacho_desde=${desde}&despacho_hasta=${targetDate}`);
       const data: Repair[] = await res.json();
       setRepairs(data);
       setIsLoading(false);
@@ -149,8 +160,22 @@ export default function ReportPage() {
   };
 
   // Only unclosed (cierre_id IS NULL) delivered repairs for selected date
+  // Si la fecha es lunes, también incluye facturas del domingo anterior
+  // (regla "cuadre dominical" — no se cierra caja los domingos).
+  const isMonday = (() => {
+    const [y, m, d] = date.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d, 12, 0, 0)).getUTCDay() === 1;
+  })();
   const filtered = repairs.filter(r => {
-    const matchDate = r.fecha_despacho?.startsWith(date);
+    const fd = r.fecha_despacho?.slice(0, 10) || "";
+    const matchDate = isMonday
+      ? (fd === date || fd === (() => {
+          const [y, m, d] = date.split("-").map(Number);
+          const prev = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+          prev.setUTCDate(prev.getUTCDate() - 1);
+          return `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-${String(prev.getUTCDate()).padStart(2, "0")}`;
+        })())
+      : fd === date;
     const matchUnclosed = (r as any).cierre_id == null;
     const q = search.trim().toLowerCase();
     const matchSearch = !q || r.codigo?.toLowerCase().includes(q) || r.cliente?.toLowerCase().includes(q) || r.modelo?.toLowerCase().includes(q);
@@ -264,12 +289,21 @@ export default function ReportPage() {
             <Button variant="outline" size="icon" onClick={loadAll} title="Actualizar">
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            {filtered.length > 0 && (
+            {filtered.length > 0 && !isSundayRD(date) && (
               <Button
                 onClick={() => setConfirming(true)}
                 className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
               >
                 <Lock className="h-4 w-4" /> Cerrar Caja
+              </Button>
+            )}
+            {filtered.length > 0 && isSundayRD(date) && (
+              <Button
+                disabled
+                className="gap-2 opacity-60 cursor-not-allowed"
+                title="Los domingos no se cierra caja. Las facturas se incluyen en el cuadre del lunes."
+              >
+                <Lock className="h-4 w-4" /> Cierre solo lunes
               </Button>
             )}
           </div>
