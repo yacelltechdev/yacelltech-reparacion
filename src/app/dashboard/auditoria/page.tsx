@@ -57,7 +57,17 @@ export default function AuditoriaPage() {
   const cargar = useCallback(async (f: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/repairs?despacho_desde=${f}&despacho_hasta=${f}`);
+      // Regla "cuadre dominical": si la fecha objetivo es lunes, incluir
+      // también las facturas del domingo anterior (no se auditaron solas).
+      let desde = f;
+      const [y, m, d] = f.split("-").map(Number);
+      const target = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+      if (target.getUTCDay() === 1) {
+        const prev = new Date(target);
+        prev.setUTCDate(prev.getUTCDate() - 1);
+        desde = `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-${String(prev.getUTCDate()).padStart(2, "0")}`;
+      }
+      const res = await fetch(`/api/repairs?despacho_desde=${desde}&despacho_hasta=${f}`);
       const data = await res.json();
       const sorted = (Array.isArray(data) ? data : data.data || []).sort(
         (a: Repair, b: Repair) =>
@@ -248,7 +258,17 @@ export default function AuditoriaPage() {
                 ? "Cargando..."
                 : auditables.length === 0
                 ? `Sin facturas para ${fecha}`
-                : `${auditables.length} factura(s) — ${fecha}`}
+                : (() => {
+                    const [y, m, d] = fecha.split("-").map(Number);
+                    const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+                    if (dt.getUTCDay() === 1) {
+                      const prev = new Date(dt);
+                      prev.setUTCDate(prev.getUTCDate() - 1);
+                      const dom = `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}-${String(prev.getUTCDate()).padStart(2, "0")}`;
+                      return `${auditables.length} factura(s) — domingo ${dom} + lunes ${fecha}`;
+                    }
+                    return `${auditables.length} factura(s) — ${fecha}`;
+                  })()}
             </span>
             {!loading && revisadas > 0 && (
               <button
