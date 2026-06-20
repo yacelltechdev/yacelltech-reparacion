@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ClipboardCheck, CheckCircle2, Clock, Scan, X, RotateCcw } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { todayRD } from "@/lib/date";
+import { cuadreDateRD } from "@/lib/date";
 
 const STORAGE_KEY = "yacell_auditoria";
 
@@ -36,8 +36,7 @@ type ScanFeedback = { tipo: "ok"; codigo: string } | { tipo: "error"; codigo: st
 export default function AuditoriaPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const hoy = todayRD();
-  const [fecha, setFecha] = useState(hoy);
+  const [fecha, setFecha] = useState(cuadreDateRD());
   const [reparaciones, setReparaciones] = useState<Repair[]>([]);
   const [loading, setLoading] = useState(false);
   const [reviewed, setReviewed] = useState<Record<string, Record<string, boolean>>>({});
