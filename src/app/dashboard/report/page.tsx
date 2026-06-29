@@ -297,10 +297,11 @@ export default function ReportPage() {
                 <Lock className="h-4 w-4" /> Cerrar Caja
               </Button>
             )}
-            {filtered.length > 0 && isSundayRD(date) && (
+            {isSundayRD(date) && (
               <Button
                 disabled
-                className="gap-2 opacity-60 cursor-not-allowed"
+                variant="outline"
+                className="gap-2 bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed hover:bg-slate-100 hover:text-slate-400"
                 title="Los domingos no se cierra caja. Las facturas se incluyen en el cuadre del lunes."
               >
                 <Lock className="h-4 w-4" /> Cierre solo lunes
@@ -361,7 +362,13 @@ export default function ReportPage() {
                 {isLoading ? (
                   <TableRow><TableCell colSpan={6} className="h-32 text-center text-slate-400">Cargando...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="h-32 text-center text-slate-400 italic">No hay despachos pendientes de cierre para esta fecha.</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-slate-500 italic">
+                      {isSundayRD(date)
+                        ? "Los domingos no se cierra caja. Las facturas del domingo se incluyen en el cuadre del lunes."
+                        : "No hay despachos pendientes de cierre para esta fecha."}
+                    </TableCell>
+                  </TableRow>
                 ) : filtered.map(r => (
                   <TableRow key={r.id} className="hover:bg-slate-50/50">
                     <TableCell className="font-black text-primary text-xs">{r.codigo}</TableCell>

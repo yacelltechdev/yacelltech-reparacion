@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
+import { isSundayRD } from '@/lib/date';
 
 export async function GET() {
   try {
@@ -17,6 +18,20 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const { fecha, cerrado_por } = await req.json();
+
+    // Regla de negocio "cuadre dominical": los domingos no se cierra caja.
+    // Las facturas despachadas el domingo se incluyen en el cuadre del lunes.
+    // El UI ya bloquea el botón, pero defendemos también el endpoint para
+    // evitar que un cliente directo (Postman/curl/otro) cree un cierre en 0.
+    if (!fecha || typeof fecha !== 'string') {
+      return NextResponse.json({ error: 'Fecha requerida' }, { status: 400 });
+    }
+    if (isSundayRD(fecha)) {
+      return NextResponse.json(
+        { error: 'Los domingos no se cierra caja. Las facturas se incluyen en el cuadre del lunes.' },
+        { status: 400 }
+      );
+    }
 
     const { data: repairsData, error: repairsError } = await supabase
       .from('repairs')
