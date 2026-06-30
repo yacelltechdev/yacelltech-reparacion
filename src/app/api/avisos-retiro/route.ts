@@ -26,3 +26,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { repair_id, tipo } = await req.json();
+    if (!repair_id || !tipo) {
+      return NextResponse.json({ error: "repair_id y tipo requeridos" }, { status: 400 });
+    }
+    const { error } = await supabase
+      .from('avisos_retiro')
+      .delete()
+      .eq('repair_id', repair_id)
+      .eq('tipo', tipo);
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

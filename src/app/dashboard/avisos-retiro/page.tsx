@@ -21,6 +21,7 @@ const STAGES = [
 
 const today = () => new Date();
 const diasDesde = (fecha: string) => Math.floor((today().getTime() - new Date(fecha).getTime()) / 86400000);
+const tieneTelefonoValido = (tel?: string) => (tel || "").replace(/\D/g, "").length >= 10;
 
 function getWhatsAppMsg(r: Repair, tipo: string) {
   const dias = diasDesde(r.fecha);
@@ -76,7 +77,9 @@ export default function AvisosRetiroPage() {
   };
 
   const pendingRepairs = repairs.filter(r =>
-    (r.status === 'Listo para entregar' || r.status === 'No se pudo reparar') && diasDesde(r.fecha) >= 30
+    (r.status === 'Listo para entregar' || r.status === 'No se pudo reparar') &&
+    diasDesde(r.fecha) >= 30 &&
+    tieneTelefonoValido(r.telefono)
   ).sort((a, b) => diasDesde(b.fecha) - diasDesde(a.fecha));
 
   const allAvisos = avisos;
@@ -115,6 +118,20 @@ export default function AvisosRetiroPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repair_id: r.id, tipo, enviado_por: user?.username || 'caja' }),
+      });
+      await loadAvisos();
+    } catch (e) { console.error(e); }
+    setEnviando(null);
+  };
+
+  const handleDeshacer = async (r: Repair, tipo: string) => {
+    if (!confirm(`¿Deshacer el aviso "${tipo}" para ${r.cliente}? Volverá a "Pendiente por enviar".`)) return;
+    setEnviando(r.id);
+    try {
+      await fetch('/api/avisos-retiro', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repair_id: r.id, tipo }),
       });
       await loadAvisos();
     } catch (e) { console.error(e); }
@@ -279,7 +296,18 @@ export default function AvisosRetiroPage() {
                             ))}
                           </div>
                         </TableCell>
-                        <TableCell />
+                        <TableCell>
+                          {last && (
+                            <Button size="sm" variant="ghost"
+                              disabled={enviando === r.id}
+                              onClick={() => handleDeshacer(r, last.tipo)}
+                              className="gap-1 text-xs text-slate-500 hover:text-red-600 whitespace-nowrap"
+                              title={`Deshacer aviso ${last.tipo} (${formatDateSlash(last.enviado_en)})`}
+                            >
+                              ↶ Deshacer
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
