@@ -45,17 +45,28 @@ function MobileQuickEdit({
   const [tecnico, setTecnico] = useState<string>(repair.tecnico || "");
   const [modelo, setModelo] = useState<string>(repair.modelo || "");
   const [trabajo, setTrabajo] = useState<string>(repair.trabajoARealizar || "");
+  const [status, setStatus] = useState<Repair["status"]>(repair.status);
   const [cargos, setCargos] = useState<{ id: number; desc: string; monto: number }[]>(
     repair.cargosAdicionales || []
   );
   const [newDesc, setNewDesc] = useState("");
   const [newMonto, setNewMonto] = useState("");
 
+  const ALL_STATUSES: Repair["status"][] = [
+    "En chequeo",
+    "En reparación",
+    "Listo para entregar",
+    "No se pudo reparar",
+    "Entregado bueno",
+    "Entregado malo",
+  ];
+
   const startEdit = () => {
     setCosto(String(repair.costo || 0));
     setTecnico(repair.tecnico || "");
     setModelo(repair.modelo || "");
     setTrabajo(repair.trabajoARealizar || "");
+    setStatus(repair.status);
     setCargos(repair.cargosAdicionales || []);
     setNewDesc("");
     setNewMonto("");
@@ -94,6 +105,7 @@ function MobileQuickEdit({
           tecnico: tecnico || null,
           modelo: modelo || null,
           trabajoARealizar: trabajo || null,
+          status: status,
           cargosAdicionales: cargos,
         }),
       });
@@ -101,7 +113,15 @@ function MobileQuickEdit({
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Error al guardar");
       }
-      const updated: Repair = { ...repair, costo: costoNum, tecnico: tecnico || undefined, modelo, trabajoARealizar: trabajo, cargosAdicionales: cargos };
+      const updated: Repair = {
+        ...repair,
+        costo: costoNum,
+        tecnico: tecnico || undefined,
+        modelo,
+        trabajoARealizar: trabajo,
+        status,
+        cargosAdicionales: cargos,
+      };
       toast.success("Cambios guardados");
       onSaved(updated);
       setEditing(false);
@@ -184,6 +204,35 @@ function MobileQuickEdit({
         </div>
 
         <div className="grid grid-cols-1 gap-3">
+          {/* Estado — primero para que sea el cambio más visible */}
+          <div>
+            <Label className="text-xs font-semibold text-slate-600">Estado</Label>
+            <div className="grid grid-cols-2 gap-1.5 mt-1.5">
+              {ALL_STATUSES.map(s => {
+                const active = status === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
+                    className={`text-xs font-semibold px-2 py-2 rounded-md border transition-all ${
+                      active
+                        ? `${statusColors[s] || "bg-slate-200 text-slate-800 border-slate-300"} ring-2 ring-primary/40`
+                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+            {(status === "Entregado bueno" || status === "Entregado malo") && (
+              <p className="text-[11px] text-amber-700 mt-1.5 leading-snug">
+                ⚠ Al guardar, se seteará automáticamente la <strong>fecha de salida</strong> con la hora actual.
+              </p>
+            )}
+          </div>
+
           {/* Precio */}
           <div>
             <Label htmlFor={`costo-${repair.id}`} className="text-xs font-semibold text-slate-600">Precio base (RD$)</Label>
