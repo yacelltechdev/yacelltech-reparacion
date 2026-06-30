@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Database, Eye, X, Printer, Trash2 } from "lucide-react";
+import { Search, Database, Eye, X, Pencil, Trash2 } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { formatDateTimeCompact } from "@/lib/date";
 import RepairDetailModal from "@/components/RepairDetailModal";
@@ -268,29 +268,17 @@ export default function HistoryBetaPage() {
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <Button
-                  variant="outline"
                   size="sm"
                   className="gap-1.5"
                   onClick={() => setSelected(r)}
                 >
-                  <Eye className="h-3.5 w-3.5" /> Ver
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => {
-                    setPrintTarget(r);
-                    setTimeout(() => window.print(), 200);
-                  }}
-                >
-                  <Printer className="h-3.5 w-3.5" /> Imprimir
+                  <Pencil className="h-3.5 w-3.5" /> Editar
                 </Button>
                 {isAdmin && (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="col-span-2 gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    className="col-span-1 gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                     onClick={() => { if (confirm(`¿Eliminar reparación ${r.codigo}?`)) alert("Eliminar requiere flujo de confirmación (pendiente integrar con el modal)."); }}
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Eliminar
