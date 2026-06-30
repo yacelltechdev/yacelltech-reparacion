@@ -66,11 +66,13 @@ export default function SeguimientoClientesPage() {
     } catch (e) { console.error(e); }
   };
 
-  // Solo "Entregado bueno", con fecha_despacho >= 15 días, sin chequeos ni entregado malo
+  // Solo "Entregado bueno", con fecha_despacho >= 15 días, con teléfono válido (>=10 dígitos)
+  const tieneTelefonoValido = (tel?: string) => (tel || "").replace(/\D/g, "").length >= 10;
   const elegibles = repairs.filter(r =>
     r.status === 'Entregado bueno' &&
     r.fecha_despacho &&
-    diasDesde(r.fecha_despacho) >= DIAS_SEGUIMIENTO
+    diasDesde(r.fecha_despacho) >= DIAS_SEGUIMIENTO &&
+    tieneTelefonoValido(r.telefono)
   ).sort((a, b) => diasDesde(b.fecha_despacho!) - diasDesde(a.fecha_despacho!));
 
   const yaEnviado = (id: number) => seguimientos.some(s => s.repair_id === id);
