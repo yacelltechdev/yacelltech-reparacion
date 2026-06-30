@@ -21,12 +21,12 @@ function getWhatsAppMsg(r: Repair) {
   const dias = r.fecha_despacho ? diasDesde(r.fecha_despacho) : DIAS_SEGUIMIENTO;
   const modelo = `${r.marca} ${r.modelo}`.trim();
   const trabajo = r.trabajoARealizar?.trim() || "la reparación realizada";
-  return `¡Hola, ${r.cliente}! 😊\n\n` +
+  return `¡Hola, ${r.cliente}!\n\n` +
     `Te saludamos de YacellTech.\n\n` +
     `Ya han pasado ${dias} días desde la reparación de tu ${modelo}, donde realizamos ${trabajo}.\n\n` +
     `Queríamos saber cómo ha estado funcionando tu equipo. ¿Todo ha marchado bien?\n\n` +
     `Si necesitas nuestra ayuda o tienes alguna duda, solo responde este mensaje. Y si nos quieres ayudar, ¿qué calificación del 1 al 10 le darías a tu experiencia con nosotros?\n\n` +
-    `¡Gracias por confiar en YacellTech! 💙`;
+    `¡Gracias por confiar en YacellTech!`;
 }
 
 export default function SeguimientoClientesPage() {
