@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Database, Eye, X, Pencil, Plus, Trash2, Save, Loader2, ExternalLink, Check } from "lucide-react";
+import { Search, Database, Eye, X, Pencil, Plus, Trash2, Save, Loader2, ExternalLink } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { formatDateTimeCompact } from "@/lib/date";
 import RepairDetailModal from "@/components/RepairDetailModal";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const PER_PAGE = 50;
@@ -46,6 +47,8 @@ function MobileQuickEdit({
   const [modelo, setModelo] = useState<string>(repair.modelo || "");
   const [trabajo, setTrabajo] = useState<string>(repair.trabajoARealizar || "");
   const [status, setStatus] = useState<Repair["status"]>(repair.status);
+  // Estado: null = "no es pantalla", "" = checkbox marcado pero sin tipo, "InCell"/"OLED" = elegido
+  const [tipoPantalla, setTipoPantalla] = useState<"InCell" | "OLED" | "" | null>(repair.tipoPantalla ?? null);
   const [cargos, setCargos] = useState<{ id: number; desc: string; monto: number }[]>(
     repair.cargosAdicionales || []
   );
@@ -67,6 +70,7 @@ function MobileQuickEdit({
     setModelo(repair.modelo || "");
     setTrabajo(repair.trabajoARealizar || "");
     setStatus(repair.status);
+    setTipoPantalla(repair.tipoPantalla ?? null);
     setCargos(repair.cargosAdicionales || []);
     setNewDesc("");
     setNewMonto("");
@@ -95,6 +99,10 @@ function MobileQuickEdit({
   const save = async () => {
     const costoNum = parseFloat(costo);
     if (isNaN(costoNum) || costoNum < 0) { toast.error("Precio inválido"); return; }
+    if ((tipoPantalla as any) != null && tipoPantalla !== "InCell" && tipoPantalla !== "OLED") {
+      toast.error("Selecciona el tipo de pantalla: InCell u OLED");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/repairs/${repair.id}`, {
@@ -106,6 +114,7 @@ function MobileQuickEdit({
           modelo: modelo || null,
           trabajoARealizar: trabajo || null,
           status: status,
+          tipoPantalla: (tipoPantalla === "" ? null : tipoPantalla),
           cargosAdicionales: cargos,
         }),
       });
@@ -120,6 +129,7 @@ function MobileQuickEdit({
         modelo,
         trabajoARealizar: trabajo,
         status,
+        tipoPantalla: (tipoPantalla === "" ? null : tipoPantalla) as Repair["tipoPantalla"],
         cargosAdicionales: cargos,
       };
       toast.success("Cambios guardados");
@@ -286,6 +296,47 @@ function MobileQuickEdit({
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-none"
               placeholder="Describe el trabajo (cambio de pantalla, batería, software...)"
             />
+          </div>
+
+          {/* ¿Es reparación de pantalla? — replica la UI del modal normal */}
+          <div className="space-y-2 border-t pt-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`esPantalla-${repair.id}`}
+                checked={tipoPantalla !== null}
+                onCheckedChange={(checked) => setTipoPantalla(checked ? ("" as any) : null)}
+              />
+              <Label htmlFor={`esPantalla-${repair.id}`} className="cursor-pointer font-semibold text-sm">
+                ¿Es reparación de pantalla?
+              </Label>
+            </div>
+            {tipoPantalla !== null && (
+              <div className="flex gap-2 items-center">
+                {tipoPantalla === "" && (
+                  <span className="text-xs text-red-500 font-semibold mr-1">Elige el tipo:</span>
+                )}
+                {(["InCell", "OLED"] as const).map(tipo => {
+                  const active = tipoPantalla === tipo;
+                  const isPending = tipoPantalla === "";
+                  return (
+                    <button
+                      key={tipo}
+                      type="button"
+                      onClick={() => setTipoPantalla(tipo)}
+                      className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors ${
+                        active
+                          ? "bg-black text-white border-black"
+                          : isPending
+                            ? "bg-white text-red-600 border-red-300 hover:border-red-500"
+                            : "bg-white text-slate-700 border-slate-300 hover:border-slate-500"
+                      }`}
+                    >
+                      {tipo}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Cargos adicionales */}
