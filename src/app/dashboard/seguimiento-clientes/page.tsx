@@ -24,7 +24,7 @@ function getWhatsAppMsg(r: Repair) {
   return `¡Hola, ${r.cliente}!\n\n` +
     `Te saludamos de YacellTech.\n\n` +
     `Ya han pasado ${dias} días desde la reparación de tu ${modelo}, donde realizamos ${trabajo}.\n\n` +
-    `Queríamos saber cómo ha estado funcionando tu equipo. ¿Todo ha marchado bien?\n\n` +
+    `Queríamos saber cómo ha estado funcionando su equipo. ¿Todo ha marchado bien?\n\n` +
     `Si necesitas nuestra ayuda o tienes alguna duda, solo responde este mensaje. Y si nos quieres ayudar, ¿qué calificación del 1 al 10 le darías a tu experiencia con nosotros?\n\n` +
     `¡Gracias por confiar en YacellTech!`;
 }
