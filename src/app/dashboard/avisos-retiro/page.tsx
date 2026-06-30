@@ -23,13 +23,17 @@ const today = () => new Date();
 const diasDesde = (fecha: string) => Math.floor((today().getTime() - new Date(fecha).getTime()) / 86400000);
 
 function getWhatsAppMsg(r: Repair, tipo: string) {
-  const equipo = `su ${r.marca} ${r.modelo} (código ${r.codigo})`;
+  const dias = diasDesde(r.fecha);
+  const modelo = `${r.marca} ${r.modelo}`.trim();
+  const trabajo = r.trabajoARealizar?.trim() || "la reparación realizada";
+  const saludo = `¡Hola, ${r.cliente}! 😊\n\nTe saludamos de YacellTech.\n\n`;
+  const equipoTxt = `tu ${modelo} (código ${r.codigo}), donde realizamos ${trabajo}`;
   const msgs: Record<string, string> = {
-    '30':    `Hola ${r.cliente}, le recordamos de YACELLTECH que ${equipo} está listo para ser retirado. Por favor, pase a buscarlo a la brevedad. ¡Gracias!`,
-    '60':    `Hola ${r.cliente}, le informamos de YACELLTECH que ${equipo} lleva 2 meses esperando ser retirado en nuestro local. Le pedimos que pase a buscarlo lo antes posible. ¡Gracias!`,
-    '90':    `⚠️ AVISO IMPORTANTE — Estimado/a ${r.cliente}, ${equipo} lleva 3 meses en YACELLTECH sin ser retirado. Es muy importante que pase a buscarlo. ¡Gracias!`,
-    '180':   `⚠️ AVISO URGENTE — Estimado/a ${r.cliente}, ${equipo} lleva 6 meses en nuestro local. Si no lo retira en los próximos 30 días, procederemos a desmantelarlo para piezas. YACELLTECH.`,
-    'final': `⛔ AVISO FINAL — Estimado/a ${r.cliente}, ${equipo} no ha sido retirado en más de 7 meses. Si no lo recoge en los próximos 30 días será desmantelado para piezas. YACELLTECH.`,
+    '30':    saludo + `Notamos que han pasado ${dias} días desde la finalización de la reparación de ${equipoTxt}, y aún no ha sido retirado de nuestro local.\n\nTe pedimos que pases a buscarlo a la brevedad. Si tienes alguna duda, solo responde este mensaje.\n\n¡Gracias por confiar en YacellTech! 💙`,
+    '60':    saludo + `Queremos recordarte que ${equipoTxt}, lleva ${dias} días esperando ser retirado en nuestro local.\n\nTe pedimos que pases a buscarlo lo antes posible. Si necesitas coordinar un horario o tienes alguna duda, solo responde este mensaje.\n\n¡Gracias por confiar en YacellTech! 💙`,
+    '90':    `¡Hola, ${r.cliente}! 😊\n\n⚠️ AVISO IMPORTANTE — YacellTech\n\n${equipoTxt[0].toUpperCase() + equipoTxt.slice(1)}, lleva ${dias} días en nuestro local sin ser retirado.\n\nEs muy importante que pases a buscarlo. Si necesitas ayuda, solo responde este mensaje.\n\n¡Gracias por confiar en YacellTech! 💙`,
+    '180':   `¡Hola, ${r.cliente}! 😊\n\n⚠️ AVISO URGENTE — YacellTech\n\n${equipoTxt[0].toUpperCase() + equipoTxt.slice(1)}, lleva ${dias} días en nuestro local.\n\nSi no lo retiras en los próximos 30 días, procederemos a desmantelarlo para piezas. YacellTech.`,
+    'final': `¡Hola, ${r.cliente}! 😊\n\n⛔ AVISO FINAL — YacellTech\n\n${equipoTxt[0].toUpperCase() + equipoTxt.slice(1)}, lleva más de 7 meses en nuestro local sin ser retirado.\n\nSi no lo recoges en los próximos 30 días será desmantelado para piezas. YacellTech.`,
   };
   return msgs[tipo] ?? msgs['30'];
 }
