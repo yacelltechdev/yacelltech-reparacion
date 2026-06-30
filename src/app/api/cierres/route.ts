@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import { isSundayRD } from '@/lib/date';
 
+/** "YYYY-MM-DD" − 1 día en UTC (regla "cuadre dominical" — lunes agrupa dom+lun). */
+function previousDayRD(fecha: string): string {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  t.setUTCDate(t.getUTCDate() - 1);
+  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
+}
+
 export async function GET() {
   try {
     const { data, error } = await supabase.from('cierres').select('*').order('id', { ascending: false });
@@ -33,14 +41,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: repairsData, error: repairsError } = await supabase
+    // Regla "cuadre dominical": si la fecha objetivo es lunes, incluir también
+    // las facturas del domingo anterior (no se cerraron solas).
+    const [fy, fm, fd] = fecha.split('-').map(Number);
+    const isMonday = new Date(Date.UTC(fy, fm - 1, fd, 12, 0, 0)).getUTCDay() === 1;
+    const previousDate = isMonday ? previousDayRD(fecha) : null;
+
+    let repairsQuery = supabase
       .from('repairs')
       .select('*')
-      .like('fecha_despacho', `${fecha}%`)
       .is('cierre_id', null)
       .in('status', ['Entregado bueno', 'Entregado malo']);
-
-    if (repairsError) throw repairsError;
+    if (previousDate) {
+      // .like OR .like — Supabase lo respeta como AND con OR interno
+      repairsQuery = repairsQuery.or(
+        `fecha_despacho.like.${fecha}%,fecha_despacho.like.${previousDate}%`
+      );
+    } else {
+      repairsQuery = repairsQuery.like('fecha_despacho', `${fecha}%`);
+    }
+    const { data: repairsData, error: repairsError } = await repairsQuery;
 
     const parsed = (repairsData || []).map((r: any) => ({
       ...r,
