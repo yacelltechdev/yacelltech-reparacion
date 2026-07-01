@@ -107,6 +107,7 @@ export default function SeguimientoClientesPage() {
         <TableHead className="font-bold">Código</TableHead>
         <TableHead className="font-bold">Cliente</TableHead>
         <TableHead className="font-bold">Equipo</TableHead>
+        <TableHead className="font-bold">Trabajo realizado</TableHead>
         <TableHead className="font-bold text-center">Días entregado</TableHead>
         <TableHead className="font-bold">Fecha entrega</TableHead>
         <TableHead />
@@ -144,9 +145,9 @@ export default function SeguimientoClientesPage() {
               <TableHead_ />
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={6} className="h-24 text-center text-slate-400">Cargando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-400">Cargando...</TableCell></TableRow>
                 ) : porEnviar.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="h-24 text-center text-slate-400 italic">No hay seguimientos pendientes.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-400 italic">No hay seguimientos pendientes.</TableCell></TableRow>
                 ) : porEnviar.map(r => {
                   const dias = diasDesde(r.fecha_despacho!);
                   return (
@@ -157,6 +158,9 @@ export default function SeguimientoClientesPage() {
                         <div className="text-xs text-slate-400">{r.telefono}</div>
                       </TableCell>
                       <TableCell className="text-sm">{r.marca} {r.modelo}</TableCell>
+                      <TableCell className="text-sm text-slate-700 max-w-xs">
+                        {r.trabajoARealizar?.trim() || <span className="text-slate-400 italic">—</span>}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="secondary" className={
                           dias >= 30 ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
@@ -217,6 +221,13 @@ export default function SeguimientoClientesPage() {
                     {r.marca} {r.modelo}
                     <span className="text-slate-400"> · entregado {formatDateSlash(r.fecha_despacho!)}</span>
                   </div>
+                  {/* Trabajo realizado — qué le hicimos */}
+                  {r.trabajoARealizar?.trim() && (
+                    <div className="text-xs text-slate-700 bg-slate-50 rounded px-2 py-1.5 border-l-2 border-slate-300">
+                      <span className="font-semibold text-slate-500">Trabajo: </span>
+                      <span className="whitespace-pre-wrap">{r.trabajoARealizar}</span>
+                    </div>
+                  )}
                   {/* Acciones: WhatsApp full-width + Marcar enviado */}
                   <div className="flex gap-2 pt-1">
                     <Button size="sm"
@@ -273,6 +284,9 @@ export default function SeguimientoClientesPage() {
                           <div className="text-xs text-slate-400">{r.telefono}</div>
                         </TableCell>
                         <TableCell className="text-sm">{r.marca} {r.modelo}</TableCell>
+                        <TableCell className="text-sm text-slate-600 max-w-xs">
+                          {r.trabajoARealizar?.trim() || <span className="text-slate-400 italic">—</span>}
+                        </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="secondary" className="bg-slate-100 text-slate-500">{dias}d</Badge>
                         </TableCell>
@@ -312,6 +326,11 @@ export default function SeguimientoClientesPage() {
                         <Badge variant="secondary" className="bg-slate-100 text-slate-500 shrink-0">{dias}d</Badge>
                       </div>
                       <div className="text-xs text-slate-500">{r.marca} {r.modelo}</div>
+                      {r.trabajoARealizar?.trim() && (
+                        <div className="text-xs text-slate-500 italic truncate">
+                          {r.trabajoARealizar}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-[11px]">
                         <span className="text-green-700 font-semibold">✓ Contactado</span>
                         {reg && (
