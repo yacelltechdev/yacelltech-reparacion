@@ -213,7 +213,7 @@ export default function PrintTicket({ repair, copies = 2 }: { repair: Repair; co
                 <div style={{ width: '42%', textAlign: 'center' }}>
                   <div style={{ height: '55px' }}></div>
                   <div style={{ borderTop: '1px solid #000', paddingTop: '5px', fontSize: '12px', color: '#1E293B' }}>
-                    <strong>Firma</strong><br/>
+                    <strong>Firma (Cliente)</strong><br/>
                     <span style={{ fontSize: '10px', color: '#64748B' }}>Acepto los términos</span>
                   </div>
                 </div>
