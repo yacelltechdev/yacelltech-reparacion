@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MessageCircle, RefreshCcw } from "lucide-react";
+import { MessageCircle, RefreshCcw, ChevronDown, ChevronRight, Check } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD, formatDateSlash } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
@@ -35,6 +35,7 @@ export default function SeguimientoClientesPage() {
   const [seguimientos, setSeguimientos] = useState<SeguimientoRecord[]>([]);
   const [enviando, setEnviando] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showContactados, setShowContactados] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -115,14 +116,14 @@ export default function SeguimientoClientesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Seguimiento de Clientes</h1>
-          <p className="text-slate-500 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Seguimiento de Clientes</h1>
+          <p className="text-slate-500 text-xs md:text-sm">
             Equipos reparados y entregados hace 15+ días. Envía un mensaje para saber si todo está bien.
           </p>
         </div>
-        <Button variant="outline" size="icon" onClick={loadAll} title="Actualizar">
+        <Button variant="outline" size="icon" onClick={loadAll} title="Actualizar" className="shrink-0">
           <RefreshCcw className="h-4 w-4" />
         </Button>
       </div>
@@ -135,7 +136,9 @@ export default function SeguimientoClientesPage() {
             Pendiente por contactar ({loading ? '…' : porEnviar.length})
           </h2>
         </div>
-        <Card className="border-none shadow-sm overflow-hidden">
+
+        {/* Desktop: tabla (md+) */}
+        <Card className="border-none shadow-sm overflow-hidden hidden md:block">
           <CardContent className="p-0">
             <Table>
               <TableHead_ />
@@ -186,18 +189,75 @@ export default function SeguimientoClientesPage() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Mobile: cards (<md) — WhatsApp prominent, marcar enviado secundario */}
+        <div className="md:hidden space-y-2">
+          {loading ? (
+            <Card className="border-none shadow-sm"><CardContent className="p-6 text-center text-slate-400 text-sm">Cargando...</CardContent></Card>
+          ) : porEnviar.length === 0 ? (
+            <Card className="border-none shadow-sm"><CardContent className="p-6 text-center text-slate-400 text-sm italic">No hay seguimientos pendientes.</CardContent></Card>
+          ) : porEnviar.map(r => {
+            const dias = diasDesde(r.fecha_despacho!);
+            return (
+              <Card key={r.id} className="border-none shadow-sm">
+                <CardContent className="p-3 space-y-2">
+                  {/* Header: código + badge de días */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-black text-primary text-xs">{r.codigo}</div>
+                      <div className="font-semibold text-sm text-slate-800 truncate">{r.cliente}</div>
+                      <div className="text-[11px] text-slate-400">{r.telefono}</div>
+                    </div>
+                    <Badge variant="secondary" className={
+                      dias >= 30 ? 'bg-orange-100 text-orange-700 shrink-0' : 'bg-blue-100 text-blue-700 shrink-0'
+                    }>{dias}d</Badge>
+                  </div>
+                  {/* Equipo + fecha entrega */}
+                  <div className="text-xs text-slate-600">
+                    {r.marca} {r.modelo}
+                    <span className="text-slate-400"> · entregado {formatDateSlash(r.fecha_despacho!)}</span>
+                  </div>
+                  {/* Acciones: WhatsApp full-width + Marcar enviado */}
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm"
+                      onClick={() => handleAbrirWhatsApp(r)}
+                      className="flex-1 gap-1.5 text-xs bg-green-600 hover:bg-green-700 text-white h-10"
+                    >
+                      <MessageCircle className="h-4 w-4" /> Abrir WhatsApp
+                    </Button>
+                    <Button size="sm"
+                      disabled={enviando === r.id}
+                      onClick={() => handleMarcarEnviado(r)}
+                      className="gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white h-10 px-3"
+                    >
+                      {enviando === r.id ? '...' : <Check className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Ya contactados */}
+      {/* Ya contactados — colapsado por defecto en mobile */}
       {!loading && enviados.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => setShowContactados(v => !v)}
+            className="flex items-center gap-2 mb-2 w-full text-left md:cursor-default"
+            aria-expanded={showContactados}
+          >
             <span className="h-2.5 w-2.5 rounded-full bg-green-500 inline-block" />
             <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
               Ya contactados ({enviados.length})
             </h2>
-          </div>
-          <Card className="border-none shadow-sm overflow-hidden opacity-70">
+            <ChevronDown className={`h-4 w-4 text-slate-400 md:hidden transition-transform ${showContactados ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Desktop: tabla (md+) — siempre visible */}
+          <Card className="border-none shadow-sm overflow-hidden opacity-70 hidden md:block">
             <CardContent className="p-0">
               <Table>
                 <TableHead_ />
@@ -234,6 +294,38 @@ export default function SeguimientoClientesPage() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Mobile: cards compactos, colapsados por defecto */}
+          {showContactados && (
+            <div className="md:hidden space-y-2 opacity-70">
+              {enviados.map(r => {
+                const dias = diasDesde(r.fecha_despacho!);
+                const reg = seguimientos.find(s => s.repair_id === r.id);
+                return (
+                  <Card key={r.id} className="border-none shadow-sm bg-slate-50/30">
+                    <CardContent className="p-3 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-black text-primary text-xs">{r.codigo}</div>
+                          <div className="font-medium text-sm text-slate-700 truncate">{r.cliente}</div>
+                        </div>
+                        <Badge variant="secondary" className="bg-slate-100 text-slate-500 shrink-0">{dias}d</Badge>
+                      </div>
+                      <div className="text-xs text-slate-500">{r.marca} {r.modelo}</div>
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <span className="text-green-700 font-semibold">✓ Contactado</span>
+                        {reg && (
+                          <span className="text-slate-400">
+                            {formatDateSlash(reg.enviado_en)} — {reg.enviado_por}
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
