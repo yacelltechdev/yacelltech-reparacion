@@ -44,6 +44,7 @@ function MobileQuickEdit({
   const [saving, setSaving] = useState(false);
   const [costo, setCosto] = useState<string>(String(repair.costo || 0));
   const [tecnico, setTecnico] = useState<string>(repair.tecnico || "");
+  const [marca, setMarca] = useState<string>(repair.marca || "");
   const [modelo, setModelo] = useState<string>(repair.modelo || "");
   const [trabajo, setTrabajo] = useState<string>(repair.trabajoARealizar || "");
   const [status, setStatus] = useState<Repair["status"]>(repair.status);
@@ -67,6 +68,7 @@ function MobileQuickEdit({
   const startEdit = () => {
     setCosto(String(repair.costo || 0));
     setTecnico(repair.tecnico || "");
+    setMarca(repair.marca || "");
     setModelo(repair.modelo || "");
     setTrabajo(repair.trabajoARealizar || "");
     setStatus(repair.status);
@@ -111,6 +113,7 @@ function MobileQuickEdit({
         body: JSON.stringify({
           costo: costoNum,
           tecnico: tecnico || null,
+          marca: marca || null,
           modelo: modelo || null,
           trabajoARealizar: trabajo || null,
           status: status,
@@ -126,6 +129,7 @@ function MobileQuickEdit({
         ...repair,
         costo: costoNum,
         tecnico: tecnico || undefined,
+        marca,
         modelo,
         trabajoARealizar: trabajo,
         status,
@@ -271,6 +275,18 @@ function MobileQuickEdit({
               <option value="Freddy">Freddy</option>
               <option value="Carlos">Carlos</option>
             </select>
+          </div>
+
+          {/* Marca */}
+          <div>
+            <Label htmlFor={`marca-${repair.id}`} className="text-xs font-semibold text-slate-600">Marca</Label>
+            <Input
+              id={`marca-${repair.id}`}
+              value={marca}
+              onChange={e => setMarca(e.target.value)}
+              className="h-10 text-sm"
+              placeholder="Ej: iPhone, Samsung, Xiaomi, Motorola..."
+            />
           </div>
 
           {/* Modelo */}
