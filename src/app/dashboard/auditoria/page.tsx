@@ -47,7 +47,7 @@ export default function AuditoriaPage() {
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
-    if (user && user.role !== "admin") router.replace("/dashboard");
+    if (user && user.role !== "admin" && user.role !== "caja") router.replace("/dashboard");
   }, [user, router]);
 
   useEffect(() => {
