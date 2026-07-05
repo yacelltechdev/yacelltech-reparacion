@@ -156,9 +156,12 @@ function MobileQuickEdit({
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="font-black text-primary text-base leading-tight">{repair.codigo}</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                Ingreso: {formatDate(repair.fecha)}
-                {repair.fecha_despacho && ` · Salida: ${formatDate(repair.fecha_despacho)}`}
+              <div className="text-[11px] text-slate-400 mt-0.5 space-y-0.5">
+                <div>Ingreso: {formatDate(repair.fecha)}</div>
+                {repair.fecha_entrega_recepcion && (
+                  <div className="text-violet-700">Recepción: {formatDate(repair.fecha_entrega_recepcion)}</div>
+                )}
+                {repair.fecha_despacho && <div>Despachado: {formatDate(repair.fecha_despacho)}</div>}
               </div>
             </div>
             <Badge variant="secondary" className={`text-[10px] shrink-0 ${statusColors[repair.status] || ""}`}>
@@ -585,8 +588,9 @@ export default function HistoryBetaPage() {
             <TableHeader className="bg-slate-50/50">
               <TableRow>
                 <TableHead className="font-bold w-[110px]">Código</TableHead>
-                <TableHead className="font-bold w-[140px]">Ingreso</TableHead>
-                <TableHead className="font-bold w-[140px]">Salida</TableHead>
+                <TableHead className="font-bold w-[120px]">Ingreso</TableHead>
+                <TableHead className="font-bold w-[120px] text-violet-700">Recepción</TableHead>
+                <TableHead className="font-bold w-[120px]">Despachado</TableHead>
                 <TableHead className="font-bold">Cliente</TableHead>
                 <TableHead className="font-bold">Equipo</TableHead>
                 <TableHead className="font-bold">Técnico</TableHead>
@@ -597,14 +601,16 @@ export default function HistoryBetaPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={9} className="h-32 text-center text-slate-400">Buscando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="h-32 text-center text-slate-400">Buscando...</TableCell></TableRow>
               ) : results.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="h-32 text-center text-slate-400 italic">Sin resultados para esta búsqueda.</TableCell></TableRow>
-              ) : results.map(r => (
-                <TableRow key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                  <TableCell className="font-black text-primary text-xs">{r.codigo}</TableCell>
-                  <TableCell className="text-xs text-slate-500">{formatDate(r.fecha)}</TableCell>
-                  <TableCell className="text-xs text-slate-500">{formatDate(r.fecha_despacho)}</TableCell>
+                <TableRow><TableCell colSpan={10} className="h-32 text-center text-slate-400 italic">Sin resultados para esta búsqueda.</TableCell></TableRow>
+              ) : (
+                results.map(r => (
+                  <TableRow key={r.id} className="hover:bg-slate-50/50 transition-colors">
+                    <TableCell className="font-black text-primary text-xs">{r.codigo}</TableCell>
+                    <TableCell className="text-xs text-slate-500">{formatDate(r.fecha)}</TableCell>
+                    <TableCell className="text-xs text-violet-700">{formatDate(r.fecha_entrega_recepcion)}</TableCell>
+                    <TableCell className="text-xs text-slate-500">{formatDate(r.fecha_despacho)}</TableCell>
                   <TableCell>
                     <div className="font-medium text-sm">{r.cliente}</div>
                     <div className="text-xs text-slate-400">{r.telefono}</div>
@@ -626,7 +632,8 @@ export default function HistoryBetaPage() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
