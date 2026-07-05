@@ -155,6 +155,7 @@ export default function InventarioTecnicosPage() {
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TecnicoInventario[]>([]);
+  const [printTarget, setPrintTarget] = useState<TecnicoInventario | null>(null);
 
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
@@ -186,8 +187,17 @@ export default function InventarioTecnicosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const handlePrint = () => {
-    setTimeout(() => window.print(), 200);
+  const handlePrint = (tec: TecnicoInventario) => {
+    setPrintTarget(tec);
+    setTimeout(() => {
+      window.print();
+      // Limpiar el target después de imprimir para no acumular hojas en el DOM
+      const onAfter = () => {
+        setPrintTarget(null);
+        window.removeEventListener("afterprint", onAfter);
+      };
+      window.addEventListener("afterprint", onAfter);
+    }, 200);
   };
 
   if (!user || user.role !== "admin") return null;
@@ -214,14 +224,6 @@ export default function InventarioTecnicosPage() {
             <Button variant="outline" onClick={load} disabled={loading} className="gap-2">
               <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Actualizar
-            </Button>
-            <Button
-              onClick={handlePrint}
-              disabled={loading || data.length === 0}
-              className="gap-2"
-            >
-              <Printer className="h-4 w-4" />
-              Imprimir hojas
             </Button>
           </div>
         </div>
@@ -295,6 +297,16 @@ export default function InventarioTecnicosPage() {
                     </Badge>
                   </div>
 
+                  <Button
+                    onClick={() => handlePrint(tec)}
+                    disabled={total === 0}
+                    className="w-full gap-2"
+                    size="sm"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Imprimir hoja de {tec.nombre}
+                  </Button>
+
                   {total === 0 ? (
                     <p className="text-sm text-slate-400 italic">Sin equipos en su poder.</p>
                   ) : (
@@ -344,29 +356,13 @@ export default function InventarioTecnicosPage() {
         )}
       </div>
 
-      {/* Hojas para impresión — un solo wrapper .print-only con position:static
-          para que los 3 hijos .ticket fluyan verticalmente. La regla global
-          .print-only usa position:absolute + top:0, lo que apilaría las 3
-          hojas en la misma posición; los style inline con !important ganan
-          por especificidad. page-break-after: always de la clase .ticket
-          genera una página por técnico. */}
-      {data.length > 0 && (
-        <div
-          className="print-only"
-          style={{
-            display: "none",
-            position: "static !important" as any,
-            top: "auto !important" as any,
-            left: "auto !important" as any,
-            width: "auto !important" as any,
-            background: "#fff",
-          }}
-        >
-          {data.map((tec) => (
-            <div key={tec.nombre} className="ticket">
-              <HojaInventario tec={tec} fecha={fechaHoy} />
-            </div>
-          ))}
+      {/* Hoja para impresión — solo 1 técnico a la vez. Patrón validado de
+          cuadre-tecnico (1 sola .print-only, 1 sola .ticket → 1 sola página). */}
+      {printTarget && (
+        <div className="print-only">
+          <div className="ticket">
+            <HojaInventario tec={printTarget} fecha={fechaHoy} />
+          </div>
         </div>
       )}
     </>
