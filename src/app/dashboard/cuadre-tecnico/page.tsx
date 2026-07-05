@@ -73,6 +73,7 @@ const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 function canAccessCuadre(role: string | undefined, username: string | undefined): boolean {
   if (role === "admin") return true;
   if (role === "tech" && username === "Oscar") return true;
+  if (role === "taller_jefe") return true;
   return false;
 }
 
