@@ -344,12 +344,24 @@ export default function InventarioTecnicosPage() {
         )}
       </div>
 
-      {/* Hojas para impresión — SIEMPRE montado cuando hay datos.
-          En pantalla: position:fixed fuera del viewport (no estorba).
-          En @media print: la regla global .print-only lo posiciona absoluto arriba
-          y los hijos .ticket (page-break-after) generan una página por técnico. */}
+      {/* Hojas para impresión — un solo wrapper .print-only con position:static
+          para que los 3 hijos .ticket fluyan verticalmente. La regla global
+          .print-only usa position:absolute + top:0, lo que apilaría las 3
+          hojas en la misma posición; los style inline con !important ganan
+          por especificidad. page-break-after: always de la clase .ticket
+          genera una página por técnico. */}
       {data.length > 0 && (
-        <div className="print-only">
+        <div
+          className="print-only"
+          style={{
+            display: "none",
+            position: "static !important" as any,
+            top: "auto !important" as any,
+            left: "auto !important" as any,
+            width: "auto !important" as any,
+            background: "#fff",
+          }}
+        >
           {data.map((tec) => (
             <div key={tec.nombre} className="ticket">
               <HojaInventario tec={tec} fecha={fechaHoy} />
