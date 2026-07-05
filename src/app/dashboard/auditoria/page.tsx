@@ -24,8 +24,8 @@ function saveReviewed(data: Record<string, Record<string, boolean>>) {
 
 
 function statusColor(status: string) {
-  if (status === "Entregado bueno") return "bg-emerald-100 text-emerald-800";
-  if (status === "Entregado malo") return "bg-orange-100 text-orange-800";
+  if (status === "Despachado bueno") return "bg-emerald-100 text-emerald-800";
+  if (status === "Despachado malo") return "bg-orange-100 text-orange-800";
   if (status === "Listo para entregar") return "bg-blue-100 text-blue-800";
   if (status === "No se pudo reparar") return "bg-red-100 text-red-800";
   return "bg-slate-100 text-slate-700";

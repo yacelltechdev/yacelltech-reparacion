@@ -33,8 +33,8 @@ interface Cierre {
 }
 
 function CierreFactura({ cierre }: { cierre: Cierre }) {
-  const buenos = cierre.snapshot.filter(r => r.status === "Entregado bueno");
-  const malos  = cierre.snapshot.filter(r => r.status === "Entregado malo");
+  const buenos = cierre.snapshot.filter(r => r.status === "Despachado bueno");
+  const malos  = cierre.snapshot.filter(r => r.status === "Despachado malo");
   const line   = "━".repeat(50);
 
   return (
@@ -179,11 +179,11 @@ export default function ReportPage() {
     const matchUnclosed = (r as any).cierre_id == null;
     const q = search.trim().toLowerCase();
     const matchSearch = !q || r.codigo?.toLowerCase().includes(q) || r.cliente?.toLowerCase().includes(q) || r.modelo?.toLowerCase().includes(q);
-    return matchDate && matchUnclosed && matchSearch && (r.status === "Entregado bueno" || r.status === "Entregado malo");
+    return matchDate && matchUnclosed && matchSearch && (r.status === "Despachado bueno" || r.status === "Despachado malo");
   });
 
-  const entregadosBueno = filtered.filter(r => r.status === "Entregado bueno");
-  const entregadosMalo  = filtered.filter(r => r.status === "Entregado malo");
+  const entregadosBueno = filtered.filter(r => r.status === "Despachado bueno");
+  const entregadosMalo  = filtered.filter(r => r.status === "Despachado malo");
   const ingresos = [...entregadosBueno, ...entregadosMalo.filter(r => (r.costo || 0) > 0)]
     .reduce((sum, r) => sum + totalCosto(r), 0);
 
@@ -324,7 +324,7 @@ export default function ReportPage() {
           </Card>
           <Card className="border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Entregado bueno</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">Despachado bueno</CardTitle>
               <div className="p-2 bg-blue-100 rounded-lg"><PackageCheck className="h-4 w-4 text-blue-600" /></div>
             </CardHeader>
             <CardContent>
@@ -334,7 +334,7 @@ export default function ReportPage() {
           </Card>
           <Card className="border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Entregado malo</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">Despachado malo</CardTitle>
               <div className="p-2 bg-red-100 rounded-lg"><PackageX className="h-4 w-4 text-red-600" /></div>
             </CardHeader>
             <CardContent>
@@ -380,8 +380,8 @@ export default function ReportPage() {
                     <TableCell className="text-sm text-slate-500">{r.tecnico || "—"}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={
-                        r.status === "Entregado bueno" ? "bg-blue-100 text-blue-700" :
-                        r.status === "Entregado malo"  ? "bg-red-100 text-red-700" : ""
+                        r.status === "Despachado bueno" ? "bg-blue-100 text-blue-700" :
+                        r.status === "Despachado malo"  ? "bg-red-100 text-red-700" : ""
                       }>{r.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right font-bold">RD$ {formatMoney(totalCosto(r))}</TableCell>

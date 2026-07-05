@@ -275,7 +275,7 @@ export default function TechnicianPage() {
 
       // Historial del día: completados o entregados hoy
       setHistory(historyData.filter(r =>
-        ["Entregado bueno", "Entregado malo"].includes(r.status)
+        ["Despachado bueno", "Despachado malo"].includes(r.status)
       ));
 
       setIsLoading(false);
@@ -578,7 +578,7 @@ export default function TechnicianPage() {
                   <div className="text-xs text-slate-400 italic truncate mt-0.5">{r.sintoma}</div>
                 </div>
                 <div className="shrink-0">
-                  {r.status === "Entregado bueno"
+                  {r.status === "Despachado bueno"
                     ? <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✔ Reparado</span>
                     : <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">✖ Sin solución</span>
                   }

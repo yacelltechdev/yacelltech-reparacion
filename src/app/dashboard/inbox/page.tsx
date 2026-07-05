@@ -50,13 +50,13 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px]">
         {(status === "Listo para entregar" || isAdmin) && (
-          <button onClick={() => onStatusChange(id, "Entregado bueno")}
+          <button onClick={() => onStatusChange(id, "Despachado bueno")}
             className={`${btnBase} bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100`}>
             💰 Entregar y Cobrar
           </button>
         )}
         {(status === "No se pudo reparar" || isAdmin) && (
-          <button onClick={() => onStatusChange(id, "Entregado malo")}
+          <button onClick={() => onStatusChange(id, "Despachado malo")}
             className={`${btnBase} bg-red-50 border-red-300 text-red-700 hover:bg-red-100`}>
             📦 Entregar Sin Reparar
           </button>
@@ -72,8 +72,8 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
   // Entregado
   return (
     <div className="flex flex-col gap-1">
-      <Badge variant="outline" className={status === "Entregado bueno" ? "border-emerald-400 text-emerald-700" : "border-red-400 text-red-700"}>
-        {status === "Entregado bueno" ? "✔ Entregado" : "📦 Devuelto"}
+      <Badge variant="outline" className={status === "Despachado bueno" ? "border-emerald-400 text-emerald-700" : "border-red-400 text-red-700"}>
+        {status === "Despachado bueno" ? "✔ Entregado" : "📦 Devuelto"}
       </Badge>
       {isAdmin && (
         <button onClick={() => onStatusChange(id, "En reparación")}
@@ -158,7 +158,7 @@ export default function InboxPage() {
 
   const handleStatusChange = async (id: number, newStatus: string) => {
     const payload: any = { status: newStatus };
-    if (newStatus === "Entregado bueno" || newStatus === "Entregado malo") {
+    if (newStatus === "Despachado bueno" || newStatus === "Despachado malo") {
       payload.fecha_despacho = nowRD();
     } else {
       payload.fecha_despacho = null;

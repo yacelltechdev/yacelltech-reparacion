@@ -19,8 +19,8 @@ const statusColors: Record<string, string> = {
   "En reparación":      "bg-amber-100 text-amber-700 border-amber-200",
   "Listo para entregar":"bg-emerald-100 text-emerald-700 border-emerald-200",
   "No se pudo reparar": "bg-orange-100 text-orange-700 border-orange-200",
-  "Entregado bueno":    "bg-blue-100 text-blue-700 border-blue-200",
-  "Entregado malo":     "bg-red-100 text-red-700 border-red-200",
+  "Despachado bueno":    "bg-blue-100 text-blue-700 border-blue-200",
+  "Despachado malo":     "bg-red-100 text-red-700 border-red-200",
 };
 
 const formatDate = (s?: string) => (s ? formatDateTimeCompact(s) : "—");
@@ -61,8 +61,8 @@ function MobileQuickEdit({
     "En reparación",
     "Listo para entregar",
     "No se pudo reparar",
-    "Entregado bueno",
-    "Entregado malo",
+    "Despachado bueno",
+    "Despachado malo",
   ];
 
   const startEdit = () => {
@@ -240,7 +240,7 @@ function MobileQuickEdit({
                 );
               })}
             </div>
-            {(status === "Entregado bueno" || status === "Entregado malo") && (
+            {(status === "Despachado bueno" || status === "Despachado malo") && (
               <p className="text-[11px] text-amber-700 mt-1.5 leading-snug">
                 ⚠ Al guardar, se seteará automáticamente la <strong>fecha de salida</strong> con la hora actual.
               </p>
@@ -520,8 +520,8 @@ export default function HistoryBetaPage() {
                 <option value="En reparación">En reparación</option>
                 <option value="Listo para entregar">Listo para entregar</option>
                 <option value="No se pudo reparar">No se pudo reparar</option>
-                <option value="Entregado bueno">Entregado bueno</option>
-                <option value="Entregado malo">Entregado malo</option>
+                <option value="Despachado bueno">Despachado bueno</option>
+                <option value="Despachado malo">Despachado malo</option>
               </select>
             </div>
 

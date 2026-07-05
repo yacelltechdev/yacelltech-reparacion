@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       .from('repairs')
       .select('*')
       .ilike('tecnico', tecnico)
-      .in('status', ['Entregado bueno', 'Entregado malo'])
+      .in('status', ['Despachado bueno', 'Despachado malo'])
       .is('cuadre_tecnico_id', null)
       .gte('fecha_despacho', desde)
       .lte('fecha_despacho', hasta + 'T23:59:59');
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     if (repairsError) throw repairsError;
 
     const parsed = (repairsData || [])
-      .filter((r: any) => r.status === 'Entregado bueno' || (r.costo || 0) > 0)
+      .filter((r: any) => r.status === 'Despachado bueno' || (r.costo || 0) > 0)
       .map((r: any) => ({
         ...r,
         cargosAdicionales: r.cargosAdicionales ? JSON.parse(r.cargosAdicionales) : [],

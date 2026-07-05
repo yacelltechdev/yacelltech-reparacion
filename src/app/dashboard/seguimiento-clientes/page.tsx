@@ -67,10 +67,10 @@ export default function SeguimientoClientesPage() {
     } catch (e) { console.error(e); }
   };
 
-  // Solo "Entregado bueno", con fecha_despacho >= 15 días, con teléfono válido (>=10 dígitos)
+  // Solo "Despachado bueno", con fecha_despacho >= 15 días, con teléfono válido (>=10 dígitos)
   const tieneTelefonoValido = (tel?: string) => (tel || "").replace(/\D/g, "").length >= 10;
   const elegibles = repairs.filter(r =>
-    r.status === 'Entregado bueno' &&
+    r.status === 'Despachado bueno' &&
     r.fecha_despacho &&
     diasDesde(r.fecha_despacho) >= DIAS_SEGUIMIENTO &&
     tieneTelefonoValido(r.telefono)

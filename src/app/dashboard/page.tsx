@@ -79,8 +79,8 @@ export default function AdminDashboard() {
 
   const listos         = data.filter(r => r.status === "Listo para entregar").length;
 
-  const despachHoy  = data.filter(r => r.fecha_despacho?.startsWith(today) && r.status === "Entregado bueno");
-  const despachAyer = data.filter(r => r.fecha_despacho?.startsWith(yesterday) && r.status === "Entregado bueno");
+  const despachHoy  = data.filter(r => r.fecha_despacho?.startsWith(today) && r.status === "Despachado bueno");
+  const despachAyer = data.filter(r => r.fecha_despacho?.startsWith(yesterday) && r.status === "Despachado bueno");
   const ingresosHoy  = despachHoy.reduce((s, r) => s + totalCosto(r), 0);
   const ingresosAyer = despachAyer.reduce((s, r) => s + totalCosto(r), 0);
 
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
               const t = r.tecnico || "Sin asignar";
               if (!acc[t]) acc[t] = { total: 0, entregados: 0 };
               acc[t].total++;
-              if (r.status === "Entregado bueno") acc[t].entregados++;
+              if (r.status === "Despachado bueno") acc[t].entregados++;
               return acc;
             }, {});
             const entries = Object.entries(porTecnico).sort((a, b) => b[1].total - a[1].total);
@@ -187,8 +187,8 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-4 pt-2.5 text-sm font-bold text-slate-700">
                   <span>Total</span>
                   <span className="text-center text-blue-700">{delMes.length}</span>
-                  <span className="text-center text-emerald-700">{delMes.filter(r => r.status === "Entregado bueno").length}</span>
-                  <span className="text-center text-amber-700">{delMes.filter(r => r.status !== "Entregado bueno").length}</span>
+                  <span className="text-center text-emerald-700">{delMes.filter(r => r.status === "Despachado bueno").length}</span>
+                  <span className="text-center text-amber-700">{delMes.filter(r => r.status !== "Despachado bueno").length}</span>
                 </div>
               </div>
             );
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                       r.status === "En reparación"      ? "bg-amber-100 text-amber-700" :
                       r.status === "Listo para entregar"? "bg-emerald-100 text-emerald-700" :
-                      r.status === "Entregado bueno"    ? "bg-blue-100 text-blue-700" :
+                      r.status === "Despachado bueno"    ? "bg-blue-100 text-blue-700" :
                       "bg-slate-100 text-slate-600"
                     }`}>{r.status}</span>
                   </div>

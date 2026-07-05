@@ -12,7 +12,7 @@ export interface Repair {
   costo: number;
   claveTexto?: string;
   tipoClave?: 'sin clave' | 'texto' | 'patron';
-  status: 'En reparación' | 'En chequeo' | 'Listo para entregar' | 'No se pudo reparar' | 'Entregado bueno' | 'Entregado malo';
+  status: 'En reparación' | 'En chequeo' | 'Listo para entregar' | 'No se pudo reparar' | 'Despachado bueno' | 'Despachado malo';
   tecnico?: string;
   estadoInicial: 'Encendido' | 'Apagado';
   observacion?: string;

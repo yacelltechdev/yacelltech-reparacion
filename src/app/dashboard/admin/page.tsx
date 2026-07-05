@@ -154,7 +154,7 @@ export default function AdminPage() {
           trabajoARealizar: f.trabajo.trim(),
           costo: parseFloat(f.costo),
           cargosAdicionales: [],
-          status: "Entregado bueno",
+          status: "Despachado bueno",
           tecnico: f.tecnico,
           estadoInicial: "Apagado",
           tipoClave: "sin clave",

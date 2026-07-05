@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import { nowRD } from '@/lib/date';
 
-const DELIVERED_STATUSES = ['Entregado bueno', 'Entregado malo'];
+const DELIVERED_STATUSES = ['Despachado bueno', 'Despachado malo'];
 
 export async function DELETE(
   _req: Request,

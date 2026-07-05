@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       .from('repairs')
       .select('*')
       .is('cierre_id', null)
-      .in('status', ['Entregado bueno', 'Entregado malo']);
+      .in('status', ['Despachado bueno', 'Despachado malo']);
     if (previousDate) {
       // .like OR .like — Supabase lo respeta como AND con OR interno
       repairsQuery = repairsQuery.or(
@@ -67,8 +67,8 @@ export async function POST(req: Request) {
       cargosAdicionales: r.cargosAdicionales ? JSON.parse(r.cargosAdicionales) : []
     }));
 
-    const entregadosBueno = parsed.filter((r: any) => r.status === 'Entregado bueno');
-    const entregadosMalo  = parsed.filter((r: any) => r.status === 'Entregado malo');
+    const entregadosBueno = parsed.filter((r: any) => r.status === 'Despachado bueno');
+    const entregadosMalo  = parsed.filter((r: any) => r.status === 'Despachado malo');
     const cobrados = [...entregadosBueno, ...entregadosMalo.filter((r: any) => (r.costo || 0) > 0)];
     const total_ingresos  = cobrados.reduce((sum: number, r: any) =>
       sum + (r.costo || 0) + (r.cargosAdicionales?.reduce((a: number, c: any) => a + c.monto, 0) || 0), 0);

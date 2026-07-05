@@ -19,7 +19,7 @@ const checklistLabels: Record<string, string> = {
   altavoz: "Altavoz", carga: "Carga", botones: "Botones",
 };
 
-const deliveredStatuses = ["Entregado bueno", "Entregado malo"];
+const deliveredStatuses = ["Despachado bueno", "Despachado malo"];
 
 function formatMoney(n: number) {
   return Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -384,7 +384,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                     onChange={e => handleChangeStatus(e.target.value)}
                     className="text-sm border border-slate-200 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    {["En chequeo","En reparación","Listo para entregar","No se pudo reparar","Entregado bueno","Entregado malo"].map(s => (
+                    {["En chequeo","En reparación","Listo para entregar","No se pudo reparar","Despachado bueno","Despachado malo"].map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
