@@ -68,16 +68,28 @@ function FacturaCuadre({ cuadre }: { cuadre: CuadreTecnico }) {
 
 const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
+// Solo Oscar (rol tech) puede auto-cuadrar. Freddy y Carlos no.
+// Admin puede cuadrar a cualquiera.
+function canAccessCuadre(role: string | undefined, username: string | undefined): boolean {
+  if (role === "admin") return true;
+  if (role === "tech" && username === "Oscar") return true;
+  return false;
+}
+
 export default function CuadreTecnicoPage() {
   const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user && user.role !== "admin") router.replace("/dashboard");
+    if (user && !canAccessCuadre(user.role, user.username)) router.replace("/dashboard");
   }, [user, router]);
 
+  const isOscar = user?.role === "tech" && user?.username === "Oscar";
+  const isAdmin = user?.role === "admin";
+
+  // Si es Oscar, fijamos el técnico a "Oscar" (no puede cuadrar a otros)
   const today = todayRD();
-  const [tecnico, setTecnico] = useState(TECNICOS[0]);
+  const [tecnico, setTecnico] = useState(isOscar ? "Oscar" : TECNICOS[0]);
   const [desde, setDesde] = useState(today);
   const [hasta, setHasta] = useState(today);
   const [pendientes, setPendientes] = useState<Repair[]>([]);
@@ -182,15 +194,21 @@ export default function CuadreTecnicoPage() {
             <div className="grid gap-4 sm:grid-cols-4 items-end">
               <div className="space-y-1">
                 <Label>Técnico</Label>
-                <select
-                  value={tecnico}
-                  onChange={e => { setTecnico(e.target.value); setPendientes([]); }}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm capitalize"
-                >
-                  {TECNICOS.map(t => (
-                    <option key={t} value={t} className="capitalize">{t}</option>
-                  ))}
-                </select>
+                {isAdmin ? (
+                  <select
+                    value={tecnico}
+                    onChange={e => { setTecnico(e.target.value); setPendientes([]); }}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm capitalize"
+                  >
+                    {TECNICOS.map(t => (
+                      <option key={t} value={t} className="capitalize">{t}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full h-9 rounded-md border border-input bg-slate-50 px-3 text-sm capitalize flex items-center text-slate-700 font-medium">
+                    {tecnico}
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Desde</Label>
@@ -221,9 +239,11 @@ export default function CuadreTecnicoPage() {
                     </span>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50 shrink-0" onClick={() => { setAnularCuadre(ultimoCuadre); setAnularError(""); }}>
-                  <RotateCcw className="h-3 w-3" /> Reabrir
-                </Button>
+                {isAdmin && (
+                  <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50 shrink-0" onClick={() => { setAnularCuadre(ultimoCuadre); setAnularError(""); }}>
+                    <RotateCcw className="h-3 w-3" /> Reabrir
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400 italic">
@@ -347,7 +367,7 @@ export default function CuadreTecnicoPage() {
                               }}>
                                 <Printer className="h-3 w-3" /> Imprimir
                               </Button>
-                              {c.id === historialTecnico[0]?.id && (
+                              {isAdmin && c.id === historialTecnico[0]?.id && (
                                 <Button size="sm" variant="outline" className="gap-1 text-xs text-amber-600 border-amber-200 hover:bg-amber-50" onClick={() => { setAnularCuadre(c); setAnularError(""); }}>
                                   <RotateCcw className="h-3 w-3" /> Reabrir
                                 </Button>
