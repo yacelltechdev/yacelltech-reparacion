@@ -155,7 +155,6 @@ export default function InventarioTecnicosPage() {
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TecnicoInventario[]>([]);
-  const [printMode, setPrintMode] = useState(false);
 
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
@@ -188,15 +187,7 @@ export default function InventarioTecnicosPage() {
   }, [user]);
 
   const handlePrint = () => {
-    setPrintMode(true);
-    setTimeout(() => window.print(), 250);
-    // El usuario cierra la vista de impresión → volver a modo pantalla.
-    // Usamos el evento afterprint del navegador.
-    const onAfter = () => {
-      setPrintMode(false);
-      window.removeEventListener("afterprint", onAfter);
-    };
-    window.addEventListener("afterprint", onAfter);
+    setTimeout(() => window.print(), 200);
   };
 
   if (!user || user.role !== "admin") return null;
@@ -209,7 +200,8 @@ export default function InventarioTecnicosPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      {/* Layout de pantalla — NO se imprime */}
+      <div className="no-print space-y-6">
         {/* Header */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div className="min-w-0 flex-1">
@@ -352,8 +344,11 @@ export default function InventarioTecnicosPage() {
         )}
       </div>
 
-      {/* Hojas para impresión (solo visible al imprimir) */}
-      {printMode && (
+      {/* Hojas para impresión — SIEMPRE montado cuando hay datos.
+          En pantalla: position:fixed fuera del viewport (no estorba).
+          En @media print: la regla global .print-only lo posiciona absoluto arriba
+          y los hijos .ticket (page-break-after) generan una página por técnico. */}
+      {data.length > 0 && (
         <div className="print-only">
           {data.map((tec) => (
             <div key={tec.nombre} className="ticket">
