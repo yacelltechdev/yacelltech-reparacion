@@ -8,7 +8,6 @@ import {
   Inbox,
   Wrench,
   History,
-  FlaskConical,
   BarChart3,
   LogOut,
   Smartphone,
@@ -117,7 +116,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Inventario Técnicos", icon: ClipboardList, path: "/dashboard/inventario-tecnicos", roles: ["admin"] },
     { name: "Auditoría", icon: ShieldCheck, path: "/dashboard/auditoria", roles: ["admin"] },
     { name: "Admin", icon: Settings, path: "/dashboard/admin", roles: ["admin"] },
-    { name: "Historial Beta", icon: FlaskConical, path: "/dashboard/history-beta", roles: ["admin"] },
   ];
 
   const filteredNav = navItems.filter(item => item.roles.includes(user.role));
@@ -133,7 +131,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="space-y-1 p-4">
           {filteredNav.map((item) => {
             const isActive = pathname === item.path;
-            const isBeta = item.path === "/dashboard/history-beta";
             const isBandeja = item.path === "/dashboard/inbox";
             const bandejaBadge = isBandeja && entregaRecepcionCount > 0 ? entregaRecepcionCount : null;
             return (
@@ -145,11 +142,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 <span className="flex-1 text-left">{item.name}</span>
-                {isBeta && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                    BETA
-                  </span>
-                )}
                 {bandejaBadge !== null && (
                   <span
                     title="Equipos en mi poder (entregados a recepción, pendientes de despachar)"
@@ -214,7 +206,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t bg-white lg:hidden">
         {filteredNav.map((item) => {
           const isActive = pathname === item.path;
-          const isBeta = item.path === "/dashboard/history-beta";
           const isBandeja = item.path === "/dashboard/inbox";
           const bandejaBadge = isBandeja && entregaRecepcionCount > 0 ? entregaRecepcionCount : null;
           return (
@@ -227,11 +218,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <span className="relative">
                 <item.icon className="h-5 w-5" />
-                {isBeta && (
-                  <span className="absolute -top-1 -right-2 text-[8px] font-bold px-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                    β
-                  </span>
-                )}
                 {bandejaBadge !== null && (
                   <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-black px-1 rounded-full bg-red-500 text-white shadow-sm">
                     {bandejaBadge}
