@@ -581,22 +581,23 @@ export default function HistoryBetaPage() {
         </CardContent>
       </Card>
 
-      {/* Tabla — solo md+ */}
+      {/* Tabla — solo md+ — scroll horizontal controlado + sticky first/last col */}
       <Card className="border-none shadow-sm overflow-hidden hidden md:block">
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow>
-                <TableHead className="font-bold w-[110px]">Código</TableHead>
-                <TableHead className="font-bold w-[120px]">Ingreso</TableHead>
-                <TableHead className="font-bold w-[120px] text-violet-700">Recepción</TableHead>
-                <TableHead className="font-bold w-[120px]">Despachado</TableHead>
-                <TableHead className="font-bold">Cliente</TableHead>
-                <TableHead className="font-bold">Equipo</TableHead>
-                <TableHead className="font-bold">Técnico</TableHead>
-                <TableHead className="font-bold">Estado</TableHead>
-                <TableHead className="font-bold text-right">Total</TableHead>
-                <TableHead className="w-[50px]" />
+                <TableHead className="font-bold min-w-[110px] sticky left-0 z-20 bg-slate-50/95 backdrop-blur-sm">Código</TableHead>
+                <TableHead className="font-bold min-w-[110px]">Ingreso</TableHead>
+                <TableHead className="font-bold min-w-[110px] text-violet-700">Recepción</TableHead>
+                <TableHead className="font-bold min-w-[110px]">Despachado</TableHead>
+                <TableHead className="font-bold min-w-[160px]">Cliente</TableHead>
+                <TableHead className="font-bold min-w-[160px]">Equipo</TableHead>
+                <TableHead className="font-bold min-w-[100px]">Técnico</TableHead>
+                <TableHead className="font-bold min-w-[140px]">Estado</TableHead>
+                <TableHead className="font-bold text-right min-w-[90px]">Total</TableHead>
+                <TableHead className="w-[50px] sticky right-0 z-20 bg-slate-50/95 backdrop-blur-sm" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -607,7 +608,7 @@ export default function HistoryBetaPage() {
               ) : (
                 results.map(r => (
                   <TableRow key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="font-black text-primary text-xs">{r.codigo}</TableCell>
+                    <TableCell className="font-black text-primary text-xs sticky left-0 z-10 bg-white">{r.codigo}</TableCell>
                     <TableCell className="text-xs text-slate-500">{formatDate(r.fecha)}</TableCell>
                     <TableCell className="text-xs text-violet-700">{formatDate(r.fecha_entrega_recepcion)}</TableCell>
                     <TableCell className="text-xs text-slate-500">{formatDate(r.fecha_despacho)}</TableCell>
@@ -627,7 +628,7 @@ export default function HistoryBetaPage() {
                     RD$ {totalCosto(r).toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => setSelected(r)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary sticky right-0 z-10 bg-white" onClick={() => setSelected(r)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -636,6 +637,7 @@ export default function HistoryBetaPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

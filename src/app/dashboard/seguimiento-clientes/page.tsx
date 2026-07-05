@@ -104,13 +104,13 @@ export default function SeguimientoClientesPage() {
   const TableHead_ = () => (
     <TableHeader className="bg-slate-50/50">
       <TableRow>
-        <TableHead className="font-bold">Código</TableHead>
-        <TableHead className="font-bold">Cliente</TableHead>
-        <TableHead className="font-bold">Equipo</TableHead>
-        <TableHead className="font-bold">Trabajo realizado</TableHead>
-        <TableHead className="font-bold text-center">Días entregado</TableHead>
-        <TableHead className="font-bold">Fecha entrega</TableHead>
-        <TableHead />
+        <TableHead className="font-bold sticky left-0 z-20 bg-slate-50/95 backdrop-blur-sm min-w-[110px]">Código</TableHead>
+        <TableHead className="font-bold min-w-[180px]">Cliente</TableHead>
+        <TableHead className="font-bold min-w-[150px]">Equipo</TableHead>
+        <TableHead className="font-bold min-w-[200px]">Trabajo realizado</TableHead>
+        <TableHead className="font-bold text-center min-w-[90px]">Días entregado</TableHead>
+        <TableHead className="font-bold min-w-[110px]">Fecha entrega</TableHead>
+        <TableHead className="sticky right-0 z-20 bg-slate-50/95 backdrop-blur-sm min-w-[140px]" />
       </TableRow>
     </TableHeader>
   );
@@ -138,45 +138,46 @@ export default function SeguimientoClientesPage() {
           </h2>
         </div>
 
-        {/* Desktop: tabla (md+) */}
+        {/* Desktop: tabla (md+) — scroll horizontal controlado + sticky first/last col */}
         <Card className="border-none shadow-sm overflow-hidden hidden md:block">
           <CardContent className="p-0">
-            <Table>
-              <TableHead_ />
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-400">Cargando...</TableCell></TableRow>
-                ) : porEnviar.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-400 italic">No hay seguimientos pendientes.</TableCell></TableRow>
-                ) : porEnviar.map(r => {
-                  const dias = diasDesde(r.fecha_despacho!);
-                  return (
-                    <TableRow key={r.id} className="hover:bg-slate-50/50">
-                      <TableCell className="font-black text-primary text-xs">{r.codigo}</TableCell>
-                      <TableCell>
-                        <div className="font-medium">{r.cliente}</div>
-                        <div className="text-xs text-slate-400">{r.telefono}</div>
-                      </TableCell>
-                      <TableCell className="text-sm">{r.marca} {r.modelo}</TableCell>
-                      <TableCell className="text-sm text-slate-700 max-w-xs">
-                        {r.trabajoARealizar?.trim() || <span className="text-slate-400 italic">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="secondary" className={
-                          dias >= 30 ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                        }>{dias}d</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {formatDateSlash(r.fecha_despacho!)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1.5">
-                          <Button size="sm" variant="outline"
-                            onClick={() => handleAbrirWhatsApp(r)}
-                            className="gap-1 text-xs text-green-700 border-green-200 hover:bg-green-50 whitespace-nowrap"
-                          >
-                            <MessageCircle className="h-3 w-3" /> WhatsApp
-                          </Button>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHead_ />
+                <TableBody>
+                  {loading ? (
+                    <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-400">Cargando...</TableCell></TableRow>
+                  ) : porEnviar.length === 0 ? (
+                    <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-400 italic">No hay seguimientos pendientes.</TableCell></TableRow>
+                  ) : porEnviar.map(r => {
+                    const dias = diasDesde(r.fecha_despacho!);
+                    return (
+                      <TableRow key={r.id} className="hover:bg-slate-50/50">
+                        <TableCell className="font-black text-primary text-xs sticky left-0 z-10 bg-white group-hover:bg-slate-50/50">{r.codigo}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{r.cliente}</div>
+                          <div className="text-xs text-slate-400">{r.telefono}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{r.marca} {r.modelo}</TableCell>
+                        <TableCell className="text-sm text-slate-700 max-w-xs">
+                          {r.trabajoARealizar?.trim() || <span className="text-slate-400 italic">—</span>}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className={
+                            dias >= 30 ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                          }>{dias}d</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-500">
+                          {formatDateSlash(r.fecha_despacho!)}
+                        </TableCell>
+                        <TableCell className="sticky right-0 z-10 bg-white group-hover:bg-slate-50/50">
+                          <div className="flex gap-1.5">
+                            <Button size="sm" variant="outline"
+                              onClick={() => handleAbrirWhatsApp(r)}
+                              className="gap-1 text-xs text-green-700 border-green-200 hover:bg-green-50 whitespace-nowrap"
+                            >
+                              <MessageCircle className="h-3 w-3" /> WhatsApp
+                            </Button>
                           <Button size="sm"
                             disabled={enviando === r.id}
                             onClick={() => handleMarcarEnviado(r)}
@@ -191,6 +192,7 @@ export default function SeguimientoClientesPage() {
                 })}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
 
