@@ -21,6 +21,7 @@ import {
   MessageCircle,
   ClipboardList,
 } from "lucide-react";
+import { Repair } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
+  const [entregaRecepcionCount, setEntregaRecepcionCount] = useState(0);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +83,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/");
     }
   }, [user, router]);
+
+  // Polling del contador de equipos en "Entregado a recepción" para el badge
+  // del sidebar. Solo activo para roles que ven la Bandeja (admin/caja).
+  useEffect(() => {
+    if (!user || (user.role !== "admin" && user.role !== "caja")) return;
+    const fetchCount = async () => {
+      try {
+        const res = await fetch("/api/repairs?status=" + encodeURIComponent("Entregado a recepción"));
+        const data: Repair[] = await res.json();
+        setEntregaRecepcionCount(Array.isArray(data) ? data.length : 0);
+      } catch {
+        // Silencioso: el badge solo es informativo
+      }
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 8000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   if (!user) return null;
 
@@ -114,6 +134,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {filteredNav.map((item) => {
             const isActive = pathname === item.path;
             const isBeta = item.path === "/dashboard/history-beta";
+            const isBandeja = item.path === "/dashboard/inbox";
+            const bandejaBadge = isBandeja && entregaRecepcionCount > 0 ? entregaRecepcionCount : null;
             return (
               <Button
                 key={item.path}
@@ -126,6 +148,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {isBeta && (
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                     BETA
+                  </span>
+                )}
+                {bandejaBadge !== null && (
+                  <span
+                    title="Equipos en mi poder (entregados a recepción, pendientes de despachar)"
+                    className="ml-2 min-w-[22px] h-[22px] flex items-center justify-center text-[11px] font-black px-1.5 rounded-full bg-red-500 text-white shadow-sm"
+                  >
+                    {bandejaBadge}
                   </span>
                 )}
               </Button>
@@ -185,6 +215,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {filteredNav.map((item) => {
           const isActive = pathname === item.path;
           const isBeta = item.path === "/dashboard/history-beta";
+          const isBandeja = item.path === "/dashboard/inbox";
+          const bandejaBadge = isBandeja && entregaRecepcionCount > 0 ? entregaRecepcionCount : null;
           return (
             <button
               key={item.path}
@@ -198,6 +230,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {isBeta && (
                   <span className="absolute -top-1 -right-2 text-[8px] font-bold px-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                     β
+                  </span>
+                )}
+                {bandejaBadge !== null && (
+                  <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-black px-1 rounded-full bg-red-500 text-white shadow-sm">
+                    {bandejaBadge}
                   </span>
                 )}
               </span>

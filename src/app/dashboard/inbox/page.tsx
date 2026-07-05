@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, Wrench, CheckCircle2, Inbox, Hand } from "lucide-react";
+import { Search, Eye, Wrench, CheckCircle2, Inbox, Hand, Bell, BellRing } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { formatDateTimeCompact, formatDateTimeShort, nowRD } from "@/lib/date";
 import { toast } from "sonner";
@@ -113,11 +113,14 @@ export default function InboxPage() {
   const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
   const readyIds = useRef<Set<number>>(new Set());
   const chequeoIds = useRef<Set<number>>(new Set());
+  const entregaRecepcionIds = useRef<Set<number>>(new Set());
   const isFirstLoad = useRef(true);
   const stopAlarm = useRef<(() => void) | null>(null);
   const stopReadyAlarm = useRef<(() => void) | null>(null);
+  const stopEntregaAlarm = useRef<(() => void) | null>(null);
   const [chequeoAlerts, setChequeoAlerts] = useState<Repair[]>([]);
   const [readyAlerts, setReadyAlerts] = useState<Repair[]>([]);
+  const [entregaRecepcionAlerts, setEntregaRecepcionAlerts] = useState<Repair[]>([]);
 
   useEffect(() => {
     loadRepairs();
@@ -160,6 +163,21 @@ export default function InboxPage() {
             stopAlarm.current = startChequeoAlarm();
           }
         }
+
+        // Detectar equipos recién entregados a recepción (transición desde taller)
+        const nowEntregados = active.filter(r =>
+          r.status === "Entregado a recepción" && !entregaRecepcionIds.current.has(r.id)
+        );
+        if (nowEntregados.length > 0) {
+          setEntregaRecepcionAlerts(prev => {
+            const existingIds = new Set(prev.map(r => r.id));
+            const nuevos = nowEntregados.filter(r => !existingIds.has(r.id));
+            return nuevos.length > 0 ? [...prev, ...nuevos] : prev;
+          });
+          if (!stopEntregaAlarm.current) {
+            stopEntregaAlarm.current = startReadyAlarm();
+          }
+        }
       }
       isFirstLoad.current = false;
       readyIds.current = new Set(
@@ -167,6 +185,9 @@ export default function InboxPage() {
       );
       chequeoIds.current = new Set(
         active.filter(r => r.status === "En chequeo").map(r => r.id)
+      );
+      entregaRecepcionIds.current = new Set(
+        active.filter(r => r.status === "Entregado a recepción").map(r => r.id)
       );
 
       setRepairs(active);
@@ -488,6 +509,55 @@ export default function InboxPage() {
                   setChequeoAlerts([]);
                 }}
                 className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg transition-colors"
+              >
+                ✔ Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {entregaRecepcionAlerts.length > 0 && (
+        <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-pulse-border">
+            <div className="bg-violet-500 px-6 py-4 flex items-center gap-3">
+              <Hand className="h-7 w-7 text-white" />
+              <div>
+                <h2 className="text-white font-black text-lg leading-tight">¡Entrega a Recepción!</h2>
+                <p className="text-violet-100 text-sm">El técnico dejó el equipo en el mostrador</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-3">
+              {entregaRecepcionAlerts.map(r => (
+                <div key={r.id} className="rounded-xl p-4 border bg-violet-50 border-violet-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-black text-primary text-sm">{r.codigo}</span>
+                    <span className="text-xs font-bold text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">
+                      📥 En recepción
+                    </span>
+                  </div>
+                  <p className="font-bold text-slate-800">{r.cliente}</p>
+                  <p className="text-xs text-slate-500">{r.marca} {r.modelo}</p>
+                  <p className="text-[11px] text-violet-700 mt-1.5 font-semibold">
+                    Técnico: {r.tecnico || "Sin asignar"}
+                    {r.fecha_entrega_recepcion && (
+                      <> · Recibido: {formatDateTimeShort(r.fecha_entrega_recepcion)}</>
+                    )}
+                  </p>
+                  <p className="text-sm font-bold text-slate-700 mt-1">
+                    RD$ {(r.costo + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0)).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="px-6 pb-6">
+              <button
+                onClick={() => {
+                  stopEntregaAlarm.current?.();
+                  stopEntregaAlarm.current = null;
+                  setEntregaRecepcionAlerts([]);
+                }}
+                className="w-full py-3 rounded-xl bg-violet-500 hover:bg-violet-600 text-white font-black text-lg transition-colors"
               >
                 ✔ Aceptar
               </button>
