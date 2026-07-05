@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X, Phone, KeyRound, CalendarDays, StickyNote, Search } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Wrench, Pencil, Trash2, PlusCircle, Check, X, Phone, KeyRound, CalendarDays, StickyNote, Search, Hand } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { todayRD, formatDateShort } from "@/lib/date";
 import { toast } from "sonner";
@@ -386,7 +386,9 @@ export default function TechnicianPage() {
                   r.status === "En chequeo" ? "bg-orange-50 border-b border-orange-100" :
                   r.status === "En reparación" ? "bg-amber-50 border-b border-amber-100" :
                   r.status === "Listo para entregar" ? "bg-emerald-50 border-b border-emerald-100" :
-                  "bg-red-50 border-b border-red-100"
+                  r.status === "No se pudo reparar" ? "bg-red-50 border-b border-red-100" :
+                  r.status === "Entregado a recepción" ? "bg-violet-50 border-b border-violet-100" :
+                  "bg-slate-50 border-b border-slate-100"
                 }`}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-black text-primary bg-white border border-primary/20 px-2.5 py-0.5 rounded-full">{r.codigo}</span>
@@ -394,6 +396,7 @@ export default function TechnicianPage() {
                     {r.status === "En chequeo" && <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200 text-xs">Chequeo</Badge>}
                     {r.status === "Listo para entregar" && <Badge className="bg-emerald-500 text-xs">Listo</Badge>}
                     {r.status === "No se pudo reparar" && <Badge variant="destructive" className="text-xs">Sin solución</Badge>}
+                    {r.status === "Entregado a recepción" && <Badge className="bg-violet-500 text-xs">📥 En recepción</Badge>}
                   </div>
                   <p className="text-lg font-bold text-slate-800 leading-tight">{r.marca} {r.modelo}</p>
                   {r.color && <p className="text-xs text-slate-400">{r.color}{r.serie ? ` · S/N: ${r.serie}` : ""}</p>}
@@ -539,7 +542,21 @@ export default function TechnicianPage() {
                         </div>
                       </>
                     )}
-                    {r.status !== "En reparación" && r.status !== "En chequeo" && (
+                    {(r.status === "Listo para entregar" || r.status === "No se pudo reparar") && (
+                      <Button
+                        className="w-full h-12 text-base bg-violet-500 hover:bg-violet-600"
+                        onClick={() => updateStatus(r.id, "Entregado a recepción")}
+                      >
+                        <Hand className="h-5 w-5 mr-2" /> Entregar a Recepción
+                      </Button>
+                    )}
+                    {r.status === "Entregado a recepción" && (
+                      <div className="rounded-lg bg-violet-50 border border-violet-200 px-3 py-2 text-xs text-violet-800 flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-violet-600" />
+                        <span>Entregado a recepción{r.fecha_entrega_recepcion ? ` el ${new Date(r.fecha_entrega_recepcion).toLocaleString("es-DO", { dateStyle: "short", timeStyle: "short" })}` : ""}. Esperando despacho.</span>
+                      </div>
+                    )}
+                    {r.status !== "En reparación" && r.status !== "En chequeo" && r.status !== "Entregado a recepción" && (
                       <Button
                         variant="outline"
                         className="w-full h-11 text-slate-500 border-dashed"

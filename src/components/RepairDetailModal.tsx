@@ -384,7 +384,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                     onChange={e => handleChangeStatus(e.target.value)}
                     className="text-sm border border-slate-200 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    {["En chequeo","En reparación","Listo para entregar","No se pudo reparar","Despachado bueno","Despachado malo"].map(s => (
+                    {["En chequeo","En reparación","Listo para entregar","No se pudo reparar","Entregado a recepción","Despachado bueno","Despachado malo"].map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>

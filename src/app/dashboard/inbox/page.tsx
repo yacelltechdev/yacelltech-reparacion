@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, Wrench, CheckCircle2 } from "lucide-react";
+import { Search, Eye, Wrench, CheckCircle2, Inbox, Hand } from "lucide-react";
 import { Repair } from "@/lib/types";
-import { formatDateTimeCompact, nowRD } from "@/lib/date";
+import { formatDateTimeCompact, formatDateTimeShort, nowRD } from "@/lib/date";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { startReadyAlarm, startChequeoAlarm } from "@/lib/sound";
@@ -15,7 +15,7 @@ import RepairDetailModal from "@/components/RepairDetailModal";
 
 const formatTime = (iso: string) => formatDateTimeCompact(iso);
 
-// ── Selector de estado por fila ────────────────────────────────────────────
+// ── Acciones rápidas por fila (técnico ve "Entregar a recepción"; caja ve "Despachar") ──
 function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusChange: (id: number, status: string) => void }) {
   const { user } = useAuth();
   const isTech = user?.role === "tech" || user?.role === "admin";
@@ -62,6 +62,26 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
           </button>
         )}
         <button onClick={() => onStatusChange(id, "En reparación")}
+          className="text-[10px] text-slate-400 hover:text-slate-600 mt-1 text-left">
+          ↻ Revertir a taller
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "Entregado a recepción") {
+    if (!isCaja) return <span className="text-[11px] text-slate-400 italic">En recepción...</span>;
+    return (
+      <div className="flex flex-col gap-1.5 min-w-[160px]">
+        <button onClick={() => onStatusChange(id, "Despachado bueno")}
+          className={`${btnBase} bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100`}>
+          💰 Entregar y Cobrar
+        </button>
+        <button onClick={() => onStatusChange(id, "Despachado malo")}
+          className={`${btnBase} bg-red-50 border-red-300 text-red-700 hover:bg-red-100`}>
+          📦 Devolver al cliente
+        </button>
+        <button onClick={() => onStatusChange(id, "Listo para entregar")}
           className="text-[10px] text-slate-400 hover:text-slate-600 mt-1 text-left">
           ↻ Revertir a taller
         </button>
@@ -160,19 +180,33 @@ export default function InboxPage() {
     const payload: any = { status: newStatus };
     if (newStatus === "Despachado bueno" || newStatus === "Despachado malo") {
       payload.fecha_despacho = nowRD();
-    } else {
+    } else if (newStatus !== "Despachado bueno" && newStatus !== "Despachado malo" && newStatus !== "Entregado a recepción") {
       payload.fecha_despacho = null;
     }
-    await fetch(`/api/repairs/${id}`, {
+    const res = await fetch(`/api/repairs/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || "No se pudo cambiar el estado");
+      return;
+    }
     toast.success(`Estado actualizado: ${newStatus}`);
     loadRepairs();
   };
 
-  const filtered = repairs
+  // ── Separar en 2 secciones (2026-07-05: flujo técnico → recepción → caja) ──
+  // Arriba: "En mi poder" = equipos que la caja YA tiene físicamente
+  //   (status === "Entregado a recepción")
+  // Abajo: "En taller" = equipos activos que la caja aún NO tiene
+  //   (status ∈ {"En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"})
+  const enMiPoder = repairs.filter(r => r.status === "Entregado a recepción");
+  const enTaller = repairs.filter(r => r.status !== "Entregado a recepción");
+
+  // Subagrupación de "En taller" por técnico (para la sección informativa de abajo)
+  const enTallerFiltrados = enTaller
     .filter(r =>
       r.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -185,6 +219,15 @@ export default function InboxPage() {
       if (ai !== bi) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
       return b.id - a.id;
     });
+
+  const TECNICOS = ["Oscar", "Freddy", "Carlos"];
+  const enTallerPorTecnico: Record<string, Repair[]> = {};
+  TECNICOS.forEach(t => { enTallerPorTecnico[t] = []; });
+  enTallerFiltrados.forEach(r => {
+    const t = r.tecnico && TECNICOS.includes(r.tecnico) ? r.tecnico : "Sin asignar";
+    if (!enTallerPorTecnico[t]) enTallerPorTecnico[t] = [];
+    enTallerPorTecnico[t].push(r);
+  });
 
   return (
     <div className="space-y-6">
@@ -204,37 +247,45 @@ export default function InboxPage() {
         </div>
       </div>
 
+      {/* ── SECCIÓN 1: En mi poder (entregados a recepción) ─────────────────── */}
       <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="bg-violet-50/50 border-b border-violet-100">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Hand className="h-5 w-5 text-violet-600" />
+            <span>En mi poder (entregados a recepción)</span>
+            <Badge variant="secondary" className="ml-2 bg-violet-100 text-violet-700">
+              {enMiPoder.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow>
-                <TableHead className="font-bold w-[110px]">Código</TableHead>
-                <TableHead className="font-bold">Cliente</TableHead>
-                <TableHead className="font-bold">Equipo / Técnico</TableHead>
-                <TableHead className="font-bold">Total</TableHead>
-                <TableHead className="font-bold w-[180px]">Acción Rápida</TableHead>
-                <TableHead className="font-bold w-[60px] text-right">Ver</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+          {isLoading ? (
+            <div className="h-24 flex items-center justify-center text-slate-400">Cargando...</div>
+          ) : enMiPoder.length === 0 ? (
+            <div className="h-24 flex flex-col items-center justify-center text-slate-400 text-sm">
+              <Inbox className="h-8 w-8 text-slate-300 mb-2" />
+              <span>Ningún equipo entregado a recepción todavía.</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-slate-400">Cargando...</TableCell>
+                  <TableHead className="font-bold w-[110px]">Código</TableHead>
+                  <TableHead className="font-bold">Cliente</TableHead>
+                  <TableHead className="font-bold">Equipo / Técnico</TableHead>
+                  <TableHead className="font-bold">Total</TableHead>
+                  <TableHead className="font-bold w-[180px]">Acción</TableHead>
+                  <TableHead className="font-bold w-[60px] text-right">Ver</TableHead>
                 </TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-40 text-center text-slate-400">
-                    <CheckCircle2 className="h-10 w-10 text-emerald-300 mx-auto mb-2" />
-                    No hay equipos pendientes ni despachados hoy.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map(r => (
-                  <TableRow key={r.id} className={`transition-colors ${r.status === "Listo para entregar" ? "bg-emerald-50/40" : r.status === "No se pudo reparar" ? "bg-orange-50/40" : r.status === "En chequeo" ? "bg-amber-50/40" : ""}`}>
+              </TableHeader>
+              <TableBody>
+                {enMiPoder.map(r => (
+                  <TableRow key={r.id} className="bg-violet-50/30 hover:bg-violet-50/60 transition-colors">
                     <TableCell>
                       <div className="font-black text-primary">{r.codigo}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{formatTime(r.fecha)}</div>
+                      <div className="text-[10px] text-violet-600 mt-0.5 font-semibold">
+                        Recibido: {r.fecha_entrega_recepcion ? formatDateTimeShort(r.fecha_entrega_recepcion) : "—"}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="font-medium text-slate-900">{r.cliente}</div>
@@ -245,12 +296,7 @@ export default function InboxPage() {
                       <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 mt-0.5">
                         <Wrench className="h-3 w-3" /> {r.tecnico || "Sin asignar"}
                       </div>
-                      {r.status === "Listo para entregar" && (
-                        <div className="text-[10px] text-emerald-700 bg-emerald-100 rounded px-1.5 py-0.5 mt-1 font-bold inline-block">✨ LISTO</div>
-                      )}
-                      {r.notaDevolucion && (
-                        <div className="text-[10px] text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5 mt-1 max-w-[180px] truncate">{r.notaDevolucion}</div>
-                      )}
+                      <div className="text-[10px] text-violet-700 bg-violet-100 rounded px-1.5 py-0.5 mt-1 font-bold inline-block">📥 En recepción</div>
                     </TableCell>
                     <TableCell className="font-bold text-slate-700">
                       RD$ {(r.costo + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0)).toLocaleString()}
@@ -264,10 +310,103 @@ export default function InboxPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── SECCIÓN 2: En taller (informativa, agrupada por técnico) ────────── */}
+      <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="bg-amber-50/50 border-b border-amber-100">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Wrench className="h-5 w-5 text-amber-600" />
+            <span>En taller (aún no entregados a recepción)</span>
+            <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-700">
+              {enTallerFiltrados.length}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="h-24 flex items-center justify-center text-slate-400">Cargando...</div>
+          ) : enTallerFiltrados.length === 0 ? (
+            <div className="h-24 flex flex-col items-center justify-center text-slate-400 text-sm">
+              <CheckCircle2 className="h-8 w-8 text-emerald-300 mb-2" />
+              <span>No hay equipos en taller.</span>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {Object.entries(enTallerPorTecnico).map(([tecnico, items]) => {
+                if (items.length === 0) return null;
+                return (
+                  <div key={tecnico} className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-700 capitalize">{tecnico}</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {items.length} equipo{items.length !== 1 ? "s" : ""}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {items.map(r => (
+                        <div
+                          key={r.id}
+                          className={`flex items-center justify-between gap-3 rounded-lg border p-2.5 text-sm ${
+                            r.status === "Listo para entregar"
+                              ? "bg-emerald-50/40 border-emerald-200"
+                              : r.status === "No se pudo reparar"
+                              ? "bg-orange-50/40 border-orange-200"
+                              : r.status === "En chequeo"
+                              ? "bg-amber-50/40 border-amber-200"
+                              : "bg-white border-slate-200"
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-primary text-xs">{r.codigo}</span>
+                              <span className="font-medium text-slate-900 truncate">{r.cliente}</span>
+                            </div>
+                            <div className="text-xs text-slate-500">{r.marca} {r.modelo}</div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge
+                              variant="outline"
+                              className={
+                                r.status === "Listo para entregar"
+                                  ? "border-emerald-400 text-emerald-700"
+                                  : r.status === "No se pudo reparar"
+                                  ? "border-orange-400 text-orange-700"
+                                  : r.status === "En chequeo"
+                                  ? "border-amber-400 text-amber-700"
+                                  : "border-slate-300 text-slate-600"
+                              }
+                            >
+                              {r.status === "Listo para entregar" && "✔ "}
+                              {r.status === "En reparación" && "🔧 "}
+                              {r.status === "En chequeo" && "🔍 "}
+                              {r.status === "No se pudo reparar" && "✖ "}
+                              {r.status}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-slate-400 hover:text-primary"
+                              onClick={() => setSelectedRepair(r)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 

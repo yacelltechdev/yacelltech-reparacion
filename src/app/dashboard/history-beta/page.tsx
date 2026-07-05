@@ -19,6 +19,7 @@ const statusColors: Record<string, string> = {
   "En reparación":      "bg-amber-100 text-amber-700 border-amber-200",
   "Listo para entregar":"bg-emerald-100 text-emerald-700 border-emerald-200",
   "No se pudo reparar": "bg-orange-100 text-orange-700 border-orange-200",
+  "Entregado a recepción":"bg-violet-100 text-violet-700 border-violet-200",
   "Despachado bueno":    "bg-blue-100 text-blue-700 border-blue-200",
   "Despachado malo":     "bg-red-100 text-red-700 border-red-200",
 };
@@ -61,6 +62,7 @@ function MobileQuickEdit({
     "En reparación",
     "Listo para entregar",
     "No se pudo reparar",
+    "Entregado a recepción",
     "Despachado bueno",
     "Despachado malo",
   ];
@@ -520,6 +522,7 @@ export default function HistoryBetaPage() {
                 <option value="En reparación">En reparación</option>
                 <option value="Listo para entregar">Listo para entregar</option>
                 <option value="No se pudo reparar">No se pudo reparar</option>
+                <option value="Entregado a recepción">Entregado a recepción</option>
                 <option value="Despachado bueno">Despachado bueno</option>
                 <option value="Despachado malo">Despachado malo</option>
               </select>

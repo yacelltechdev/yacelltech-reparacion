@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     let query = supabase.from('repairs').select('*', { count: 'exact' });
 
     if (active) {
-      query = query.in('status', ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"]);
+      query = query.in('status', ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar", "Entregado a recepción"]);
     }
     if (q) {
       query = query.or(`codigo.ilike.%${q}%,cliente.ilike.%${q}%,telefono.ilike.%${q}%,modelo.ilike.%${q}%,marca.ilike.%${q}%,serie.ilike.%${q}%`);
