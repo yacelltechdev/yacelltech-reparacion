@@ -53,7 +53,7 @@ export default function SeguimientoClientesPage() {
       dateLimit.setUTCDate(dateLimit.getUTCDate() - 15);
       const despachoHasta = `${dateLimit.getUTCFullYear()}-${String(dateLimit.getUTCMonth() + 1).padStart(2, "0")}-${String(dateLimit.getUTCDate()).padStart(2, "0")}`; // "YYYY-MM-DD"
 
-      const res = await fetch(`/api/repairs?status=Entregado+bueno&despacho_hasta=${despachoHasta}`);
+      const res = await fetch(`/api/repairs?status=Despachado+bueno&despacho_hasta=${despachoHasta}`);
       const data: Repair[] = await res.json();
       setRepairs(data);
     } catch (e) { console.error(e); }

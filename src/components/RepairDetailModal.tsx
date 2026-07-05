@@ -322,7 +322,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                         ) : (
                           <div className="flex items-center justify-between gap-1">
                             <span>+ {c.desc}: RD$ {formatMoney(c.monto)}</span>
-                            {!repair.status.includes("Entregado") && (
+                            {!repair.status.includes("Despachado") && (
                               <div className="flex gap-1">
                                 <button onClick={() => { setEditingCargoId(c.id); setEditCargoDesc(c.desc); setEditCargoMonto(String(c.monto)); }} className="text-emerald-600 hover:text-emerald-800"><Pencil className="h-3 w-3" /></button>
                                 <button onClick={() => handleDeleteCargo(c.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
@@ -334,7 +334,7 @@ export default function RepairDetailModal({ repair: initialRepair, onClose }: { 
                     ))}
                   </div>
                 )}
-                {!repair.status.includes("Entregado") && (
+                {!repair.status.includes("Despachado") && (
                   <button
                     onClick={() => setAddingCargo(true)}
                     className="mt-3 text-[11px] text-emerald-700 border border-emerald-300 bg-white rounded-md px-3 py-1 hover:bg-emerald-50 flex items-center gap-1"
