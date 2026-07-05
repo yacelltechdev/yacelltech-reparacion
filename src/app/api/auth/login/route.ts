@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const HARDCODED: Record<string, { username: string; password: string; role: string }> = {
   freddy:    { username: 'Freddy', password: '1234',     role: 'tech' },
-  oscar:     { username: 'Oscar',  password: 'chachito', role: 'taller_jefe' },
+  oscar:     { username: 'Oscar',  password: 'chachito', role: 'tech' },
   carlos:    { username: 'Carlos', password: '1234',     role: 'tech' },
   admin:     { username: 'admin',  password: 'admin',    role: 'admin' },
   caja:      { username: 'caja',   password: '1234',     role: 'caja' },

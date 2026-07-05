@@ -28,7 +28,7 @@ export interface Repair {
   esChequeo?: boolean;
 }
 
-export type UserRole = 'admin' | 'caja' | 'tech' | 'taller_jefe';
+export type UserRole = 'admin' | 'caja' | 'tech';
 
 export interface User {
   username: string;

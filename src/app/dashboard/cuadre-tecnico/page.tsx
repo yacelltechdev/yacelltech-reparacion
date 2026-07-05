@@ -70,10 +70,8 @@ const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
 // Solo Oscar (rol tech) puede auto-cuadrar. Freddy y Carlos no.
 // Admin puede cuadrar a cualquiera.
-function canAccessCuadre(role: string | undefined, username: string | undefined): boolean {
-  if (role === "admin") return true;
-  if (role === "tech" && username === "Oscar") return true;
-  return false;
+function canAccessCuadre(role: string | undefined): boolean {
+  return role === "admin";
 }
 
 export default function CuadreTecnicoPage() {
@@ -81,7 +79,7 @@ export default function CuadreTecnicoPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && !canAccessCuadre(user.role, user.username)) router.replace("/dashboard");
+    if (user && !canAccessCuadre(user.role)) router.replace("/dashboard");
   }, [user, router]);
 
   const isOscar = user?.role === "tech" && user?.username === "Oscar";
@@ -178,7 +176,7 @@ export default function CuadreTecnicoPage() {
   const historialTecnico = historial.filter(c => c.tecnico === tecnico);
   const ultimoCuadre = historialTecnico[0] ?? null; // ya viene ordenado desc
 
-  if (!user || !canAccessCuadre(user.role, user.username)) return null;
+  if (!user || !canAccessCuadre(user.role)) return null;
 
   return (
     <>
