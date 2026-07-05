@@ -68,11 +68,13 @@ function FacturaCuadre({ cuadre }: { cuadre: CuadreTecnico }) {
 
 const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
-// Solo Oscar (rol tech) puede auto-cuadrar. Freddy y Carlos no.
-// Admin puede cuadrar a cualquiera.
-function canAccessCuadre(role: string | undefined, username: string | undefined): boolean {
+// Roles que pueden acceder al cuadre:
+// - admin: puede cuadrar a cualquier técnico
+// - taller_jefe: puede auto-cuadrar (es Oscar, jefe del área técnica)
+// tech (Freddy, Carlos) NO pueden entrar
+function canAccessCuadre(role: string | undefined): boolean {
   if (role === "admin") return true;
-  if (role === "tech" && username === "Oscar") return true;
+  if (role === "taller_jefe") return true;
   return false;
 }
 
@@ -81,15 +83,15 @@ export default function CuadreTecnicoPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && !canAccessCuadre(user.role, user.username)) router.replace("/dashboard");
+    if (user && !canAccessCuadre(user.role)) router.replace("/dashboard");
   }, [user, router]);
 
-  const isOscar = user?.role === "tech" && user?.username === "Oscar";
+  const isTallerJefe = user?.role === "taller_jefe";
   const isAdmin = user?.role === "admin";
 
-  // Si es Oscar, fijamos el técnico a "Oscar" (no puede cuadrar a otros)
+  // Si es taller_jefe, fijamos el técnico a "Oscar" (no puede cuadrar a otros)
   const today = todayRD();
-  const [tecnico, setTecnico] = useState(isOscar ? "Oscar" : TECNICOS[0]);
+  const [tecnico, setTecnico] = useState(isTallerJefe ? "Oscar" : TECNICOS[0]);
   const [desde, setDesde] = useState(today);
   const [hasta, setHasta] = useState(today);
   const [pendientes, setPendientes] = useState<Repair[]>([]);
@@ -178,7 +180,7 @@ export default function CuadreTecnicoPage() {
   const historialTecnico = historial.filter(c => c.tecnico === tecnico);
   const ultimoCuadre = historialTecnico[0] ?? null; // ya viene ordenado desc
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || !canAccessCuadre(user.role)) return null;
 
   return (
     <>

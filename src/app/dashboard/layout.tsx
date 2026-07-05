@@ -121,7 +121,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Cuadre", icon: BarChart3, path: "/dashboard/report", roles: ["admin", "caja"] },
     { name: "Avisos Retiro", icon: Bell, path: "/dashboard/avisos-retiro", roles: ["admin", "caja"] },
     { name: "Seguimiento", icon: MessageCircle, path: "/dashboard/seguimiento-clientes", roles: ["admin", "caja"] },
-    { name: "Pago Técnico", icon: BadgeDollarSign, path: "/dashboard/cuadre-tecnico", roles: ["admin", "tech"] },
+    { name: "Pago Técnico", icon: BadgeDollarSign, path: "/dashboard/cuadre-tecnico", roles: ["admin", "taller_jefe"] },
     { name: "Inventario Técnicos", icon: ClipboardList, path: "/dashboard/inventario-tecnicos", roles: ["admin"] },
     { name: "Auditoría", icon: ShieldCheck, path: "/dashboard/auditoria", roles: ["admin", "caja"] },
     { name: "Admin", icon: Settings, path: "/dashboard/admin", roles: ["admin"] },
