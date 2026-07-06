@@ -93,10 +93,12 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
             📦 Devolver al cliente
           </button>
         )}
-        <button onClick={() => onStatusChange(id, "Listo para entregar")}
-          className="text-[10px] text-slate-400 hover:text-slate-600 mt-1 text-left">
-          ↻ Revertir a taller
-        </button>
+        {isAdmin && (
+          <button onClick={() => onStatusChange(id, "Listo para entregar")}
+            className="text-[10px] text-slate-400 hover:text-slate-600 mt-1 text-left">
+            ↻ Revertir a taller
+          </button>
+        )}
       </div>
     );
   }
