@@ -71,16 +71,28 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
 
   if (status === "Entregado a recepción") {
     if (!isCaja) return <span className="text-[11px] text-slate-400 italic">En recepción...</span>;
+    // 2026-07-06: si el técnico marcó "Listo" → solo "Entregar y Cobrar";
+    // si marcó "Sin solución" → solo "Devolver al cliente".
+    // Si no hay snapshot (equipos viejos / sin backfill) → ambos botones visibles.
+    const prev = repair.status_anterior_taller;
+    const soloListo = prev === "Listo para entregar";
+    const soloMalo = prev === "No se pudo reparar";
     return (
       <div className="flex flex-col gap-1.5 min-w-[160px]">
-        <button onClick={() => onStatusChange(id, "Despachado bueno")}
-          className={`${btnBase} bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100`}>
-          💰 Entregar y Cobrar
-        </button>
-        <button onClick={() => onStatusChange(id, "Despachado malo")}
-          className={`${btnBase} bg-red-50 border-red-300 text-red-700 hover:bg-red-100`}>
-          📦 Devolver al cliente
-        </button>
+        {(soloListo || (!soloMalo)) && (
+          <button onClick={() => onStatusChange(id, "Despachado bueno")}
+            disabled={soloMalo}
+            className={`${btnBase} bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-50`}>
+            💰 Entregar y Cobrar
+          </button>
+        )}
+        {(soloMalo || (!soloListo)) && (
+          <button onClick={() => onStatusChange(id, "Despachado malo")}
+            disabled={soloListo}
+            className={`${btnBase} bg-red-50 border-red-300 text-red-700 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-50`}>
+            📦 Devolver al cliente
+          </button>
+        )}
         <button onClick={() => onStatusChange(id, "Listo para entregar")}
           className="text-[10px] text-slate-400 hover:text-slate-600 mt-1 text-left">
           ↻ Revertir a taller
