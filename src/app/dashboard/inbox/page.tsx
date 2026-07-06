@@ -294,6 +294,7 @@ export default function InboxPage() {
                   <TableHead className="font-bold w-[110px]">Código</TableHead>
                   <TableHead className="font-bold">Cliente</TableHead>
                   <TableHead className="font-bold">Equipo / Técnico</TableHead>
+                  <TableHead className="font-bold w-[140px]">Estatus</TableHead>
                   <TableHead className="font-bold">Total</TableHead>
                   <TableHead className="font-bold w-[180px]">Acción</TableHead>
                   <TableHead className="font-bold w-[60px] text-right">Ver</TableHead>
@@ -317,18 +318,25 @@ export default function InboxPage() {
                       <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 mt-0.5">
                         <Wrench className="h-3 w-3" /> {r.tecnico || "Sin asignar"}
                       </div>
-                      {/* 2026-07-06: chip de estatus del taller (Listo / Sin solución)
-                          guardado al transicionar a "Entregado a recepción". */}
-                      {r.status_anterior_taller && (
-                        <div className={`mt-1 inline-block text-[10px] font-black rounded px-1.5 py-0.5 ${
-                          r.status_anterior_taller === "Listo para entregar"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-orange-100 text-orange-700"
-                        }`}>
-                          {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin solución"}
-                        </div>
-                      )}
                       <div className="text-[10px] text-violet-700 bg-violet-100 rounded px-1.5 py-0.5 mt-1 font-bold inline-block">📥 En recepción</div>
+                    </TableCell>
+                    {/* 2026-07-06: columna dedicada de Estatus con chip grande.
+                        La cajera ve de un vistazo si el técnico lo dejó Listo o Sin solución. */}
+                    <TableCell>
+                      {r.status_anterior_taller ? (
+                        <Badge
+                          variant="outline"
+                          className={
+                            r.status_anterior_taller === "Listo para entregar"
+                              ? "border-emerald-400 text-emerald-700 bg-emerald-50 text-sm font-black px-3 py-1"
+                              : "border-orange-400 text-orange-700 bg-orange-50 text-sm font-black px-3 py-1"
+                          }
+                        >
+                          {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin solución"}
+                        </Badge>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 italic">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="font-bold text-slate-700">
                       RD$ {(r.costo + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0)).toLocaleString()}
