@@ -76,6 +76,27 @@ export async function PATCH(
       updateData.fecha_entrega_recepcion = nowRD();
     }
 
+    // 2026-07-06: al transicionar a "Entregado a recepción", guardar el status
+    // anterior del taller (Listo para entregar / No se pudo reparar) para que
+    // la caja vea en la bandeja si el equipo quedó listo o sin solución.
+    // Si el técnico revierte ("En reparación" desde la bandeja), limpiar el campo.
+    if ('status' in updateData) {
+      if (updateData.status === RECEIVED_AT_FRONT_STATUS) {
+        const { data: currentRow } = await supabase
+          .from('repairs')
+          .select('status')
+          .eq('id', id)
+          .single();
+        const prev = currentRow?.status;
+        if (prev === 'Listo para entregar' || prev === 'No se pudo reparar') {
+          updateData.status_anterior_taller = prev;
+        }
+      } else if (updateData.status === 'En reparación') {
+        // Revertir a taller: limpiar el snapshot
+        updateData.status_anterior_taller = null;
+      }
+    }
+
     const { error } = await supabase.from('repairs').update(updateData).eq('id', id);
     if (error) throw error;
 

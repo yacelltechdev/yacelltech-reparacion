@@ -26,6 +26,10 @@ export interface Repair {
   tipoPantalla?: 'InCell' | 'OLED' | null;
   trabajoARealizar?: string;
   esChequeo?: boolean;
+  // 2026-07-06: status que tenía el equipo en el taller cuando se marcó
+  // "Entregado a recepción" (Listo para entregar | No se pudo reparar).
+  // Permite a la caja ver en la bandeja si el técnico lo dejó listo o sin solución.
+  status_anterior_taller?: 'Listo para entregar' | 'No se pudo reparar' | null;
 }
 
 export type UserRole = 'admin' | 'caja' | 'tech';

@@ -317,6 +317,17 @@ export default function InboxPage() {
                       <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 mt-0.5">
                         <Wrench className="h-3 w-3" /> {r.tecnico || "Sin asignar"}
                       </div>
+                      {/* 2026-07-06: chip de estatus del taller (Listo / Sin solución)
+                          guardado al transicionar a "Entregado a recepción". */}
+                      {r.status_anterior_taller && (
+                        <div className={`mt-1 inline-block text-[10px] font-black rounded px-1.5 py-0.5 ${
+                          r.status_anterior_taller === "Listo para entregar"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}>
+                          {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin solución"}
+                        </div>
+                      )}
                       <div className="text-[10px] text-violet-700 bg-violet-100 rounded px-1.5 py-0.5 mt-1 font-bold inline-block">📥 En recepción</div>
                     </TableCell>
                     <TableCell className="font-bold text-slate-700">
