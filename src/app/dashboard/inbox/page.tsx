@@ -23,7 +23,7 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
   const isAdmin = user?.role === "admin";
   const { status, id } = repair;
 
-  const btnBase = "text-[11px] font-bold px-3 py-1.5 rounded-md border transition-colors w-full text-left";
+  const btnBase = "text-[11px] font-bold px-2 py-1.5 rounded-md border transition-colors w-full text-left";
 
   if (status === "En chequeo") {
     return <span className="text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded px-2 py-1">🔍 En chequeo...</span>;
@@ -32,7 +32,7 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
   if (status === "En reparación") {
     if (!isTech) return <span className="text-[11px] text-slate-400 italic">En taller...</span>;
     return (
-      <div className="flex flex-col gap-1.5 min-w-[160px]">
+      <div className="flex flex-col gap-1 min-w-[150px]">
         <button onClick={() => onStatusChange(id, "Listo para entregar")}
           className={`${btnBase} bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100`}>
           ✔ Listo para entregar
@@ -48,7 +48,7 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
   if (status === "Listo para entregar" || status === "No se pudo reparar") {
     if (!isCaja) return <span className="text-[11px] text-slate-400 italic">Esperando caja...</span>;
     return (
-      <div className="flex flex-col gap-1.5 min-w-[160px]">
+      <div className="flex flex-col gap-1 min-w-[150px]">
         {(status === "Listo para entregar" || isAdmin) && (
           <button onClick={() => onStatusChange(id, "Despachado bueno")}
             className={`${btnBase} bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100`}>
@@ -78,7 +78,7 @@ function StatusSelector({ repair, onStatusChange }: { repair: Repair; onStatusCh
     const soloListo = prev === "Listo para entregar";
     const soloMalo = prev === "No se pudo reparar";
     return (
-      <div className="flex flex-col gap-1.5 min-w-[160px]">
+      <div className="flex flex-col gap-1 min-w-[150px]">
         {(soloListo || (!soloMalo)) && (
           <button onClick={() => onStatusChange(id, "Despachado bueno")}
             disabled={soloMalo}
@@ -277,16 +277,16 @@ export default function InboxPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bandeja de Pendientes</h1>
-          <p className="text-slate-500 text-sm">{repairs.length} equipo{repairs.length !== 1 ? "s" : ""} activo{repairs.length !== 1 ? "s" : ""} en taller.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Bandeja de Pendientes</h1>
+          <p className="text-slate-500 text-xs">{repairs.length} equipo{repairs.length !== 1 ? "s" : ""} activo{repairs.length !== 1 ? "s" : ""} en taller.</p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Buscar por código, cliente o modelo..."
-            className="pl-9 w-[300px] border-slate-200 shadow-sm"
+            placeholder="Buscar código, cliente o modelo..."
+            className="pl-9 w-full md:w-[240px] border-slate-200 shadow-sm"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -295,7 +295,7 @@ export default function InboxPage() {
 
       {/* ── SECCIÓN 1: En mi poder (entregados a recepción) ─────────────────── */}
       <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="bg-violet-50/50 border-b border-violet-100">
+        <CardHeader className="bg-violet-50/50 border-b border-violet-100 px-3 py-2.5">
           <CardTitle className="flex items-center gap-2 text-base">
             <Hand className="h-5 w-5 text-violet-600" />
             <span>En mi poder (entregados a recepción)</span>
@@ -316,30 +316,30 @@ export default function InboxPage() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="font-bold w-[110px]">Código</TableHead>
-                  <TableHead className="font-bold">Cliente</TableHead>
-                  <TableHead className="font-bold">Equipo / Técnico</TableHead>
-                  <TableHead className="font-bold w-[140px]">Estatus</TableHead>
-                  <TableHead className="font-bold">Total</TableHead>
-                  <TableHead className="font-bold w-[180px]">Acción</TableHead>
-                  <TableHead className="font-bold w-[60px] text-right">Ver</TableHead>
+                  <TableHead className="font-bold w-[95px] px-2">Código</TableHead>
+                  <TableHead className="font-bold w-[140px] px-2">Cliente</TableHead>
+                  <TableHead className="font-bold w-[180px] px-2">Equipo / Técnico</TableHead>
+                  <TableHead className="font-bold w-[120px] px-2">Estatus</TableHead>
+                  <TableHead className="font-bold w-[80px] px-2">Total</TableHead>
+                  <TableHead className="font-bold w-[160px] px-2">Acción</TableHead>
+                  <TableHead className="font-bold w-[44px] px-1 text-right">Ver</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {enMiPoder.map(r => (
                   <TableRow key={r.id} className="bg-violet-50/30 hover:bg-violet-50/60 transition-colors">
-                    <TableCell>
-                      <div className="font-black text-primary">{r.codigo}</div>
-                      <div className="text-[10px] text-violet-600 mt-0.5 font-semibold">
+                    <TableCell className="px-2 py-2">
+                      <div className="font-black text-primary text-sm">{r.codigo}</div>
+                      <div className="text-[10px] text-violet-600 mt-0.5 font-semibold leading-tight">
                         Recibido: {r.fecha_entrega_recepcion ? formatDateTimeShort(r.fecha_entrega_recepcion) : "—"}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="font-medium text-slate-900">{r.cliente}</div>
-                      <div className="text-xs text-slate-500">{r.telefono}</div>
+                    <TableCell className="px-2 py-2">
+                      <div className="font-medium text-slate-900 text-sm truncate" title={r.cliente}>{r.cliente}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{r.telefono}</div>
                     </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{r.marca} {r.modelo}</div>
+                    <TableCell className="px-2 py-2">
+                      <div className="font-medium text-sm truncate" title={`${r.marca} ${r.modelo}`}>{r.marca} {r.modelo}</div>
                       <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 mt-0.5">
                         <Wrench className="h-3 w-3" /> {r.tecnico || "Sin asignar"}
                       </div>
@@ -349,23 +349,23 @@ export default function InboxPage() {
                         La cajera ve de un vistazo si el técnico lo dejó Listo o Sin solución.
                         Para "Sin solución" mostramos un ℹ️ con la nota de devolución
                         (que el técnico llena al rechazar) en tooltip nativo. */}
-                    <TableCell>
+                    <TableCell className="px-2 py-2">
                       {r.status_anterior_taller ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <Badge
                             variant="outline"
                             className={
                               r.status_anterior_taller === "Listo para entregar"
-                                ? "border-emerald-400 text-emerald-700 bg-emerald-50 text-sm font-black px-3 py-1"
-                                : "border-orange-400 text-orange-700 bg-orange-50 text-sm font-black px-3 py-1"
+                                ? "border-emerald-400 text-emerald-700 bg-emerald-50 text-xs font-black px-2 py-0.5"
+                                : "border-orange-400 text-orange-700 bg-orange-50 text-xs font-black px-2 py-0.5"
                             }
                           >
-                            {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin solución"}
+                            {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin sol."}
                           </Badge>
                           {r.status_anterior_taller === "No se pudo reparar" && r.notaDevolucion && (
                             <span
                               title={`Razón: ${r.notaDevolucion}`}
-                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-[11px] font-black cursor-help hover:bg-orange-200 transition-colors"
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-100 text-orange-700 text-[10px] font-black cursor-help hover:bg-orange-200 transition-colors shrink-0"
                             >
                               i
                             </span>
@@ -375,14 +375,14 @@ export default function InboxPage() {
                         <span className="text-[11px] text-slate-400 italic">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="font-bold text-slate-700">
+                    <TableCell className="font-bold text-slate-700 px-2 py-2 text-sm">
                       RD$ {(r.costo + (r.cargosAdicionales?.reduce((a, c) => a + c.monto, 0) || 0)).toLocaleString()}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-2 py-2">
                       <StatusSelector repair={r} onStatusChange={handleStatusChange} />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => setSelectedRepair(r)}>
+                    <TableCell className="text-right px-1 py-2">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary" onClick={() => setSelectedRepair(r)}>
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>
