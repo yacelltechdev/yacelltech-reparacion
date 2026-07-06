@@ -116,6 +116,10 @@ export default function ReportPage() {
   const [reabrirCierre, setReobrirCierre] = useState<Cierre | null>(null);
   const [reabriendo, setReabriendo] = useState(false);
   const [reabrirError, setReobrirError] = useState("");
+  // 2026-07-06: contador de equipos en "Entregado a recepción". Si > 0, no se
+  // puede cerrar caja — la cajera debe despachar todos primero.
+  const [enRecepcionCount, setEnRecepcionCount] = useState(0);
+  const [enRecepcionList, setEnRecepcionList] = useState<Repair[]>([]);
 
 
   useEffect(() => {
@@ -128,8 +132,25 @@ export default function ReportPage() {
   }, [date]);
 
   const loadAll = async () => {
-    await Promise.all([loadRepairs(date), loadCierres()]);
+    await Promise.all([loadRepairs(date), loadCierres(), loadEnRecepcion()]);
   };
+
+  // 2026-07-06: cargar equipos en recepción para validar el cierre
+  const loadEnRecepcion = async () => {
+    try {
+      const res = await fetch("/api/repairs?status=" + encodeURIComponent("Entregado a recepción"));
+      const data: Repair[] = await res.json();
+      setEnRecepcionList(Array.isArray(data) ? data : []);
+      setEnRecepcionCount(Array.isArray(data) ? data.length : 0);
+    } catch {
+      // Silencioso: si falla, dejamos el count en 0 y dejamos cerrar caja (defensa en UI)
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(loadEnRecepcion, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadRepairs = async (targetDate = date) => {
     try {
@@ -289,7 +310,17 @@ export default function ReportPage() {
             <Button variant="outline" size="icon" onClick={loadAll} title="Actualizar">
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            {filtered.length > 0 && !isSundayRD(date) && (
+            {enRecepcionCount > 0 && (
+              <Button
+                disabled
+                variant="outline"
+                className="gap-2 bg-amber-50 text-amber-700 border-amber-300 cursor-not-allowed hover:bg-amber-50 hover:text-amber-700"
+                title={`Tienes ${enRecepcionCount} equipo${enRecepcionCount !== 1 ? "s" : ""} en recepción pendiente${enRecepcionCount !== 1 ? "s" : ""} de despachar. Entrégalos primero.`}
+              >
+                <Lock className="h-4 w-4" /> Cerrar Caja
+              </Button>
+            )}
+            {enRecepcionCount === 0 && filtered.length > 0 && !isSundayRD(date) && (
               <Button
                 onClick={() => setConfirming(true)}
                 className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
@@ -309,6 +340,40 @@ export default function ReportPage() {
             )}
           </div>
         </div>
+
+        {/* 2026-07-06: banner de bloqueo — si hay equipos en recepción, no se
+            puede cerrar caja. La cajera debe entregarlos/devolverlos primero. */}
+        {enRecepcionCount > 0 && (
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 no-print">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center">
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-black text-amber-900 text-base">
+                  No puedes cerrar caja: tienes {enRecepcionCount} equipo{enRecepcionCount !== 1 ? "s" : ""} en recepción
+                </h3>
+                <p className="text-amber-800 text-sm mt-1">
+                  Entrégalos o devuélvelos a sus clientes antes de cerrar caja. El botón de cierre está deshabilitado hasta que la bandeja quede en cero.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {enRecepcionList.slice(0, 8).map(r => (
+                    <span key={r.id} className="inline-flex items-center gap-1.5 text-xs bg-white border border-amber-300 rounded-md px-2 py-1 font-bold text-amber-900">
+                      <span className="text-amber-600">📦</span> {r.codigo}
+                      <span className="text-amber-700/70">·</span>
+                      <span className="text-amber-800">{r.cliente}</span>
+                    </span>
+                  ))}
+                  {enRecepcionList.length > 8 && (
+                    <span className="text-xs text-amber-700 font-semibold self-center">
+                      y {enRecepcionList.length - 8} más...
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Resumen */}
         <div className="grid gap-4 md:grid-cols-3 no-print">

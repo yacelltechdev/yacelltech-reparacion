@@ -41,6 +41,24 @@ export async function POST(req: Request) {
       );
     }
 
+    // 2026-07-06: regla de cierre — la caja no se puede cerrar si hay equipos
+    // en "Entregado a recepción" sin despachar. La cajera debe entregar o devolver
+    // TODOS los equipos que el técnico le dejó antes de cerrar caja al final del día.
+    const { data: enRecepcion, error: recepErr } = await supabase
+      .from('repairs')
+      .select('id, codigo, cliente, status_anterior_taller')
+      .eq('status', 'Entregado a recepción');
+    if (recepErr) throw recepErr;
+    if (enRecepcion && enRecepcion.length > 0) {
+      return NextResponse.json(
+        {
+          error: `No se puede cerrar caja: hay ${enRecepcion.length} equipo${enRecepcion.length !== 1 ? 's' : ''} en recepción pendiente${enRecepcion.length !== 1 ? 's' : ''} de despachar. Entrégalos o devuélvelos primero.`,
+          enRecepcion: enRecepcion.map((r: any) => r.codigo),
+        },
+        { status: 400 }
+      );
+    }
+
     // Regla "cuadre dominical": si la fecha objetivo es lunes, incluir también
     // las facturas del domingo anterior (no se cerraron solas).
     const [fy, fm, fd] = fecha.split('-').map(Number);
