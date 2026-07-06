@@ -335,19 +335,31 @@ export default function InboxPage() {
                       <div className="text-[10px] text-violet-700 bg-violet-100 rounded px-1.5 py-0.5 mt-1 font-bold inline-block">📥 En recepción</div>
                     </TableCell>
                     {/* 2026-07-06: columna dedicada de Estatus con chip grande.
-                        La cajera ve de un vistazo si el técnico lo dejó Listo o Sin solución. */}
+                        La cajera ve de un vistazo si el técnico lo dejó Listo o Sin solución.
+                        Para "Sin solución" mostramos un ℹ️ con la nota de devolución
+                        (que el técnico llena al rechazar) en tooltip nativo. */}
                     <TableCell>
                       {r.status_anterior_taller ? (
-                        <Badge
-                          variant="outline"
-                          className={
-                            r.status_anterior_taller === "Listo para entregar"
-                              ? "border-emerald-400 text-emerald-700 bg-emerald-50 text-sm font-black px-3 py-1"
-                              : "border-orange-400 text-orange-700 bg-orange-50 text-sm font-black px-3 py-1"
-                          }
-                        >
-                          {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin solución"}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge
+                            variant="outline"
+                            className={
+                              r.status_anterior_taller === "Listo para entregar"
+                                ? "border-emerald-400 text-emerald-700 bg-emerald-50 text-sm font-black px-3 py-1"
+                                : "border-orange-400 text-orange-700 bg-orange-50 text-sm font-black px-3 py-1"
+                            }
+                          >
+                            {r.status_anterior_taller === "Listo para entregar" ? "✔ Listo" : "✖ Sin solución"}
+                          </Badge>
+                          {r.status_anterior_taller === "No se pudo reparar" && r.notaDevolucion && (
+                            <span
+                              title={`Razón: ${r.notaDevolucion}`}
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-[11px] font-black cursor-help hover:bg-orange-200 transition-colors"
+                            >
+                              i
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-[11px] text-slate-400 italic">—</span>
                       )}
