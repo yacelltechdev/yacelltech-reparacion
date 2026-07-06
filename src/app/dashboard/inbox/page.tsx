@@ -237,7 +237,18 @@ export default function InboxPage() {
   //   (status === "Entregado a recepción")
   // Abajo: "En taller" = equipos activos que la caja aún NO tiene
   //   (status ∈ {"En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"})
-  const enMiPoder = repairs.filter(r => r.status === "Entregado a recepción");
+  // 2026-07-06: aplicar el buscador a AMBAS secciones (antes solo filtraba
+  // "En taller" — "En mi poder" ignoraba el término de búsqueda).
+  const matchesSearch = (r: Repair) => {
+    if (!searchTerm) return true;
+    const t = searchTerm.toLowerCase();
+    return (
+      r.codigo.toLowerCase().includes(t) ||
+      r.cliente.toLowerCase().includes(t) ||
+      r.modelo.toLowerCase().includes(t)
+    );
+  };
+  const enMiPoder = repairs.filter(r => r.status === "Entregado a recepción" && matchesSearch(r));
   const enTaller = repairs.filter(r => r.status !== "Entregado a recepción");
 
   // Subagrupación de "En taller" por técnico (para la sección informativa de abajo)
