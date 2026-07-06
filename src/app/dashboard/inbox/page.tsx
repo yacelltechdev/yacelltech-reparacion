@@ -555,7 +555,7 @@ export default function InboxPage() {
               <Hand className="h-7 w-7 text-white" />
               <div>
                 <h2 className="text-white font-black text-lg leading-tight">¡Entrega a Recepción!</h2>
-                <p className="text-violet-100 text-sm">El técnico dejó el equipo en el mostrador</p>
+                <p className="text-violet-100 text-sm">El técnico se lo entregó a recepción</p>
               </div>
             </div>
             <div className="p-6 space-y-3">
