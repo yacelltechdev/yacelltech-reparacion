@@ -8,7 +8,6 @@ import { ClipboardList, Printer, RefreshCcw, Wrench, PackageCheck, User as UserI
 import { Repair } from "@/lib/types";
 import { formatDateLong, formatDateTimeShort, todayRD } from "@/lib/date";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 
 const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
@@ -201,14 +200,8 @@ export default function InventarioTecnicosPage() {
   const load = async () => {
     setLoading(true);
     try {
-      // Traer la bóveda para excluir esos repairs del inventario
-      // (equipos archivados no están físicamente con el técnico).
-      const resBov = await fetch("/api/boveda");
-      const bovData = await resBov.json();
-      const repairIdsEnBoveda = new Set<number>(
-        (Array.isArray(bovData) ? bovData : []).map((b: any) => b.repair_id)
-      );
-
+      // La API /api/repairs ya excluye automáticamente los archivados en bóveda
+      // (opt-in con ?include_archived=true). No hace falta filtrar acá.
       const results = await Promise.all(
         TECNICOS.map(async (nombre) => {
           // Por cada técnico: fetch los 4 estados "en su poder" en paralelo
@@ -218,21 +211,14 @@ export default function InventarioTecnicosPage() {
             fetch(`/api/repairs?tecnico=${encodeURIComponent(nombre)}&status=${encodeURIComponent("Listo para entregar")}`),
             fetch(`/api/repairs?tecnico=${encodeURIComponent(nombre)}&status=${encodeURIComponent("No se pudo reparar")}`),
           ]);
-          const filterBoveda = (arr: Repair[]) => arr.filter(r => !repairIdsEnBoveda.has(r.id));
-          const enChequeo: Repair[] = filterBoveda(await resChequeo.json());
-          const enReparacion: Repair[] = filterBoveda(await resRep.json());
-          const listoParaEntregar: Repair[] = filterBoveda(await resListo.json());
-          const noSePudoReparar: Repair[] = filterBoveda(await resSinSol.json());
+          const enChequeo: Repair[] = await resChequeo.json();
+          const enReparacion: Repair[] = await resRep.json();
+          const listoParaEntregar: Repair[] = await resListo.json();
+          const noSePudoReparar: Repair[] = await resSinSol.json();
           return { nombre, enChequeo, enReparacion, listoParaEntregar, noSePudoReparar };
         })
       );
       setData(results);
-      if (repairIdsEnBoveda.size > 0) {
-        toast.info(
-          `${repairIdsEnBoveda.size} equipo(s) están en la bóveda de investigación y no cuentan en este inventario`,
-          { duration: 6000 }
-        );
-      }
     } finally {
       setLoading(false);
     }

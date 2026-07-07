@@ -12,6 +12,7 @@ export async function GET(req: Request) {
     const despachoDesde  = searchParams.get("despacho_desde") || "";
     const despachoHasta  = searchParams.get("despacho_hasta") || "";
     const active         = searchParams.get("active") === "true";
+    const includeArchived = searchParams.get("include_archived") === "true";
     const page    = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit   = parseInt(searchParams.get("limit") || "0");
 
@@ -19,6 +20,22 @@ export async function GET(req: Request) {
 
     if (active) {
       query = query.in('status', ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar", "Entregado a recepción"]);
+    }
+
+    // Excluir por defecto los repairs archivados en la bóveda. Para incluirlos
+    // (ej. desde la página de archivar o auditoría), pasar include_archived=true.
+    // El opt-out es explícito: por seguridad, ningún endpoint existente ve
+    // bóveda sin pedirlo.
+    if (!includeArchived) {
+      const { data: bovedaIds } = await supabase
+        .from('boveda_equipos')
+        .select('repair_id');
+      const ids = (bovedaIds || []).map((b: any) => b.repair_id);
+      if (ids.length > 0) {
+        // .not('id', 'in', `(${ids.join(',')})`) — defensivo: si la bóveda
+        // está vacía, no aplicamos filtro (PostgREST no acepta IN vacío).
+        query = query.not('id', 'in', `(${ids.join(',')})`);
+      }
     }
     if (q) {
       query = query.or(`codigo.ilike.%${q}%,cliente.ilike.%${q}%,telefono.ilike.%${q}%,modelo.ilike.%${q}%,marca.ilike.%${q}%,serie.ilike.%${q}%`);

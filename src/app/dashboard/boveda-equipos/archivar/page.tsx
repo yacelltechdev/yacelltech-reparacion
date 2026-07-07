@@ -47,6 +47,8 @@ export default function ArchivarBovedaPage() {
     setDone(null);
     try {
       // Los 4 estados que cuentan como "en poder del técnico"
+      // La API ya excluye automáticamente los archivados en bóveda
+      // (opt-in con ?include_archived=true), así que no hace falta filtrar acá.
       const STATUSES = ["En chequeo", "En reparación", "Listo para entregar", "No se pudo reparar"];
       const fetches = STATUSES.map(s =>
         fetch(`/api/repairs?tecnico=${encodeURIComponent(tec)}&status=${encodeURIComponent(s)}`)
@@ -55,19 +57,13 @@ export default function ArchivarBovedaPage() {
       );
       const results = await Promise.all(fetches);
       const todos: Repair[] = results.flat();
-      // Excluir los que YA están en la bóveda
-      const resBov = await fetch("/api/boveda?tecnico=" + encodeURIComponent(tec));
-      const bov = await resBov.json();
-      const yaArchivados = new Set<number>((Array.isArray(bov) ? bov : []).map((b: any) => b.repair_id));
-      const visibles = todos.filter(r => !yaArchivados.has(r.id));
-
-      setReparaciones(visibles);
+      setReparaciones(todos);
 
       // Preseleccionar los del preset si el técnico es Oscar y son visibles
       const preselected = new Set<number>();
       if (tec === "Oscar") {
         const codigos = new Set(PRESELECCIONADOS_OSCAR);
-        for (const r of visibles) {
+        for (const r of todos) {
           if (codigos.has(r.codigo)) preselected.add(r.id);
         }
       }
