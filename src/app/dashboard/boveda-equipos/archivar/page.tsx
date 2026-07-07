@@ -1,12 +1,13 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Archive, RefreshCcw, ArrowLeft, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Archive, RefreshCcw, ArrowLeft, Loader2, AlertTriangle, CheckCircle2, Search, X } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -32,6 +33,7 @@ export default function ArchivarBovedaPage() {
   const [tecnico, setTecnico] = useState<string>("Oscar");
   const [reparaciones, setReparaciones] = useState<Repair[]>([]);
   const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
+  const [busqueda, setBusqueda] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ count: number } | null>(null);
@@ -83,6 +85,20 @@ export default function ArchivarBovedaPage() {
     if (user?.role === "admin") cargar(tecnico);
   }, [tecnico, user, cargar]);
 
+  // Filtrado por búsqueda (código, cliente, marca, modelo, serie, teléfono)
+  const reparacionesVisibles = useMemo(() => {
+    if (!busqueda.trim()) return reparaciones;
+    const q = busqueda.toLowerCase().trim();
+    return reparaciones.filter(r =>
+      (r.codigo ?? "").toLowerCase().includes(q) ||
+      (r.cliente ?? "").toLowerCase().includes(q) ||
+      (r.marca ?? "").toLowerCase().includes(q) ||
+      (r.modelo ?? "").toLowerCase().includes(q) ||
+      (r.serie ?? "").toLowerCase().includes(q) ||
+      (r.telefono ?? "").toLowerCase().includes(q)
+    );
+  }, [reparaciones, busqueda]);
+
   const toggle = (id: number) => {
     setSeleccionados(prev => {
       const next = new Set(prev);
@@ -93,11 +109,20 @@ export default function ArchivarBovedaPage() {
   };
 
   const toggleAll = () => {
-    if (seleccionados.size === reparaciones.length) {
-      setSeleccionados(new Set());
-    } else {
-      setSeleccionados(new Set(reparaciones.map(r => r.id)));
-    }
+    // Si hay filtro activo, "marcar todos" solo afecta a los visibles
+    const visiblesIds = reparacionesVisibles.map(r => r.id);
+    const todosVisiblesMarcados = visiblesIds.every(id => seleccionados.has(id));
+    setSeleccionados(prev => {
+      const next = new Set(prev);
+      if (todosVisiblesMarcados) {
+        // Desmarcar solo los visibles
+        for (const id of visiblesIds) next.delete(id);
+      } else {
+        // Marcar todos los visibles
+        for (const id of visiblesIds) next.add(id);
+      }
+      return next;
+    });
   };
 
   const archivar = async () => {
@@ -256,14 +281,41 @@ export default function ArchivarBovedaPage() {
 
       {/* Lista de equipos */}
       <Card className="border-none shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
           <CardTitle className="text-base">
             Equipos de {tecnico} — marca los que tiene en la mano
+            {busqueda.trim() && (
+              <span className="text-slate-400 font-normal text-sm ml-2">
+                ({reparacionesVisibles.length} de {reparaciones.length})
+              </span>
+            )}
           </CardTitle>
           {reparaciones.length > 0 && (
-            <Button size="sm" variant="ghost" onClick={toggleAll}>
-              {seleccionados.size === reparaciones.length ? "Desmarcar todos" : "Marcar todos"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <Input
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  placeholder="Buscar código, cliente, marca..."
+                  className="pl-8 pr-8 w-64"
+                />
+                {busqueda && (
+                  <button
+                    onClick={() => setBusqueda("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center"
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <X className="h-3 w-3 text-slate-600" />
+                  </button>
+                )}
+              </div>
+              <Button size="sm" variant="ghost" onClick={toggleAll}>
+                {reparacionesVisibles.every(r => seleccionados.has(r.id)) && reparacionesVisibles.length > 0
+                  ? "Desmarcar visibles"
+                  : "Marcar visibles"}
+              </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent>
@@ -276,9 +328,13 @@ export default function ArchivarBovedaPage() {
             <div className="py-10 text-center text-slate-400 italic">
               {tecnico} no tiene equipos en estados del taller, o todos ya están en la bóveda.
             </div>
+          ) : reparacionesVisibles.length === 0 ? (
+            <div className="py-10 text-center text-slate-400 italic">
+              No hay coincidencias para "<strong>{busqueda}</strong>".
+            </div>
           ) : (
             <div className="divide-y">
-              {reparaciones.map(r => {
+              {reparacionesVisibles.map(r => {
                 const checked = seleccionados.has(r.id);
                 return (
                   <label
