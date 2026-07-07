@@ -11,20 +11,45 @@ import { useAuth } from "@/context/AuthContext";
 
 const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
+// Estados que cuentan como "equipo físicamente en poder del técnico".
+// NO se incluyen: Entregado a recepción, Despachado bueno, Despachado malo
+// (ya salieron del taller; el cuadre semanal del taller no los refleja).
+const ESTADOS_EN_PODER = [
+  "En chequeo",
+  "En reparación",
+  "Listo para entregar",
+  "No se pudo reparar",
+] as const;
+
 const statusColors: Record<string, string> = {
+  "En chequeo": "bg-sky-100 text-sky-700 border-sky-200",
   "En reparación": "bg-amber-100 text-amber-700 border-amber-200",
   "Listo para entregar": "bg-emerald-100 text-emerald-700 border-emerald-200",
+  "No se pudo reparar": "bg-rose-100 text-rose-700 border-rose-200",
+};
+
+const statusLabelCorto: Record<string, string> = {
+  "En chequeo": "En chequeo",
+  "En reparación": "En reparación",
+  "Listo para entregar": "Listo p/ entregar",
+  "No se pudo reparar": "Sin solución",
 };
 
 interface TecnicoInventario {
   nombre: string;
+  enChequeo: Repair[];
   enReparacion: Repair[];
   listoParaEntregar: Repair[];
+  noSePudoReparar: Repair[];
 }
 
 function HojaInventario({ tec, fecha }: { tec: TecnicoInventario; fecha: string }) {
   const line = "━".repeat(50);
-  const total = tec.enReparacion.length + tec.listoParaEntregar.length;
+  const total =
+    tec.enChequeo.length +
+    tec.enReparacion.length +
+    tec.listoParaEntregar.length +
+    tec.noSePudoReparar.length;
 
   return (
     <div
@@ -57,12 +82,26 @@ function HojaInventario({ tec, fecha }: { tec: TecnicoInventario; fecha: string 
       <div style={{ textAlign: "center", letterSpacing: "-1px", margin: "8px 0" }}>{line}</div>
 
       {/* Resumen */}
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "8px 0 12px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "4px 12px",
+          margin: "8px 0 12px",
+        }}
+      >
+        <span>
+          <strong>En chequeo:</strong> {tec.enChequeo.length}
+        </span>
         <span>
           <strong>En reparación:</strong> {tec.enReparacion.length}
         </span>
         <span>
           <strong>Listos p/ entregar:</strong> {tec.listoParaEntregar.length}
+        </span>
+        <span>
+          <strong>Sin solución:</strong> {tec.noSePudoReparar.length}
         </span>
         <span>
           <strong>Total:</strong> {total}
@@ -95,7 +134,7 @@ function HojaInventario({ tec, fecha }: { tec: TecnicoInventario; fecha: string 
           </tr>
         </thead>
         <tbody>
-          {tec.enReparacion.length === 0 && tec.listoParaEntregar.length === 0 ? (
+          {total === 0 ? (
             <tr>
               <td colSpan={6} style={{ textAlign: "center", padding: "16px", color: "#666", fontStyle: "italic" }}>
                 (Sin equipos en su poder)
@@ -103,30 +142,27 @@ function HojaInventario({ tec, fecha }: { tec: TecnicoInventario; fecha: string 
             </tr>
           ) : (
             <>
-              {tec.enReparacion.map((r, i) => (
-                <tr key={r.id} style={{ borderBottom: "1px dashed #999" }}>
-                  <td style={{ textAlign: "center", padding: "6px 2px" }}>☐</td>
-                  <td style={{ padding: "6px 4px", fontWeight: "bold" }}>{r.codigo}</td>
-                  <td style={{ padding: "6px 4px" }}>{r.cliente}</td>
-                  <td style={{ padding: "6px 4px" }}>
-                    {r.marca} {r.modelo}
-                  </td>
-                  <td style={{ padding: "6px 4px" }}>En reparación</td>
-                  <td style={{ padding: "6px 4px" }}>{r.fecha?.split("T")[0] || "—"}</td>
-                </tr>
-              ))}
-              {tec.listoParaEntregar.map((r) => (
-                <tr key={r.id} style={{ borderBottom: "1px dashed #999" }}>
-                  <td style={{ textAlign: "center", padding: "6px 2px" }}>☐</td>
-                  <td style={{ padding: "6px 4px", fontWeight: "bold" }}>{r.codigo}</td>
-                  <td style={{ padding: "6px 4px" }}>{r.cliente}</td>
-                  <td style={{ padding: "6px 4px" }}>
-                    {r.marca} {r.modelo}
-                  </td>
-                  <td style={{ padding: "6px 4px" }}>Listo p/ entregar</td>
-                  <td style={{ padding: "6px 4px" }}>{r.fecha?.split("T")[0] || "—"}</td>
-                </tr>
-              ))}
+              {([
+                ["En chequeo", tec.enChequeo],
+                ["En reparación", tec.enReparacion],
+                ["Listo para entregar", tec.listoParaEntregar],
+                ["No se pudo reparar", tec.noSePudoReparar],
+              ] as const).map(([estado, lista]) =>
+                lista.map((r) => (
+                  <tr key={r.id} style={{ borderBottom: "1px dashed #999" }}>
+                    <td style={{ textAlign: "center", padding: "6px 2px" }}>☐</td>
+                    <td style={{ padding: "6px 4px", fontWeight: "bold" }}>{r.codigo}</td>
+                    <td style={{ padding: "6px 4px" }}>{r.cliente}</td>
+                    <td style={{ padding: "6px 4px" }}>
+                      {r.marca} {r.modelo}
+                    </td>
+                    <td style={{ padding: "6px 4px" }}>
+                      {statusLabelCorto[estado] ?? estado}
+                    </td>
+                    <td style={{ padding: "6px 4px" }}>{r.fecha?.split("T")[0] || "—"}</td>
+                  </tr>
+                ))
+              )}
             </>
           )}
         </tbody>
@@ -166,14 +202,18 @@ export default function InventarioTecnicosPage() {
     try {
       const results = await Promise.all(
         TECNICOS.map(async (nombre) => {
-          // Por cada técnico: fetch ambos estados en paralelo
-          const [resRep, resListo] = await Promise.all([
+          // Por cada técnico: fetch los 4 estados "en su poder" en paralelo
+          const [resChequeo, resRep, resListo, resSinSol] = await Promise.all([
+            fetch(`/api/repairs?tecnico=${encodeURIComponent(nombre)}&status=${encodeURIComponent("En chequeo")}`),
             fetch(`/api/repairs?tecnico=${encodeURIComponent(nombre)}&status=${encodeURIComponent("En reparación")}`),
             fetch(`/api/repairs?tecnico=${encodeURIComponent(nombre)}&status=${encodeURIComponent("Listo para entregar")}`),
+            fetch(`/api/repairs?tecnico=${encodeURIComponent(nombre)}&status=${encodeURIComponent("No se pudo reparar")}`),
           ]);
+          const enChequeo: Repair[] = await resChequeo.json();
           const enReparacion: Repair[] = await resRep.json();
           const listoParaEntregar: Repair[] = await resListo.json();
-          return { nombre, enReparacion, listoParaEntregar };
+          const noSePudoReparar: Repair[] = await resSinSol.json();
+          return { nombre, enChequeo, enReparacion, listoParaEntregar, noSePudoReparar };
         })
       );
       setData(results);
@@ -203,7 +243,12 @@ export default function InventarioTecnicosPage() {
   if (!user || user.role !== "admin") return null;
 
   const totalGlobal = data.reduce(
-    (s, t) => s + t.enReparacion.length + t.listoParaEntregar.length,
+    (s, t) =>
+      s +
+      t.enChequeo.length +
+      t.enReparacion.length +
+      t.listoParaEntregar.length +
+      t.noSePudoReparar.length,
     0
   );
   const fechaHoy = formatDateLong(todayRD());
@@ -229,10 +274,24 @@ export default function InventarioTecnicosPage() {
         </div>
 
         {/* Resumen global */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Card className="border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Equipos en taller</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">En chequeo</CardTitle>
+              <div className="p-2 bg-sky-100 rounded-lg">
+                <ClipboardList className="h-4 w-4 text-sky-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data.reduce((s, t) => s + t.enChequeo.length, 0)}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Diagnóstico inicial</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-500">En reparación</CardTitle>
               <div className="p-2 bg-amber-100 rounded-lg">
                 <Wrench className="h-4 w-4 text-amber-600" />
               </div>
@@ -241,7 +300,7 @@ export default function InventarioTecnicosPage() {
               <div className="text-2xl font-bold">
                 {data.reduce((s, t) => s + t.enReparacion.length, 0)}
               </div>
-              <p className="text-xs text-slate-400 mt-1">En reparación</p>
+              <p className="text-xs text-slate-400 mt-1">En taller</p>
             </CardContent>
           </Card>
           <Card className="border-none shadow-sm">
@@ -256,6 +315,20 @@ export default function InventarioTecnicosPage() {
                 {data.reduce((s, t) => s + t.listoParaEntregar.length, 0)}
               </div>
               <p className="text-xs text-slate-400 mt-1">Esperando pickup</p>
+            </CardContent>
+          </Card>
+          <Card className="border-none shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-500">Sin solución</CardTitle>
+              <div className="p-2 bg-rose-100 rounded-lg">
+                <Wrench className="h-4 w-4 text-rose-600" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data.reduce((s, t) => s + t.noSePudoReparar.length, 0)}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">En taller, a devolver</p>
             </CardContent>
           </Card>
           <Card className="border-none shadow-sm">
@@ -275,7 +348,11 @@ export default function InventarioTecnicosPage() {
         {/* Cards por técnico */}
         <div className="grid gap-4 md:grid-cols-3">
           {data.map((tec) => {
-            const total = tec.enReparacion.length + tec.listoParaEntregar.length;
+            const total =
+              tec.enChequeo.length +
+              tec.enReparacion.length +
+              tec.listoParaEntregar.length +
+              tec.noSePudoReparar.length;
             return (
               <Card key={tec.nombre} className="border-none shadow-sm">
                 <CardHeader>
@@ -286,11 +363,17 @@ export default function InventarioTecnicosPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={statusColors["En chequeo"]}>
+                      {tec.enChequeo.length} en chequeo
+                    </Badge>
                     <Badge className={statusColors["En reparación"]}>
                       {tec.enReparacion.length} en reparación
                     </Badge>
                     <Badge className={statusColors["Listo para entregar"]}>
                       {tec.listoParaEntregar.length} listo{tec.listoParaEntregar.length === 1 ? "" : "s"}
+                    </Badge>
+                    <Badge className={statusColors["No se pudo reparar"]}>
+                      {tec.noSePudoReparar.length} sin solución
                     </Badge>
                     <Badge variant="secondary" className="font-bold">
                       Total: {total}
@@ -311,34 +394,30 @@ export default function InventarioTecnicosPage() {
                     <p className="text-sm text-slate-400 italic">Sin equipos en su poder.</p>
                   ) : (
                     <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {tec.enReparacion.map((r) => (
-                        <div
-                          key={r.id}
-                          className="flex items-center justify-between text-sm border-b border-slate-100 pb-1.5"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="font-black text-primary text-xs">{r.codigo}</div>
-                            <div className="text-xs text-slate-500 truncate">{r.cliente}</div>
+                      {([
+                        ["En chequeo", tec.enChequeo],
+                        ["En reparación", tec.enReparacion],
+                        ["Listo para entregar", tec.listoParaEntregar],
+                        ["No se pudo reparar", tec.noSePudoReparar],
+                      ] as const).map(([estado, lista]) =>
+                        lista.map((r) => (
+                          <div
+                            key={r.id}
+                            className="flex items-center justify-between text-sm border-b border-slate-100 pb-1.5"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="font-black text-primary text-xs">{r.codigo}</div>
+                              <div className="text-xs text-slate-500 truncate">{r.cliente}</div>
+                            </div>
+                            <div className="text-xs text-slate-400 ml-2 text-right shrink-0">
+                              <div>{r.marca} {r.modelo}</div>
+                              <div className="text-[10px] text-slate-400">
+                                {statusLabelCorto[estado]}
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-xs text-slate-400 ml-2 text-right shrink-0">
-                            {r.marca} {r.modelo}
-                          </div>
-                        </div>
-                      ))}
-                      {tec.listoParaEntregar.map((r) => (
-                        <div
-                          key={r.id}
-                          className="flex items-center justify-between text-sm border-b border-slate-100 pb-1.5"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="font-black text-primary text-xs">{r.codigo}</div>
-                            <div className="text-xs text-slate-500 truncate">{r.cliente}</div>
-                          </div>
-                          <div className="text-xs text-slate-400 ml-2 text-right shrink-0">
-                            {r.marca} {r.modelo}
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   )}
                 </CardContent>
