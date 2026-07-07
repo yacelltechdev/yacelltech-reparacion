@@ -19,6 +19,7 @@ import {
   Bell,
   MessageCircle,
   ClipboardList,
+  Archive,
   Menu,
   X,
   ChevronRight,
@@ -123,6 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Seguimiento", icon: MessageCircle, path: "/dashboard/seguimiento-clientes", roles: ["admin", "caja"] },
     { name: "Pago Técnico", icon: BadgeDollarSign, path: "/dashboard/cuadre-tecnico", roles: ["admin"] },
     { name: "Inventario Técnicos", icon: ClipboardList, path: "/dashboard/inventario-tecnicos", roles: ["admin"] },
+    { name: "Bóveda Equipos", icon: Archive, path: "/dashboard/boveda-equipos", roles: ["admin"] },
     { name: "Auditoría", icon: ShieldCheck, path: "/dashboard/auditoria", roles: ["admin", "caja"] },
     { name: "Admin", icon: Settings, path: "/dashboard/admin", roles: ["admin"] },
   ];
