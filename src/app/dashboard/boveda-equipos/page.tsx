@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Archive, RefreshCcw, Plus, Loader2, CheckCircle2, Clock,
-  Eye, PackageCheck, PackageX, X, FileQuestion,
+  Eye, PackageCheck, PackageX, X, FileQuestion, PackageOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTimeShort } from "@/lib/date";
@@ -347,6 +347,43 @@ export default function BovedaEquiposPage() {
               <div className="space-y-2">
                 <Label>¿Qué pasó con este equipo?</Label>
                 <div className="grid gap-2">
+                  {[
+                    {
+                      v: "encontrado",
+                      label: "Ya lo encontré / fue un error de archivo",
+                      desc: "El equipo vuelve a su estado anterior en el taller",
+                      icon: PackageOpen,
+                      color: "amber",
+                    },
+                  ].map(opt => {
+                    const Icon = opt.icon;
+                    return (
+                      <label
+                        key={opt.v}
+                        className={`flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                          tipoResolucion === opt.v
+                            ? "border-primary bg-primary/5"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="tipo"
+                          value={opt.v}
+                          checked={tipoResolucion === opt.v}
+                          onChange={(e) => setTipoResolucion(e.target.value)}
+                          className="mt-1"
+                        />
+                        <Icon className={`h-5 w-5 mt-0.5 text-${opt.color}-600`} />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{opt.label}</div>
+                          <div className="text-xs text-slate-500">{opt.desc}</div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="grid gap-2 pt-1">
                   {[
                     {
                       v: "despachado_bueno",
