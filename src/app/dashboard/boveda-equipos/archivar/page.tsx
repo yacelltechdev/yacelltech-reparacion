@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Archive, RefreshCcw, ArrowLeft, Loader2, AlertTriangle, CheckCircle2, Search, X } from "lucide-react";
+import { Archive, RefreshCcw, ArrowLeft, Loader2, AlertTriangle, CheckCircle2, Search, X, Eye } from "lucide-react";
 import { Repair } from "@/lib/types";
 import { toast } from "sonner";
+import { formatDateTimeShort } from "@/lib/date";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 
 const TECNICOS = ["Oscar", "Freddy", "Carlos"];
 
@@ -37,6 +41,7 @@ export default function ArchivarBovedaPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ count: number } | null>(null);
+  const [detalleItem, setDetalleItem] = useState<Repair | null>(null);
 
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
@@ -358,8 +363,19 @@ export default function ArchivarBovedaPage() {
                           {r.status}
                         </Badge>
                       </div>
-                      <div className="col-span-6 sm:col-span-3 text-xs text-slate-400 text-right">
+                      <div className="col-span-4 sm:col-span-2 text-xs text-slate-400 text-right">
                         {r.fecha?.split("T")[0] || "—"}
+                      </div>
+                      <div className="col-span-2 sm:col-span-1 flex justify-end">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) => { e.preventDefault(); setDetalleItem(r); }}
+                          className="h-7 w-7"
+                          title="Ver detalle del equipo"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </div>
                   </label>
@@ -405,6 +421,129 @@ export default function ArchivarBovedaPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal Detalle del equipo — muestra toda la info para decidir si buscarlo */}
+      <Dialog open={!!detalleItem} onOpenChange={(o) => !o && setDetalleItem(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {detalleItem?.codigo} — {detalleItem?.cliente}
+            </DialogTitle>
+          </DialogHeader>
+          {detalleItem && (
+            <div className="space-y-3 pt-2 text-sm">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div>
+                  <div className="text-xs text-slate-500">Cliente</div>
+                  <div className="font-medium">{detalleItem.cliente || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Cédula</div>
+                  <div className="font-medium">{detalleItem.cedula || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Teléfono</div>
+                  <div className="font-medium">{detalleItem.telefono || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Técnico</div>
+                  <div className="font-medium">{detalleItem.tecnico || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Marca</div>
+                  <div className="font-medium">{detalleItem.marca || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Modelo</div>
+                  <div className="font-medium">{detalleItem.modelo || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Color</div>
+                  <div className="font-medium">{detalleItem.color || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Serie / IMEI</div>
+                  <div className="font-mono font-medium">{detalleItem.serie || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Tipo de pantalla</div>
+                  <div className="font-medium">{detalleItem.tipoPantalla || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Estado inicial</div>
+                  <div className="font-medium">{detalleItem.estadoInicial || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Status</div>
+                  <Badge className={statusColors[detalleItem.status]} variant="outline">
+                    {detalleItem.status}
+                  </Badge>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Costo</div>
+                  <div className="font-bold text-emerald-700">
+                    {typeof detalleItem.costo === "number"
+                      ? `RD$ ${detalleItem.costo.toLocaleString("es-DO")}`
+                      : "—"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Fecha de entrada</div>
+                  <div className="font-medium">
+                    {detalleItem.fecha ? formatDateTimeShort(detalleItem.fecha) : "—"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500">Tipo de clave</div>
+                  <div className="font-medium">{detalleItem.tipoClave || "—"}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-xs text-slate-500">Clave / patrón</div>
+                  <div className="font-mono bg-slate-50 p-2 rounded mt-1 break-all">
+                    {detalleItem.claveTexto || detalleItem.patronArray?.join(" - ") || "—"}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-xs text-slate-500">Síntoma</div>
+                  <div className="whitespace-pre-wrap">{detalleItem.sintoma || "—"}</div>
+                </div>
+                {detalleItem.trabajoARealizar && (
+                  <div className="col-span-2">
+                    <div className="text-xs text-slate-500">Trabajo a realizar</div>
+                    <div className="whitespace-pre-wrap">{detalleItem.trabajoARealizar}</div>
+                  </div>
+                )}
+                {detalleItem.observacion && (
+                  <div className="col-span-2">
+                    <div className="text-xs text-slate-500">Observación</div>
+                    <div className="whitespace-pre-wrap">{detalleItem.observacion}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            {detalleItem && (
+              <Button
+                variant={seleccionados.has(detalleItem.id) ? "outline" : "default"}
+                onClick={() => toggle(detalleItem.id)}
+                className="gap-2"
+              >
+                {seleccionados.has(detalleItem.id) ? (
+                  <>
+                    <X className="h-4 w-4" /> Quitar de la selección
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" /> Marcar como lo tiene el técnico
+                  </>
+                )}
+              </Button>
+            )}
+            <Button onClick={() => setDetalleItem(null)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
