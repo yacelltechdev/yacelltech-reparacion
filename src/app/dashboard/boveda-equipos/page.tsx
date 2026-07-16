@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Archive, RefreshCcw, Plus, Loader2, CheckCircle2, Clock,
-  Eye, PackageCheck, PackageX, X, FileQuestion, PackageOpen,
+  Eye, PackageCheck, PackageX, X, FileQuestion, PackageOpen, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTimeShort } from "@/lib/date";
@@ -68,6 +68,7 @@ export default function BovedaEquiposPage() {
   const [loading, setLoading] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState<string>("");
   const [filtroTecnico, setFiltroTecnico] = useState<string>("");
+  const [busqueda, setBusqueda] = useState<string>("");
 
   // Modal de resolver
   const [resolverItem, setResolverItem] = useState<BovedaItem | null>(null);
@@ -132,6 +133,26 @@ export default function BovedaEquiposPage() {
       setSubmitting(false);
     }
   };
+
+  // Filtro client-side por texto: busca en código, cliente, marca, modelo,
+  // serie, teléfono, motivo y técnico. No toca la API.
+  const itemsVisibles = useMemo(() => {
+    if (!busqueda.trim()) return items;
+    const q = busqueda.toLowerCase().trim();
+    return items.filter(i => {
+      const r = i.repairs;
+      return (
+        (r.codigo ?? "").toLowerCase().includes(q) ||
+        (r.cliente ?? "").toLowerCase().includes(q) ||
+        (r.marca ?? "").toLowerCase().includes(q) ||
+        (r.modelo ?? "").toLowerCase().includes(q) ||
+        (r.serie ?? "").toLowerCase().includes(q) ||
+        (r.telefono ?? "").toLowerCase().includes(q) ||
+        (i.motivo ?? "").toLowerCase().includes(q) ||
+        (i.tecnico_al_archivar ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [items, busqueda]);
 
   if (!user || user.role !== "admin") return null;
 
@@ -243,6 +264,24 @@ export default function BovedaEquiposPage() {
               ))}
             </div>
           </div>
+          <div className="relative flex-1 min-w-[200px] sm:max-w-xs sm:ml-auto">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <Input
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar código, cliente, IMEI, motivo…"
+              className="pl-8 pr-8"
+            />
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-3 w-3 text-slate-600" />
+              </button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -250,7 +289,11 @@ export default function BovedaEquiposPage() {
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">
-            {items.length === 0 ? "Sin equipos en bóveda" : `${items.length} caso(s)`}
+            {items.length === 0
+              ? "Sin equipos en bóveda"
+              : busqueda.trim()
+                ? `${itemsVisibles.length} de ${items.length} caso(s)`
+                : `${items.length} caso(s)`}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -264,9 +307,13 @@ export default function BovedaEquiposPage() {
               No hay equipos archivados. Cuando hagas un inventario físico y alguno
               no aparezca, entras a "Archivar nuevo" para meterlo aquí.
             </div>
+          ) : itemsVisibles.length === 0 ? (
+            <div className="py-10 text-center text-slate-400 italic">
+              No hay coincidencias para "<strong>{busqueda}</strong>".
+            </div>
           ) : (
             <div className="divide-y">
-              {items.map(item => (
+              {itemsVisibles.map(item => (
                 <div key={item.id} className="py-3 px-2 grid grid-cols-12 gap-3 items-center hover:bg-slate-50 rounded-lg">
                   <div className="col-span-12 sm:col-span-2">
                     <div className="font-black text-primary text-base">{item.repairs.codigo}</div>
