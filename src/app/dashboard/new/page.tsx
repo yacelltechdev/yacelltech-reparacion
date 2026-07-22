@@ -754,26 +754,13 @@ export default function NewRepairPage() {
             </div>
           </div>
 
-          <DialogFooter className="bg-slate-950 p-4 border-t border-slate-800 sm:justify-between flex-row gap-2">
+          <DialogFooter className="bg-slate-950 p-4 border-t border-slate-800 flex justify-end">
             <Button
-              variant="ghost"
               type="button"
-              className="text-slate-400 hover:text-white text-xs"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-6"
               onClick={() => setShowBlockedModal(false)}
             >
               Entendido
-            </Button>
-            <Button
-              variant="destructive"
-              type="button"
-              className="bg-red-600 hover:bg-red-700 font-bold text-xs"
-              onClick={() => {
-                setFormData(prev => ({ ...prev, cedula: "" }));
-                setClientBlockedData(null);
-                setShowBlockedModal(false);
-              }}
-            >
-              <X className="h-4 w-4 mr-1" /> Limpiar Cédula
             </Button>
           </DialogFooter>
         </DialogContent>
