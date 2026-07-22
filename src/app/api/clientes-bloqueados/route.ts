@@ -36,10 +36,19 @@ export async function GET(req: Request) {
   }
 
   // Lista completa de clientes bloqueados
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('clientes_bloqueados')
     .select('*')
-    .order('creado_en', { ascending: false });
+    .order('id', { ascending: false });
+
+  if (error) {
+    // Fallback: consultar sin order si por alguna razón falla el order
+    const fallback = await supabase.from('clientes_bloqueados').select('*');
+    if (!fallback.error) {
+      data = fallback.data;
+      error = null;
+    }
+  }
 
   if (error) {
     console.error('Error al obtener lista de bloqueados:', error);
@@ -60,7 +69,8 @@ export async function POST(req: Request) {
 
     const clean = normalizeCedula(cedula);
 
-    const { data, error } = await supabase
+    // Intentar inserción completa
+    let { data, error } = await supabase
       .from('clientes_bloqueados')
       .insert({
         cedula: clean,
@@ -71,6 +81,22 @@ export async function POST(req: Request) {
       })
       .select('*')
       .single();
+
+    // Fallback si alguna columna opcional no existe en la tabla de Supabase
+    if (error && error.code !== '23505') {
+      const fallbackRes = await supabase
+        .from('clientes_bloqueados')
+        .insert({
+          cedula: clean,
+          nombre: nombre?.trim() || null,
+          motivo: motivo?.trim() || null,
+        })
+        .select('*')
+        .single();
+
+      data = fallbackRes.data;
+      error = fallbackRes.error;
+    }
 
     if (error) {
       if (error.code === '23505') {

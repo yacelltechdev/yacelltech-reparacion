@@ -739,9 +739,9 @@ export default function NewRepairPage() {
                 </div>
               </div>
 
-              {clientBlockedData?.client?.creado_en && (
+              {(clientBlockedData?.client?.creado_en || (clientBlockedData?.client as any)?.created_at) && (
                 <p className="text-[10px] text-red-400 text-right">
-                  Registrado el {new Date(clientBlockedData.client.creado_en).toLocaleDateString("es-DO")}
+                  Registrado el {new Date(clientBlockedData!.client!.creado_en || (clientBlockedData!.client as any)!.created_at).toLocaleDateString("es-DO")}
                 </p>
               )}
             </div>

@@ -594,7 +594,7 @@ export default function AdminPage() {
                           </p>
                         )}
                         <p className="text-[10px] text-slate-400">
-                          Bloqueado el {new Date(b.creado_en).toLocaleDateString("es-DO")} {b.creado_por ? `por ${b.creado_por}` : ""}
+                          {b.creado_en || (b as any).created_at ? `Bloqueado el ${new Date(b.creado_en || (b as any).created_at).toLocaleDateString("es-DO")}` : "Bloqueado"} {b.creado_por ? `por ${b.creado_por}` : ""}
                         </p>
                       </div>
                       <Button
