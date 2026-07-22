@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search, Settings2, ShieldAlert, UserX, Ban } from "lucide-react";
+import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search, Settings2, ShieldAlert, UserX, Ban, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 import { Repair } from "@/lib/types";
@@ -65,6 +65,7 @@ export default function AdminPage() {
 
   // Clientes Bloqueados
   const [bloqueados, setBloqueados] = useState<ClienteBloqueado[]>([]);
+  const [bloqueadosError, setBloqueadosError] = useState<string | null>(null);
   const [nuevoBloqueo, setNuevoBloqueo] = useState({ cedula: "", nombre: "", motivo: "" });
   const [agregandoBloqueo, setAgregandoBloqueo] = useState(false);
   const [busquedaBloqueados, setBusquedaBloqueados] = useState("");
@@ -84,9 +85,14 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/clientes-bloqueados");
       const data = await res.json();
-      if (Array.isArray(data)) setBloqueados(data);
-    } catch {
-      // silencioso
+      if (res.ok && Array.isArray(data)) {
+        setBloqueados(data);
+        setBloqueadosError(null);
+      } else if (data?.error) {
+        setBloqueadosError(data.error);
+      }
+    } catch (err: any) {
+      setBloqueadosError(err.message || "Error de conexión");
     }
   };
 
@@ -543,7 +549,20 @@ export default function AdminPage() {
               )}
             </div>
 
-            {bloqueados.length === 0 ? (
+            {bloqueadosError ? (
+              <div className="bg-amber-50 border border-amber-300 text-amber-900 text-xs p-3.5 rounded-md flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Atención: No se pudo consultar la tabla en Supabase</p>
+                  <p className="mt-0.5 text-[11px] opacity-90">
+                    Detalle: <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">{bloqueadosError}</code>
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-amber-800">
+                    💡 Si la tabla aún no se ha creado en Supabase, ejecuta el script SQL en el <strong>SQL Editor</strong> de tu proyecto.
+                  </p>
+                </div>
+              </div>
+            ) : bloqueados.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-4 bg-slate-50 rounded-md border border-dashed">
                 No hay clientes bloqueados en el sistema.
               </p>
