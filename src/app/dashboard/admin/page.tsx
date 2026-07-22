@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search, Settings2 } from "lucide-react";
+import { Trash2, Plus, MessageSquare, FileText, CalendarDays, Search, Settings2, ShieldAlert, UserX, Ban } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 import { Repair } from "@/lib/types";
@@ -25,6 +25,16 @@ type FilaManual = {
   costo: string;
   tecnico: string;
 };
+
+interface ClienteBloqueado {
+  id: number;
+  cedula: string;
+  cedula_formato?: string;
+  nombre?: string;
+  motivo?: string;
+  creado_en: string;
+  creado_por?: string;
+}
 
 const filaVacia = (): FilaManual => ({
   cliente: "", cedula: "", telefono: "", marca: "", modelo: "", trabajo: "", costo: "", tecnico: "Oscar",
@@ -53,6 +63,12 @@ export default function AdminPage() {
   const [diagnosticoEnabled, setDiagnosticoEnabled] = useState(false);
   const [togglingDiagnostico, setTogglingDiagnostico] = useState(false);
 
+  // Clientes Bloqueados
+  const [bloqueados, setBloqueados] = useState<ClienteBloqueado[]>([]);
+  const [nuevoBloqueo, setNuevoBloqueo] = useState({ cedula: "", nombre: "", motivo: "" });
+  const [agregandoBloqueo, setAgregandoBloqueo] = useState(false);
+  const [busquedaBloqueados, setBusquedaBloqueados] = useState("");
+
   useEffect(() => {
     if (user && user.role !== "admin") router.replace("/dashboard");
   }, [user, router]);
@@ -63,6 +79,69 @@ export default function AdminPage() {
       .then(d => setDiagnosticoEnabled(d.value === "true"))
       .catch(() => {});
   }, []);
+
+  const loadBloqueados = async () => {
+    try {
+      const res = await fetch("/api/clientes-bloqueados");
+      const data = await res.json();
+      if (Array.isArray(data)) setBloqueados(data);
+    } catch {
+      // silencioso
+    }
+  };
+
+  const agregarBloqueo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoBloqueo.cedula.trim()) {
+      toast.error("La cédula es obligatoria para bloquear");
+      return;
+    }
+    setAgregandoBloqueo(true);
+    try {
+      const res = await fetch("/api/clientes-bloqueados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cedula: nuevoBloqueo.cedula.trim(),
+          nombre: nuevoBloqueo.nombre.trim(),
+          motivo: nuevoBloqueo.motivo.trim(),
+          creado_por: user?.username || "admin",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Cliente agregado a la lista de bloqueados");
+        setNuevoBloqueo({ cedula: "", nombre: "", motivo: "" });
+        loadBloqueados();
+      } else {
+        toast.error(data.error || "Error al bloquear cliente");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setAgregandoBloqueo(false);
+    }
+  };
+
+  const desbloquearCliente = async (id: number, cedula: string) => {
+    if (!confirm(`¿Estás seguro de desbloquear la cédula ${cedula}?`)) return;
+    try {
+      const res = await fetch("/api/clientes-bloqueados", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        toast.success("Cliente desbloqueado correctamente");
+        loadBloqueados();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Error al desbloquear");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    }
+  };
 
   const toggleDiagnostico = async (val: boolean) => {
     setTogglingDiagnostico(true);
@@ -394,6 +473,124 @@ export default function AdminPage() {
               </div>
             );
           })()}
+        </CardContent>
+      </Card>
+
+      {/* Clientes Bloqueados (Lista Negra) */}
+      <Card className="border-none shadow-sm border-l-4 border-l-red-500">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600 text-md">
+            <ShieldAlert className="h-5 w-5 text-red-600" /> Clientes Bloqueados (Lista Negra)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-slate-500">
+            Los clientes o cédulas registradas aquí serán automáticamente bloqueados en Recepción y el sistema no permitirá crear reparaciones a su nombre.
+          </p>
+
+          {/* Formulario de bloqueo */}
+          <form onSubmit={agregarBloqueo} className="grid gap-3 sm:grid-cols-3 bg-slate-50 p-3 rounded-lg border">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Cédula *</label>
+              <Input
+                placeholder="000-0000000-0"
+                value={nuevoBloqueo.cedula}
+                onChange={e => setNuevoBloqueo({ ...nuevoBloqueo, cedula: e.target.value })}
+                className="bg-white text-xs"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Nombre (Opcional)</label>
+              <Input
+                placeholder="Nombre del cliente"
+                value={nuevoBloqueo.nombre}
+                onChange={e => setNuevoBloqueo({ ...nuevoBloqueo, nombre: e.target.value })}
+                className="bg-white text-xs"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Motivo de bloqueo</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Ej: Cliente conflictivo / no pagó"
+                  value={nuevoBloqueo.motivo}
+                  onChange={e => setNuevoBloqueo({ ...nuevoBloqueo, motivo: e.target.value })}
+                  className="bg-white text-xs flex-1"
+                />
+                <Button type="submit" variant="destructive" size="sm" disabled={agregandoBloqueo || !nuevoBloqueo.cedula.trim()}>
+                  <Ban className="h-4 w-4 mr-1" /> Bloquear
+                </Button>
+              </div>
+            </div>
+          </form>
+
+          {/* Lista de bloqueados */}
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Clientes bloqueados ({bloqueados.length})
+              </span>
+              {bloqueados.length > 0 && (
+                <div className="relative w-48">
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    placeholder="Filtrar por cédula/nombre..."
+                    value={busquedaBloqueados}
+                    onChange={e => setBusquedaBloqueados(e.target.value)}
+                    className="pl-8 text-xs h-8"
+                  />
+                </div>
+              )}
+            </div>
+
+            {bloqueados.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-4 bg-slate-50 rounded-md border border-dashed">
+                No hay clientes bloqueados en el sistema.
+              </p>
+            ) : (
+              <div className="divide-y rounded-lg border bg-white overflow-hidden">
+                {bloqueados
+                  .filter(b => {
+                    if (!busquedaBloqueados.trim()) return true;
+                    const q = busquedaBloqueados.toLowerCase();
+                    return (
+                      b.cedula.toLowerCase().includes(q) ||
+                      (b.cedula_formato && b.cedula_formato.toLowerCase().includes(q)) ||
+                      (b.nombre && b.nombre.toLowerCase().includes(q)) ||
+                      (b.motivo && b.motivo.toLowerCase().includes(q))
+                    );
+                  })
+                  .map(b => (
+                    <div key={b.id} className="flex items-center justify-between p-3 hover:bg-red-50/40 transition-colors">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                            {b.cedula_formato || b.cedula}
+                          </span>
+                          {b.nombre && <span className="text-xs font-semibold text-slate-800">{b.nombre}</span>}
+                        </div>
+                        {b.motivo && (
+                          <p className="text-xs text-red-600 font-medium">
+                            <span className="text-slate-400 font-normal">Motivo:</span> {b.motivo}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-400">
+                          Bloqueado el {new Date(b.creado_en).toLocaleDateString("es-DO")} {b.creado_por ? `por ${b.creado_por}` : ""}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs text-slate-600 hover:text-green-700 hover:bg-green-50 border-slate-200"
+                        onClick={() => desbloquearCliente(b.id, b.cedula_formato || b.cedula)}
+                      >
+                        Desbloquear
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

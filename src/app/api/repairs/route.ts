@@ -74,6 +74,24 @@ export async function POST(req: Request) {
   try {
     const r = await req.json();
 
+    if (r.cedula) {
+      const cleanCedula = r.cedula.replace(/\D/g, '') || r.cedula.trim().toLowerCase();
+      if (cleanCedula) {
+        const { data: bloqueado } = await supabase
+          .from('clientes_bloqueados')
+          .select('motivo')
+          .eq('cedula', cleanCedula)
+          .maybeSingle();
+
+        if (bloqueado) {
+          return NextResponse.json(
+            { error: `El cliente con cédula "${r.cedula}" está bloqueado del sistema.` },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     // Generar código secuencial REP-00001, REP-00002, ...
     const { data: last } = await supabase
       .from('repairs')

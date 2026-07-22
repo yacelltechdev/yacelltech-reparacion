@@ -21,12 +21,19 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, User, ClipboardList, Check, AlertCircle, Trash2, Plus } from "lucide-react";
+import { Smartphone, User, ClipboardList, Check, AlertCircle, Trash2, Plus, ShieldAlert, Ban, AlertOctagon, X } from "lucide-react";
 import { toast } from "sonner";
 import { Repair } from "@/lib/types";
 import PrintTicket from "@/components/PrintTicket";
 import PatternLock from "@/components/PatternLock";
 import { nowRD } from "@/lib/date";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function NewRepairPage() {
   const router = useRouter();
@@ -39,6 +46,19 @@ export default function NewRepairPage() {
     models: [],
     colores: []
   });
+
+  // Verificación de cliente bloqueado
+  const [clientBlockedData, setClientBlockedData] = useState<{
+    blocked: boolean;
+    client?: {
+      cedula: string;
+      cedula_formato?: string;
+      nombre?: string;
+      motivo?: string;
+      creado_en?: string;
+    };
+  } | null>(null);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Repair>>({
     cliente: "",
@@ -93,9 +113,42 @@ export default function NewRepairPage() {
     });
   }, []);
 
+  // Verificación en vivo de cédula bloqueada
+  useEffect(() => {
+    const rawCedula = formData.cedula?.trim();
+    if (!rawCedula || rawCedula.length < 3) {
+      setClientBlockedData(null);
+      setShowBlockedModal(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      fetch(`/api/clientes-bloqueados?check=${encodeURIComponent(rawCedula)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data?.blocked) {
+            setClientBlockedData(data);
+            setShowBlockedModal(true);
+          } else {
+            setClientBlockedData(null);
+            setShowBlockedModal(false);
+          }
+        })
+        .catch(() => {});
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [formData.cedula]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    if (clientBlockedData?.blocked) {
+      setShowBlockedModal(true);
+      toast.error("No se puede registrar una orden para un cliente bloqueado.");
+      return;
+    }
 
     if ((formData.tipoPantalla as any) === "") {
       toast.error("Selecciona el tipo de pantalla: InCell u OLED.");
@@ -195,9 +248,30 @@ export default function NewRepairPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Banner de Cliente Bloqueado */}
+        {clientBlockedData?.blocked && (
+          <div className="bg-red-600 text-white p-4 rounded-xl shadow-lg border-2 border-red-700 animate-pulse flex items-start gap-3">
+            <AlertOctagon className="h-6 w-6 text-white shrink-0 mt-0.5" />
+            <div className="flex-1 text-sm">
+              <div className="font-bold text-base uppercase tracking-wider">⛔ ¡CLIENTE BLOQUEADO EN EL SISTEMA!</div>
+              <p className="mt-1 opacity-90">
+                La cédula <strong>{clientBlockedData.client?.cedula_formato || clientBlockedData.client?.cedula}</strong> se encuentra registrada en la Lista Negra. No se pueden procesar reparaciones para este cliente.
+              </p>
+              {clientBlockedData.client?.motivo && (
+                <div className="mt-2 bg-red-700/60 p-2 rounded text-xs font-semibold">
+                  Motivo de bloqueo: {clientBlockedData.client.motivo}
+                </div>
+              )}
+            </div>
+            <Button type="button" variant="secondary" size="sm" className="bg-white text-red-700 hover:bg-slate-100 shrink-0 font-bold" onClick={() => setShowBlockedModal(true)}>
+              Ver Detalle
+            </Button>
+          </div>
+        )}
+
         <div className="grid gap-6 md:grid-cols-2">
           {/* Columna Cliente */}
-          <Card className="border-none shadow-sm">
+          <Card className={`border-none shadow-sm ${clientBlockedData?.blocked ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary text-md">
                 <User className="h-4 w-4" /> Datos del Cliente
@@ -216,12 +290,20 @@ export default function NewRepairPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cedula">Cédula</Label>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="cedula">Cédula</Label>
+                    {clientBlockedData?.blocked && (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <Ban className="h-3 w-3" /> BLOQUEADO
+                      </span>
+                    )}
+                  </div>
                   <Input
                     id="cedula"
                     placeholder="001-xxxxxxx-x"
                     value={formData.cedula}
                     onChange={e => setFormData({...formData, cedula: e.target.value})}
+                    className={clientBlockedData?.blocked ? "border-red-500 bg-red-50 text-red-900 font-bold" : ""}
                   />
                 </div>
                 <div className="space-y-2">
@@ -600,11 +682,102 @@ export default function NewRepairPage() {
         </Card>
 
         <div className="flex justify-end gap-4 pt-4">
-          <Button type="submit" size="lg" disabled={isSubmitting} className="w-full md:w-auto px-12 font-bold h-12 shadow-lg shadow-primary/20">
-            <Check className="mr-2 h-5 w-5" /> {isSubmitting ? "Guardando..." : "Crear Orden de Servicio"}
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isSubmitting || !!clientBlockedData?.blocked}
+            className={`w-full md:w-auto px-12 font-bold h-12 shadow-lg ${
+              clientBlockedData?.blocked
+                ? "bg-red-600 hover:bg-red-700 cursor-not-allowed opacity-80"
+                : "shadow-primary/20"
+            }`}
+          >
+            <Check className="mr-2 h-5 w-5" /> {isSubmitting ? "Guardando..." : clientBlockedData?.blocked ? "Cliente Bloqueado" : "Crear Orden de Servicio"}
           </Button>
         </div>
       </form>
+
+      {/* Dialog Alerta de Cliente Bloqueado */}
+      <Dialog open={showBlockedModal} onOpenChange={setShowBlockedModal}>
+        <DialogContent className="max-w-lg border-2 border-red-600 bg-slate-900 text-white p-0 overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-red-600 to-red-800 p-6 flex items-center gap-4 border-b border-red-500">
+            <div className="bg-white/20 p-3 rounded-full shrink-0">
+              <Ban className="h-10 w-10 text-white animate-pulse" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-extrabold text-white tracking-wide uppercase">
+                CLIENTE BLOQUEADO DEL SISTEMA
+              </DialogTitle>
+              <p className="text-red-100 text-xs mt-1">
+                Restricción operativa activa — Yacelltech
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4 bg-slate-900">
+            <div className="bg-red-950/80 border border-red-800 rounded-lg p-4 space-y-3">
+              <div className="flex justify-between items-center border-b border-red-900/60 pb-2">
+                <span className="text-xs text-red-300 font-medium">Cédula ingresada:</span>
+                <span className="font-mono font-bold text-red-200 text-base">
+                  {clientBlockedData?.client?.cedula_formato || clientBlockedData?.client?.cedula}
+                </span>
+              </div>
+
+              {clientBlockedData?.client?.nombre && (
+                <div className="flex justify-between items-center border-b border-red-900/60 pb-2">
+                  <span className="text-xs text-red-300 font-medium">Nombre registrado:</span>
+                  <span className="font-bold text-white text-sm">
+                    {clientBlockedData.client.nombre}
+                  </span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <span className="text-xs text-red-300 font-medium block">Motivo del bloqueo:</span>
+                <div className="bg-red-900/40 text-red-100 text-xs p-2.5 rounded font-mono border border-red-800/50">
+                  {clientBlockedData?.client?.motivo || "No especificado por administración."}
+                </div>
+              </div>
+
+              {clientBlockedData?.client?.creado_en && (
+                <p className="text-[10px] text-red-400 text-right">
+                  Registrado el {new Date(clientBlockedData.client.creado_en).toLocaleDateString("es-DO")}
+                </p>
+              )}
+            </div>
+
+            <div className="bg-slate-800/80 border border-slate-700 p-3.5 rounded-lg flex items-start gap-2.5 text-xs text-slate-300">
+              <ShieldAlert className="h-5 w-5 text-yellow-400 shrink-0 mt-0.5" />
+              <span>
+                Por política de la empresa, no es posible registrar ni recibir órdenes de reparación para esta persona. Comuníquese con la administración para cualquier aclaración.
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="bg-slate-950 p-4 border-t border-slate-800 sm:justify-between flex-row gap-2">
+            <Button
+              variant="ghost"
+              type="button"
+              className="text-slate-400 hover:text-white text-xs"
+              onClick={() => setShowBlockedModal(false)}
+            >
+              Entendido
+            </Button>
+            <Button
+              variant="destructive"
+              type="button"
+              className="bg-red-600 hover:bg-red-700 font-bold text-xs"
+              onClick={() => {
+                setFormData(prev => ({ ...prev, cedula: "" }));
+                setClientBlockedData(null);
+                setShowBlockedModal(false);
+              }}
+            >
+              <X className="h-4 w-4 mr-1" /> Limpiar Cédula
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {savedRepair && (
         <div className="print-only">
