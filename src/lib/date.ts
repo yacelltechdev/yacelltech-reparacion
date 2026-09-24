@@ -1,5 +1,13 @@
 const TZ = "America/Santo_Domingo";
 
+// Excepción operativa de una sola vez: el cierre del jueves 24 de septiembre
+// se realizará junto con el del viernes 25. Las fechas de despacho originales
+// se conservan; únicamente cambia el rango que usa el cuadre.
+const ONE_TIME_CIERRE_CARRYOVER = {
+  from: "2026-09-24",
+  to: "2026-09-25",
+} as const;
+
 /** "2024-01-15T14:30:00" — hora local RD para guardar en DB */
 export function nowRD(): string {
   return new Date().toLocaleString("sv-SE", { timeZone: TZ }).replace(" ", "T");
@@ -158,4 +166,38 @@ export function isSundayRD(iso: string): boolean {
   // Crear fecha a mediodía UTC para evitar boundary issues con DST
   const d = new Date(Date.UTC(y, m - 1, day, 12, 0, 0));
   return d.getUTCDay() === 0;
+}
+
+/** Rango de fechas de despacho que debe incluir un cierre. */
+export function cierreDateRangeRD(fecha: string): { desde: string; hasta: string } {
+  if (fecha === ONE_TIME_CIERRE_CARRYOVER.to) {
+    return { desde: ONE_TIME_CIERRE_CARRYOVER.from, hasta: fecha };
+  }
+
+  const [y, m, day] = fecha.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1, day, 12, 0, 0));
+  if (d.getUTCDay() === 1) {
+    d.setUTCDate(d.getUTCDate() - 1);
+    const desde = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    return { desde, hasta: fecha };
+  }
+
+  return { desde: fecha, hasta: fecha };
+}
+
+/** Motivo por el que una fecha no puede cerrarse; null significa que sí puede. */
+export function cierreBlockReasonRD(fecha: string, currentDate = todayRD()): string | null {
+  if (isSundayRD(fecha)) {
+    return "Los domingos no se cierra caja. Las facturas se incluyen en el cuadre del lunes.";
+  }
+
+  if (fecha === ONE_TIME_CIERRE_CARRYOVER.from) {
+    return "Excepción de hoy: este cuadre se cerrará junto con el de mañana viernes 25.";
+  }
+
+  if (fecha === ONE_TIME_CIERRE_CARRYOVER.to && currentDate < ONE_TIME_CIERRE_CARRYOVER.to) {
+    return "El cuadre combinado del jueves 24 y viernes 25 se podrá cerrar mañana.";
+  }
+
+  return null;
 }

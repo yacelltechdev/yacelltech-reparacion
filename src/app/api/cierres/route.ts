@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
-import { isSundayRD } from '@/lib/date';
-
-/** "YYYY-MM-DD" − 1 día en UTC (regla "cuadre dominical" — lunes agrupa dom+lun). */
-function previousDayRD(fecha: string): string {
-  const [y, m, d] = fecha.split('-').map(Number);
-  const t = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  t.setUTCDate(t.getUTCDate() - 1);
-  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`;
-}
+import { cierreBlockReasonRD, cierreDateRangeRD } from '@/lib/date';
 
 export async function GET() {
   try {
@@ -34,9 +26,10 @@ export async function POST(req: Request) {
     if (!fecha || typeof fecha !== 'string') {
       return NextResponse.json({ error: 'Fecha requerida' }, { status: 400 });
     }
-    if (isSundayRD(fecha)) {
+    const cierreBlockReason = cierreBlockReasonRD(fecha);
+    if (cierreBlockReason) {
       return NextResponse.json(
-        { error: 'Los domingos no se cierra caja. Las facturas se incluyen en el cuadre del lunes.' },
+        { error: cierreBlockReason },
         { status: 400 }
       );
     }
@@ -59,24 +52,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Regla "cuadre dominical": si la fecha objetivo es lunes, incluir también
-    // las facturas del domingo anterior (no se cerraron solas).
-    const [fy, fm, fd] = fecha.split('-').map(Number);
-    const isMonday = new Date(Date.UTC(fy, fm - 1, fd, 12, 0, 0)).getUTCDay() === 1;
-    const previousDate = isMonday ? previousDayRD(fecha) : null;
+    // El rango centraliza tanto la regla dominical como cualquier excepción
+    // operativa fechada, para que UI y servidor cierren exactamente lo mismo.
+    const { desde, hasta } = cierreDateRangeRD(fecha);
 
     let repairsQuery = supabase
       .from('repairs')
       .select('*')
       .is('cierre_id', null)
       .in('status', ['Despachado bueno', 'Despachado malo']);
-    if (previousDate) {
+    if (desde !== hasta) {
       // .like OR .like — Supabase lo respeta como AND con OR interno
       repairsQuery = repairsQuery.or(
-        `fecha_despacho.like.${fecha}%,fecha_despacho.like.${previousDate}%`
+        `fecha_despacho.like.${hasta}%,fecha_despacho.like.${desde}%`
       );
     } else {
-      repairsQuery = repairsQuery.like('fecha_despacho', `${fecha}%`);
+      repairsQuery = repairsQuery.like('fecha_despacho', `${hasta}%`);
     }
     const { data: repairsData, error: repairsError } = await repairsQuery;
 
