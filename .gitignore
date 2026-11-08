@@ -38,4 +38,8 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+# IDE & tools
+.vscode/
+.claude/
+
 next-env.d.ts
