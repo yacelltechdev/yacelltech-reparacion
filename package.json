@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:mcp": "node node_modules/jiti/lib/jiti-cli.mjs tests/mcp.test.ts"
+    "test:mcp": "node node_modules/jiti/lib/jiti-cli.mjs tests/mcp.test.ts",
+    "test:oauth": "node node_modules/jiti/lib/jiti-cli.mjs tests/oauth.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

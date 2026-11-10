@@ -1,28 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import { authorizeMcpRequest } from '@/lib/mcp/oauth';
 import { createYacelltechMcpServer } from '@/lib/mcp/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-function validateAuth(req: Request): boolean {
-  const secret = process.env.MCP_API_KEY || process.env.YACELL_MCP_SECRET;
-  // Si no se ha configurado clave aún (primer arranque), permitir acceso para configuración inicial con advertencia
-  if (!secret) return true;
-
-  const authHeader = req.headers.get('authorization') || '';
-  const xApiKey = req.headers.get('x-api-key') || '';
-
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
-  return token === secret || xApiKey.trim() === secret;
-}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers':
     'Content-Type, Authorization, x-api-key, mcp-session-id, last-event-id, mcp-protocol-version',
-  'Access-Control-Expose-Headers': 'mcp-session-id, mcp-protocol-version',
+  'Access-Control-Expose-Headers': 'mcp-session-id, mcp-protocol-version, WWW-Authenticate',
 };
 
 export async function OPTIONS() {
@@ -33,7 +22,8 @@ export async function OPTIONS() {
 }
 
 async function handleMcpRequest(req: Request): Promise<Response> {
-  if (!validateAuth(req)) {
+  const auth = authorizeMcpRequest(req);
+  if (!auth.ok) {
     return NextResponse.json(
       {
         jsonrpc: '2.0',
@@ -43,7 +33,7 @@ async function handleMcpRequest(req: Request): Promise<Response> {
             'No autorizado. Debe incluir el encabezado "Authorization: Bearer <MCP_API_KEY>" o "x-api-key".',
         },
       },
-      { status: 401, headers: CORS_HEADERS }
+      { status: 401, headers: { ...CORS_HEADERS, 'WWW-Authenticate': auth.challenge } }
     );
   }
 
