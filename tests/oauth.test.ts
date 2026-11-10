@@ -19,7 +19,9 @@ import {
   handleRegister,
   handleToken,
   isAllowedRedirectUri,
+  logCompleted,
   pkceS256,
+  requestPath,
 } from '../src/lib/mcp/oauth';
 
 const BASE = 'http://127.0.0.1:3210';
@@ -226,6 +228,50 @@ async function run() {
   assert.equal(typeof tokens.access_token, 'string');
   assert.equal(typeof tokens.refresh_token, 'string');
 
+  const secondVerifier = randomBytes(32).toString('base64url');
+  const secondApproved = await handleAuthorize(
+    formRequest(
+      '/oauth/authorize',
+      new URLSearchParams({
+        ...fields,
+        code_challenge: pkceS256(secondVerifier),
+        password: process.env.MCP_OAUTH_PASSWORD || '',
+      })
+    )
+  );
+  assert.equal(secondApproved.status, 303);
+  const secondCode = new URL(secondApproved.headers.get('location') || '').searchParams.get('code') || '';
+  const mismatched = await handleToken(
+    formRequest(
+      '/oauth/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: secondCode,
+        redirect_uri: REDIRECT,
+        client_id: client.client_id,
+        code_verifier: secondVerifier,
+        resource: 'https://evil.example/api/mcp',
+      })
+    )
+  );
+  assert.equal(mismatched.status, 400);
+  assert.equal((await mismatched.json()).error, 'invalid_target');
+  const omittedResource = await handleToken(
+    formRequest(
+      '/oauth/token',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: secondCode,
+        redirect_uri: REDIRECT,
+        client_id: client.client_id,
+        code_verifier: secondVerifier,
+      })
+    )
+  );
+  const omittedText = await omittedResource.text();
+  assert.equal(omittedResource.status, 200, omittedText);
+  assert.equal(JSON.parse(omittedText).token_type, 'Bearer');
+
   const replay = await handleToken(
     formRequest(
       '/oauth/token',
@@ -284,6 +330,37 @@ async function run() {
   const open = await mcpCall();
   process.env.MCP_API_KEY = previous;
   assert.equal(open.response.status, 200, open.text);
+
+  assert.equal(requestPath(new Request(`${BASE}/api/mcp?access_token=SECRETO`)), '/api/mcp');
+  assert.equal(
+    requestPath(new Request(`${BASE}/api/oauth/metadata/protected-resource/api/mcp`)),
+    '/.well-known/oauth-protected-resource/api/mcp'
+  );
+  assert.equal(
+    requestPath(new Request(`${BASE}/api/oauth/metadata/authorization-server`)),
+    '/.well-known/oauth-authorization-server'
+  );
+  const secret = 'TOKEN-SECRETO-NO-LOGUEAR';
+  const lines: string[] = [];
+  const original = console.info;
+  console.info = (message?: unknown) => {
+    lines.push(String(message));
+  };
+  logCompleted(
+    new Request(`${BASE}/oauth/token?code=${secret}`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${secret}`, 'user-agent': 'ChatGPT-Test' },
+    }),
+    200,
+    Date.now()
+  );
+  console.info = original;
+  const line = lines.at(-1) || '';
+  assert.match(line, /"path":"\/oauth\/token"/);
+  assert.match(line, /"status":200/);
+  assert.match(line, /"durationMs":/);
+  assert.match(line, /ChatGPT-Test/);
+  assert.equal(line.includes(secret), false);
 
   console.log('OAuth del MCP verificado.');
 }

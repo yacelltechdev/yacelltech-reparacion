@@ -148,4 +148,71 @@ const legacy = await mcp('/api/mcp', `Bearer ${process.env.MCP_API_KEY || 'stati
 assert(legacy.response.status === 200, legacy.text);
 assert(legacy.text.includes('buscar_reparacion'), legacy.text);
 
+async function quick(method, authorization) {
+  const started = Date.now();
+  const response = await fetch(`${base}/api/mcp`, {
+    method,
+    headers: {
+      accept: 'text/event-stream',
+      ...(authorization ? { authorization } : {}),
+    },
+    signal: AbortSignal.timeout(2000),
+  });
+  const text = await response.text();
+  return { response, text, ms: Date.now() - started };
+}
+
+const openGet = await quick('GET');
+assert(openGet.response.status === 401, `GET sin auth ${openGet.response.status} ${openGet.text}`);
+assert((openGet.response.headers.get('www-authenticate') || '').includes('resource_metadata='), 'GET sin WWW-Authenticate');
+assert(openGet.ms < 1500, `GET sin auth tardó ${openGet.ms}ms`);
+
+const staticKey = process.env.MCP_API_KEY || 'static-test-key';
+for (const method of ['GET', 'DELETE']) {
+  const hung = await quick(method, `Bearer ${staticKey}`);
+  assert(hung.response.status === 405, `${method} autenticado ${hung.response.status} ${hung.text}`);
+  assert(hung.ms < 1500, `${method} tardó ${hung.ms}ms`);
+  const allow = hung.response.headers.get('allow') || '';
+  assert(allow.includes('POST') && allow.includes('OPTIONS'), `${method} Allow: ${allow}`);
+  assert((hung.response.headers.get('access-control-allow-origin') || '') === '*', `${method} sin CORS`);
+  assert(!hung.text.includes('keepalive'), `${method} abrió el stream: ${hung.text}`);
+}
+
+const oauthGet = await quick('GET', `Bearer ${tokens.access_token}`);
+assert(oauthGet.response.status === 405, `GET oauth ${oauthGet.response.status} ${oauthGet.text}`);
+assert(oauthGet.ms < 1500, `GET oauth tardó ${oauthGet.ms}ms`);
+
+const secondVerifier = randomBytes(32).toString('base64url');
+const secondApproved = await fetch(asMeta.authorization_endpoint, {
+  method: 'POST',
+  redirect: 'manual',
+  headers: { 'content-type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    response_type: 'code',
+    client_id: client.client_id,
+    redirect_uri: redirect,
+    code_challenge: pkce(secondVerifier),
+    code_challenge_method: 'S256',
+    state: 'sin-resource',
+    resource: prm.resource,
+    password: process.env.MCP_OAUTH_PASSWORD || 'clave-dueno-test',
+    decision: 'approve',
+  }),
+});
+const secondCode = new URL(secondApproved.headers.get('location')).searchParams.get('code');
+const withoutResource = await fetch(asMeta.token_endpoint, {
+  method: 'POST',
+  headers: { 'content-type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: secondCode,
+    redirect_uri: redirect,
+    client_id: client.client_id,
+    code_verifier: secondVerifier,
+  }),
+});
+const withoutText = await withoutResource.text();
+assert(withoutResource.status === 200, withoutText);
+assert(JSON.parse(withoutText).token_type === 'Bearer', withoutText);
+
 console.log('Flujo OAuth HTTP verificado.');

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { authorizeMcpRequest } from '@/lib/mcp/oauth';
+import { authorizeMcpRequest, logged } from '@/lib/mcp/oauth';
 import { createYacelltechMcpServer } from '@/lib/mcp/server';
 
 export const dynamic = 'force-dynamic';
@@ -14,28 +14,34 @@ const CORS_HEADERS = {
   'Access-Control-Expose-Headers': 'mcp-session-id, mcp-protocol-version, WWW-Authenticate',
 };
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: CORS_HEADERS,
-  });
+function unauthorized(challenge: string): Response {
+  return NextResponse.json(
+    {
+      jsonrpc: '2.0',
+      error: {
+        code: -32000,
+        message:
+          'No autorizado. Debe incluir el encabezado "Authorization: Bearer <MCP_API_KEY>" o "x-api-key".',
+      },
+    },
+    { status: 401, headers: { ...CORS_HEADERS, 'WWW-Authenticate': challenge } }
+  );
 }
 
-async function handleMcpRequest(req: Request): Promise<Response> {
+function methodNotAllowed(): Response {
+  return NextResponse.json(
+    {
+      jsonrpc: '2.0',
+      error: { code: -32000, message: 'Method not allowed.' },
+      id: null,
+    },
+    { status: 405, headers: { ...CORS_HEADERS, Allow: 'POST, OPTIONS' } }
+  );
+}
+
+async function handleMcpPost(req: Request): Promise<Response> {
   const auth = authorizeMcpRequest(req);
-  if (!auth.ok) {
-    return NextResponse.json(
-      {
-        jsonrpc: '2.0',
-        error: {
-          code: -32000,
-          message:
-            'No autorizado. Debe incluir el encabezado "Authorization: Bearer <MCP_API_KEY>" o "x-api-key".',
-        },
-      },
-      { status: 401, headers: { ...CORS_HEADERS, 'WWW-Authenticate': auth.challenge } }
-    );
-  }
+  if (!auth.ok) return unauthorized(auth.challenge);
 
   try {
     const server = createYacelltechMcpServer();
@@ -67,14 +73,25 @@ async function handleMcpRequest(req: Request): Promise<Response> {
   }
 }
 
-export async function POST(req: NextRequest) {
-  return handleMcpRequest(req);
+async function rejectStream(req: Request): Promise<Response> {
+  const auth = authorizeMcpRequest(req);
+  if (!auth.ok) return unauthorized(auth.challenge);
+  // Sin sesión, el GET del SDK deja abierto un SSE de keepalive. 405 lo cierra al momento.
+  return methodNotAllowed();
 }
 
-export async function GET(req: NextRequest) {
-  return handleMcpRequest(req);
+export function OPTIONS(req: NextRequest) {
+  return logged(req, () => new Response(null, { status: 204, headers: CORS_HEADERS }));
 }
 
-export async function DELETE(req: NextRequest) {
-  return handleMcpRequest(req);
+export function POST(req: NextRequest) {
+  return logged(req, () => handleMcpPost(req));
+}
+
+export function GET(req: NextRequest) {
+  return logged(req, () => rejectStream(req));
+}
+
+export function DELETE(req: NextRequest) {
+  return logged(req, () => rejectStream(req));
 }

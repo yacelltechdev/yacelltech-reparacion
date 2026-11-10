@@ -1,12 +1,12 @@
-import { handleRegister, oauthOptions } from '@/lib/mcp/oauth';
+import { handleRegister, logged, oauthOptions } from '@/lib/mcp/oauth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export function OPTIONS() {
-  return oauthOptions();
+export function OPTIONS(req: Request) {
+  return logged(req, () => oauthOptions());
 }
 
 export function POST(req: Request) {
-  return handleRegister(req);
+  return logged(req, () => handleRegister(req));
 }
