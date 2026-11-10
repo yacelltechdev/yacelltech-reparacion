@@ -32,12 +32,13 @@ Agrega este bloque a tu archivo de configuración MCP (`claude_desktop_config.js
 }
 ```
 
-### B. Para ChatGPT (Custom GPT / MCP Connector)
-1. En la configuración del conector MCP / Actions:
-   * **Base URL:** `https://<TU-DOMINIO-O-VERCEL>/api/mcp`
-   * **Authentication Type:** Bearer Token
-   * **Token:** Tu valor de `MCP_API_KEY`
-2. El cliente descubrirá automáticamente las 6 herramientas disponibles.
+### B. Para ChatGPT (Apps & Connectors, modo desarrollador)
+ChatGPT solo ofrece OAuth o sin autenticación. El servidor publica OAuth 2.1 con PKCE en la misma URL.
+
+1. En Vercel define `MCP_OAUTH_PASSWORD` (clave que escribe el dueño), `MCP_OAUTH_SIGNING_SECRET` (secreto para firmar tokens, mínimo 16 caracteres) y `MCP_PUBLIC_URL` (por ejemplo `https://yacelltech-reparacion.vercel.app`, sin barra final). Redespliega.
+2. Nuevo conector → URL `https://<TU-DOMINIO>/api/mcp` → autenticación **OAuth**.
+3. En la pantalla de YacellTech escribe `MCP_OAUTH_PASSWORD`.
+4. El Bearer `MCP_API_KEY` sigue válido para Claude, Cursor y scripts. No se pega en ChatGPT.
 
 ---
 
