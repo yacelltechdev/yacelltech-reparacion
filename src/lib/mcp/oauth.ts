@@ -332,6 +332,51 @@ function json(body: unknown, status: number, extra?: Record<string, string>): Re
   return Response.json(body, { status, headers: { ...CORS_HEADERS, ...extra } });
 }
 
+export function requestPath(req: Request): string {
+  let pathname = 'unknown';
+  try {
+    pathname = new URL(req.url).pathname;
+  } catch {
+    return pathname;
+  }
+  if (pathname === '/api/oauth/metadata/authorization-server') {
+    return '/.well-known/oauth-authorization-server';
+  }
+  const prefix = '/api/oauth/metadata/protected-resource';
+  if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+    return `/.well-known/oauth-protected-resource${pathname.slice(prefix.length)}`;
+  }
+  return pathname;
+}
+
+function oneLine(value: string): string {
+  return value.replace(/[\r\n]/g, ' ').slice(0, 300);
+}
+
+export function logCompleted(req: Request, status: number, started: number): void {
+  console.info(
+    JSON.stringify({
+      method: req.method,
+      path: requestPath(req),
+      status,
+      durationMs: Date.now() - started,
+      userAgent: oneLine(req.headers.get('user-agent') || ''),
+    })
+  );
+}
+
+export async function logged(req: Request, run: () => Promise<Response> | Response): Promise<Response> {
+  const started = Date.now();
+  try {
+    const response = await run();
+    logCompleted(req, response.status, started);
+    return response;
+  } catch (error) {
+    logCompleted(req, 500, started);
+    throw error;
+  }
+}
+
 function oauthError(status: number, error: string, description: string): Response {
   return json({ error, error_description: description }, status);
 }
@@ -886,9 +931,6 @@ export async function handleToken(req: Request): Promise<Response> {
     const code = params.get('code') || '';
     const redirectUri = params.get('redirect_uri') || '';
     const verifier = params.get('code_verifier') || '';
-    if (!params.get('resource')) {
-      return oauthError(400, 'invalid_target', 'Falta el parámetro resource.');
-    }
     const payload = verifyJwt(code);
     if (!isCodeToken(payload) || payload.iss !== origin) {
       return oauthError(400, 'invalid_grant', 'El código de autorización no es válido o venció.');
