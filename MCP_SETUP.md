@@ -45,6 +45,9 @@ MCP_OAUTH_SIGNING_SECRET=otro_secreto_largo_y_aleatorio
 # Opcional. Fija el dominio público del emisor OAuth, sin barra final.
 # Úsalo en Vercel para que el issuer no cambie entre despliegues.
 MCP_PUBLIC_URL=https://yacelltech-reparacion.vercel.app
+# Opcional. Hosts https extra para el retorno de OAuth, separados por comas.
+# Admite *.dominio. ChatGPT y Meta (meta.ai, facebook.com, instagram.com, etc.) ya están incluidos.
+# MCP_OAUTH_EXTRA_REDIRECT_HOSTS=*.otro-cliente.com, socio.example.com
 
 # Conexión existente a Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co

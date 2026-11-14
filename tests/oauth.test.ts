@@ -20,6 +20,7 @@ import {
   handleToken,
   isAllowedRedirectUri,
   logCompleted,
+  logged,
   pkceS256,
   requestPath,
 } from '../src/lib/mcp/oauth';
@@ -98,6 +99,23 @@ async function run() {
   assert.equal(isAllowedRedirectUri('https://evil.example/steal'), false);
   assert.equal(isAllowedRedirectUri('https://chatgpt.com.evil.com/steal'), false);
   assert.equal(isAllowedRedirectUri('http://127.0.0.1:3210/callback'), true);
+  assert.equal(isAllowedRedirectUri('https://meta.ai/oauth/callback'), true);
+  assert.equal(isAllowedRedirectUri('https://muse.meta.ai/oauth/callback'), true);
+  assert.equal(isAllowedRedirectUri('https://www.meta.com/callback'), true);
+  assert.equal(isAllowedRedirectUri('https://www.facebook.com/oauth'), true);
+  assert.equal(isAllowedRedirectUri('https://cdn.fbsbx.com/callback'), true);
+  assert.equal(isAllowedRedirectUri('https://fbsbx.com/callback'), false);
+  assert.equal(isAllowedRedirectUri('https://www.instagram.com/oauth'), true);
+  assert.equal(isAllowedRedirectUri('https://api.whatsapp.com/callback'), true);
+  assert.equal(isAllowedRedirectUri('http://meta.ai/oauth/callback'), false);
+  assert.equal(isAllowedRedirectUri('https://meta.ai.evil.com/oauth/callback'), false);
+  assert.equal(isAllowedRedirectUri('https://notmeta.ai/oauth/callback'), false);
+  process.env.MCP_OAUTH_EXTRA_REDIRECT_HOSTS = '*.example.test, socio.dev';
+  assert.equal(isAllowedRedirectUri('https://a.example.test/callback'), true);
+  assert.equal(isAllowedRedirectUri('https://socio.dev/callback'), true);
+  assert.equal(isAllowedRedirectUri('http://socio.dev/callback'), false);
+  assert.equal(isAllowedRedirectUri('https://example.test/callback'), false);
+  delete process.env.MCP_OAUTH_EXTRA_REDIRECT_HOSTS;
   assert.equal(pkceS256('a'.repeat(43)).length > 0, true);
 
   const metadata = await handleProtectedResourceMetadata(new Request(`${BASE}/.well-known/oauth-protected-resource`));
@@ -128,6 +146,15 @@ async function run() {
   assert.equal(extraGrants.status, 201);
   const extraClient = await extraGrants.json();
   assert.deepEqual(extraClient.grant_types, ['authorization_code', 'refresh_token']);
+
+  const meta = await handleRegister(
+    jsonRequest('/oauth/register', {
+      client_name: 'Muse',
+      redirect_uris: ['https://muse.meta.ai/oauth/callback'],
+      token_endpoint_auth_method: 'none',
+    })
+  );
+  assert.equal(meta.status, 201);
 
   const evil = await handleRegister(
     jsonRequest('/oauth/register', {
@@ -361,6 +388,36 @@ async function run() {
   assert.match(line, /"durationMs":/);
   assert.match(line, /ChatGPT-Test/);
   assert.equal(line.includes(secret), false);
+
+  const rejectedClient = 'client-id-completo-no-debe-aparecer-en-el-log';
+  const rejectedUri = 'https://desconocido.example/oauth/callback';
+  const rejectedRequest = new Request(
+    `${BASE}/oauth/authorize?response_type=code&client_id=${rejectedClient}&redirect_uri=${encodeURIComponent(rejectedUri)}&code_challenge=${pkceS256('c'.repeat(43))}&code_challenge_method=S256`
+  );
+  const rejectionLines: string[] = [];
+  console.info = (message?: unknown) => {
+    rejectionLines.push(String(message));
+  };
+  const rejected = await logged(rejectedRequest, () => handleAuthorize(rejectedRequest));
+  const registerRequest = jsonRequest('/oauth/register', {
+    client_name: 'Muse',
+    redirect_uris: [rejectedUri],
+    token_endpoint_auth_method: 'none',
+  });
+  const registerRejected = await logged(registerRequest, () => handleRegister(registerRequest));
+  console.info = original;
+  assert.equal(rejected.status, 400);
+  assert.match(await rejected.text(), /El cliente OAuth no es válido/);
+  const rejection = rejectionLines[0] || '';
+  assert.match(rejection, /cliente OAuth no válido/);
+  assert.match(rejection, /desconocido\.example/);
+  assert.equal(rejection.includes(rejectedClient), false);
+  assert.equal(rejection.includes(secret), false);
+  assert.equal(registerRejected.status, 400);
+  const registerLog = rejectionLines.at(-1) || '';
+  assert.match(registerLog, /redirect_uri no permitida/);
+  assert.match(registerLog, /desconocido\.example/);
+  assert.equal(registerLog.includes(rejectedClient), false);
 
   console.log('OAuth del MCP verificado.');
 }

@@ -155,6 +155,43 @@ export function canonicalResource(value: string): string | null {
   return `${url.protocol}//${url.host}${path}`;
 }
 
+const REDIRECT_HOSTS = [
+  'chatgpt.com',
+  '*.chatgpt.com',
+  'chat.openai.com',
+  'meta.ai',
+  '*.meta.ai',
+  'meta.com',
+  '*.meta.com',
+  'facebook.com',
+  '*.facebook.com',
+  '*.fbsbx.com',
+  'instagram.com',
+  '*.instagram.com',
+  'whatsapp.com',
+  '*.whatsapp.com',
+];
+
+function hostMatchesRule(host: string, rule: string): boolean {
+  if (rule.startsWith('*.')) return host.endsWith(rule.slice(1));
+  return host === rule;
+}
+
+function extraRedirectHosts(): string[] {
+  const raw = process.env.MCP_OAUTH_EXTRA_REDIRECT_HOSTS || '';
+  const rules: string[] = [];
+  for (const part of raw.split(',')) {
+    const rule = part.trim().toLowerCase();
+    if (!rule) continue;
+    const host = rule.startsWith('*.') ? rule.slice(2) : rule;
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(host)) {
+      continue;
+    }
+    rules.push(rule);
+  }
+  return rules;
+}
+
 export function isAllowedRedirectUri(uri: string): boolean {
   let url: URL;
   try {
@@ -167,7 +204,7 @@ export function isAllowedRedirectUri(uri: string): boolean {
   const loopback = host === 'localhost' || host === '127.0.0.1' || host === '::1';
   if (loopback && (url.protocol === 'http:' || url.protocol === 'https:')) return true;
   if (url.protocol !== 'https:') return false;
-  return host === 'chatgpt.com' || host.endsWith('.chatgpt.com') || host === 'chat.openai.com';
+  return [...REDIRECT_HOSTS, ...extraRedirectHosts()].some((rule) => hostMatchesRule(host, rule));
 }
 
 export function pkceS256(verifier: string): string {
@@ -353,7 +390,31 @@ function oneLine(value: string): string {
   return value.replace(/[\r\n]/g, ' ').slice(0, 300);
 }
 
+const rejectionNotes = new WeakMap<Request, { reason: string; redirectUris: string[] }>();
+
+function redirectForLog(value: string): string {
+  try {
+    const url = new URL(value);
+    url.username = '';
+    url.password = '';
+    url.hash = '';
+    return oneLine(url.toString());
+  } catch {
+    return oneLine(value);
+  }
+}
+
+function noteRejection(req: Request, reason: string, redirectUris: unknown): void {
+  const list = Array.isArray(redirectUris) ? redirectUris : [redirectUris];
+  const safe = list
+    .filter((uri): uri is string => typeof uri === 'string' && uri.length > 0)
+    .slice(0, 5)
+    .map(redirectForLog);
+  rejectionNotes.set(req, { reason: oneLine(reason), redirectUris: safe });
+}
+
 export function logCompleted(req: Request, status: number, started: number): void {
+  const note = rejectionNotes.get(req);
   console.info(
     JSON.stringify({
       method: req.method,
@@ -361,6 +422,7 @@ export function logCompleted(req: Request, status: number, started: number): voi
       status,
       durationMs: Date.now() - started,
       userAgent: oneLine(req.headers.get('user-agent') || ''),
+      ...(note ? { reason: note.reason, redirectUris: note.redirectUris } : {}),
     })
   );
 }
@@ -540,7 +602,7 @@ function htmlPage(body: string, status = 200): Response {
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff',
       'Content-Security-Policy':
-        "frame-ancestors 'self' https://chatgpt.com https://*.chatgpt.com https://chat.openai.com",
+        "frame-ancestors 'self' https://chatgpt.com https://*.chatgpt.com https://chat.openai.com https://meta.ai https://*.meta.ai https://meta.com https://*.meta.com https://facebook.com https://*.facebook.com https://*.fbsbx.com https://instagram.com https://*.instagram.com https://whatsapp.com https://*.whatsapp.com",
     },
   });
 }
@@ -611,6 +673,7 @@ function readAuthorizeParams(sp: URLSearchParams): AuthorizeInput {
 }
 
 function validateAuthorize(
+  req: Request,
   origin: string,
   input: AuthorizeInput,
   status: 302 | 303
@@ -636,8 +699,17 @@ function validateAuthorize(
     return { ok: false as const, response: htmlPage(`<h1>No se pudo autorizar</h1><p>${escapeHtml(description)}</p>`, htmlStatus) };
   };
 
-  if (!client) return fail('invalid_request', 'El cliente OAuth no es válido.');
-  if (!redirectOk) return fail('invalid_request', 'La dirección de retorno no está permitida.');
+  if (!client) {
+    noteRejection(req, 'cliente OAuth no válido', input.redirectUri);
+    return fail('invalid_request', 'El cliente OAuth no es válido.');
+  }
+  if (!redirectOk) {
+    const reason = isAllowedRedirectUri(input.redirectUri)
+      ? 'redirect_uri no registrada'
+      : 'redirect_uri no permitida';
+    noteRejection(req, reason, input.redirectUri);
+    return fail('invalid_request', 'La dirección de retorno no está permitida.');
+  }
   if (input.responseType !== 'code') return fail('unsupported_response_type', 'Solo se admite response_type=code.');
   if (!input.codeChallenge || input.codeChallengeMethod !== 'S256') {
     return fail('invalid_request', 'PKCE con S256 es obligatorio.');
@@ -752,14 +824,17 @@ export async function handleRegister(req: Request): Promise<Response> {
 
   const redirectUris = data.redirect_uris;
   if (!Array.isArray(redirectUris) || redirectUris.length < 1 || redirectUris.length > 5) {
+    noteRejection(req, 'redirect_uris inválidas', redirectUris);
     return oauthError(400, 'invalid_client_metadata', 'redirect_uris debe incluir de 1 a 5 direcciones.');
   }
-  if (!redirectUris.every((uri) => typeof uri === 'string' && isAllowedRedirectUri(uri))) {
-    return oauthError(
-      400,
-      'invalid_client_metadata',
-      'Solo se aceptan retornos de chatgpt.com, chat.openai.com o localhost.'
+  const rejectedUris = redirectUris.filter((uri) => typeof uri !== 'string' || !isAllowedRedirectUri(uri));
+  if (rejectedUris.length) {
+    noteRejection(
+      req,
+      'redirect_uri no permitida',
+      rejectedUris.map((uri) => (typeof uri === 'string' ? uri : '[no-string]'))
     );
+    return oauthError(400, 'invalid_client_metadata', 'La dirección de retorno no está permitida.');
   }
 
   let grants = ['authorization_code', 'refresh_token'];
@@ -852,7 +927,7 @@ export async function handleAuthorize(req: Request): Promise<Response> {
     input = readAuthorizeParams(new URL(req.url).searchParams);
   }
 
-  const validated = validateAuthorize(origin, input, status);
+  const validated = validateAuthorize(req, origin, input, status);
   if (!validated.ok) return validated.response;
 
   if (req.method !== 'POST') {
